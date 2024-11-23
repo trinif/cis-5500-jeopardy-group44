@@ -77,6 +77,22 @@ const random = async function(req, res) {
   });
 }
 
+// new routes
+const accuracy = function(req, res) {
+  const id = req.query.user_id;
+  connection.query(`
+    SELECT (COUNT(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS percentage_correct
+    FROM UserAnswers;
+    `, (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json({});
+      } else {
+        res.json({accuracy: parseFloat(data.rows[0].percentage_correct)});
+      }
+  });
+    
+
 /********************************
  * BASIC SONG/ALBUM INFO ROUTES *
  ********************************/
