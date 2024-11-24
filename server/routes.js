@@ -164,9 +164,25 @@ const final_jeopardy_questions = async function (req, res) {
   })
 }
 
+// 6
+const general_questions_not_in_jeopardy = function(req, res) {
+  connection.query(`
+    SELECT g.question_id, g.question, g.answer
+    FROM GeneralQuestions g
+    LEFT JOIN Jeopardy j ON g.question = j.question
+    WHERE j.question IS NULL
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
 
 // 7
-const unansweredCategoriesQuestions = function(req, res) {
+const unanswered_categories_questions = function(req, res) {
   const userId = req.query.user_id;
   connection.query(`
     WITH unfamiliar_categories AS (
