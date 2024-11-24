@@ -24,7 +24,7 @@ const overall_accuracy = async function(req, res) {
 
   connection.query(`
     SELECT 
-        (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+      (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
     FROM UserAnswers
     WHERE user_id = '${user_id}';
   `, (err, data) => {
@@ -40,41 +40,136 @@ const overall_accuracy = async function(req, res) {
 }
 
 const best_worst_category = async function (req, res) {
+  const user_id = req.query.user_id
 
   connection.query(`
     WITH category_correct_counts AS (
-    SELECT 
-        j.category,
-        COUNT(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct_count
-    FROM 
-        UserAnswers ua JOIN Questions q ON ua.question_id == q.question_id
-    GROUP BY 
-        j.category
+      SELECT 
+        q.category,
+        COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
+      FROM 
+        UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
+      WHERE 
+        ua.user_id = '${user_id}'
+      GROUP BY 
+        q.category
+    ),
+    max_min_correct_counts AS (
+      SELECT 
+        MAX(correct_count) AS max_correct_count,
+        MIN(correct_count) AS min_correct_count
+      FROM 
+        category_correct_counts
     )
-
     SELECT 
-        CASE WHEN c.correct_count = MAX(correct_count) THEN 'Most Successful' END AS best_category,
-        CASE WHEN c.correct_count = MIN(correct_count) THEN 'Least Successful' END AS worst_category
+      c.category,
+      c.correct_count,
+      CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
+      CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
     FROM 
-        category_correct_counts c
-    WHERE 
-        correct_count >= ALL(SELECT correct_count FROM category_correct_counts) 
-        OR correct_count <= ALL (SELECT correct_count FROM category_correct_counts
-
+      category_correct_counts c, max_min_correct_counts m;
 
   `, (err, data) => {
     if (err) {
+      console.log(err)
       res.json({})
     } else {
+      let best_category, worst_category;
+
+      data.rows.forEach(row => {
+        console.log(row)
+        if (row.max_category === 'Most Successful') {
+          best_category = row.category;
+        } else if (row.min_category === 'Least Successful') {
+          worst_category = row.category;
+        }
+      });
+
+      console.log(best_category)
+      console.log(worst_category)
+
       res.json({
-        best_category: '',
-        worst_category: ''
-      })
+        best_category,
+        worst_category
+      });
     }
   })
 }
 
+const unanswered_category = async function (req, res) {
+  const user_id = req.query.user_id;
+  connection.query(`
+    SELECT DISTINCT c.label
+    FROM Categories c
+    WHERE EXISTS (SELECT ua.category
+      FROM UserAnswers ua
+      WHERE ua.category = c.category
+      GROUP BY ua.category
+      HAVING COUNT(ua.is_correct) = 0)
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json({})
+    }
+  })
+}
+
+const incorrect_questions_category = async function (req, res) {
+  const user_id = req.query.user_id;
+
+  connection.query(`
+    WITH incorrect_questions AS (
+      SELECT q.question_id, q.question, q.answer, q.category, c.label
+      FROM UserAnswers ua 
+        JOIN Questions q ON ua.question_id = q.question_id
+        JOIN Categories c ON q.category = c.category
+      WHERE ua.is_correct = B'0'
+        AND ua.user_id = '${user_id}'
+    )
+
+    SELECT q.question, q.answer, c.category
+    FROM Questions q JOIN Categories c ON q.category = c.category
+    WHERE c.label IN (SELECT label FROM incorrect_questions)
+
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
+const final_jeopardy_questions = async function (req, res) {
+  const user_id = req.query.user_id;
+  connection.query(`
+    SELECT 
+      j.question_id,
+      j.question, 
+      j.answer
+    FROM Jeopardy j 
+      JOIN UserAnswers ua ON j.question_id = ua.question_id
+    WHERE ua.user_id = '${user_id}' 
+      AND j.round = 'Final Jeopardy!'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else{
+      res.json(data.rows)
+    }
+  })
+}
+
+
+
 module.exports = {
   overall_accuracy,
-  best_worst_category
+  best_worst_category,
+  unanswered_category,
+  incorrect_questions_category,
+  final_jeopardy_questions
 }

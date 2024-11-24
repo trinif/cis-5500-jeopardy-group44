@@ -12,6 +12,9 @@ app.use(cors({
 // provide their handlers that we implemented in routes.js
 app.get('/overall_accuracy', routes.overall_accuracy);
 app.get('/best_worst_category', routes.best_worst_category);
+app.get('/unanswered_category', routes.unanswered_category);
+app.get('/incorrect_questions_category', routes.incorrect_questions_category)
+app.get('/final_jeopardy_questions', routes.final_jeopardy_questions)
 
 // app.get('/random', routes.random);
 // app.get('/song/:song_id', routes.song);
