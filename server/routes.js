@@ -91,6 +91,7 @@ const accuracy = function(req, res) {
         res.json({accuracy: parseFloat(data.rows[0].percentage_correct)});
       }
   });
+}
     
 
 /********************************
