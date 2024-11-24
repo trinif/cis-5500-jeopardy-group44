@@ -18,7 +18,7 @@ const connection = new Pool({
 });
 connection.connect((err) => err && console.log(err));
 
-// Route 1: GET /overall_accuracy
+// 1
 const overall_accuracy = async function(req, res) {
   const user_id = req.query.user_id;
 
@@ -165,6 +165,31 @@ const final_jeopardy_questions = async function (req, res) {
 }
 
 
+// 7
+const unansweredCategoriesQuestions = function(req, res) {
+  const userId = req.query.user_id;
+  connection.query(`
+    WITH unfamiliar_categories AS (
+      SELECT DISTINCT category AS not_answered_category
+      FROM Jeopardy
+      WHERE category NOT IN (
+        SELECT DISTINCT category
+        FROM UserAnswers
+        WHERE user_id = '${userId}'
+      )
+    )
+    SELECT question_id, question, answer
+    FROM Jeopardy j
+    WHERE j.category IN (SELECT not_answered_category FROM unfamiliar_categories)
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+        res.json(data.rows)
+    }
+  })
+}
 
 module.exports = {
   overall_accuracy,
