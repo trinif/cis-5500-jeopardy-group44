@@ -165,7 +165,7 @@ const final_jeopardy_questions = async function (req, res) {
 }
 
 // 6
-const general_questions_not_in_jeopardy = function(req, res) {
+const general_trivia_questions = function(req, res) {
   connection.query(`
     SELECT g.question_id, g.question, g.answer
     FROM GeneralQuestions g
@@ -203,6 +203,22 @@ const unanswered_categories_questions = function(req, res) {
       res.json({})
     } else {
         res.json(data.rows)
+    }
+  })
+}
+
+// 9
+const round_accuracy = function(req, res) {
+  connection.query(`
+    SELECT j.round, AVG(ua.is_correct) AS mean_correctness
+    FROM (UserAnswers ua JOIN Questions q ON ua.question_id == q.question_id) uaq JOIN Jeopardy j ON uaq.question_id == j.question_id
+    GROUP BY j.round;
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json(data.rows)
     }
   })
 }
