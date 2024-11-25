@@ -28,7 +28,7 @@ const signup = async function(req, res) {
           console.log(err)
           res.status(500).json({error: err})
       } else {
-          res.status(201).json({message: 'Signup successful'})
+          res.status(201).json({username: username})
       }
   })
 }
@@ -48,7 +48,7 @@ const login = async function(req, res) {
               res.status(401).json({message: 'Username not found'})
           } else if (data.rows[0].password == password) {
               
-              res.status(201).json({message: 'Login successful'})
+              res.status(201).json({username: username})
           } else {
               res.status(401).json({message: 'Incorrect password'})
           }

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react';
+import { useAuth } from '../components/Context';
 
 const config = require('../config.json');
 
@@ -6,9 +7,10 @@ export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
+    const { userId, setUserId } = useAuth();
+
     // handles registration after clicking 'Register' button
     const registerButtonHandler = () => {
-        console.log("entered")
         fetch(`http://${config.server_host}:${config.server_port}/signup`, {
             method: "POST",
             headers: {
@@ -17,7 +19,12 @@ export default function Login() {
             body: JSON.stringify({username, password}),
             credentials: 'same-origin'
         }).then(res => {
-            console.log(res)
+            if (!res.ok) {
+                throw new Error('Username already exists')
+            }
+            return res.json()
+        }).then(resJson => {
+            setUserId(resJson.username)
         }).catch(err => {
             console.log(err)
         })
@@ -41,8 +48,7 @@ export default function Login() {
 
             return res.json()
         }).then(resJson => {
-            console.log("login successful!")
-            // set state as logged in with user_id = username
+            setUserId(resJson.username)
         }).catch(err => {
             console.log(err)
         })
