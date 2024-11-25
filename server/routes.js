@@ -165,6 +165,40 @@ const final_jeopardy_questions = async function (req, res) {
   })
 }
 
+const unanswered_categories_questions = async function (req, res) {
+  const user_id = req.query.user_id;
+  connection.query(`
+    WITH Cats AS (SELECT c.category
+    FROM Categories c
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM UserAnswers ua
+    WHERE ua.category = c.category
+    AND ua.is_correct = 1
+    AND ua.user_id = '${user_id}'),
+    SELECT 
+      j.question_id,
+      j.question, 
+      j.answer
+    FROM Jeopardy j 
+      JOIN UserAnswers ua ON j.question_id = ua.question_id
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM UserAnswers ua
+    WHERE ua.category = Cats.category
+    AND ua.user_id = '${user_id}' 
+    AND ua.is_correct = 1
+  )
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json({})
+    }
+  })
+}
+
 // Route: GET /random
 const random = async function(req, res) {
   connection.query(`
