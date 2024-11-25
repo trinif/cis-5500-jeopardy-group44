@@ -16,7 +16,7 @@ app.get('/unanswered_category', routes.unanswered_category);
 app.get('/incorrect_questions_category', routes.incorrect_questions_category)
 app.get('/final_jeopardy_questions', routes.final_jeopardy_questions)
 
-// app.get('/random', routes.random);
+app.get('/random', routes.random);
 // app.get('/song/:song_id', routes.song);
 // app.get('/album/:album_id', routes.album);
 // app.get('/albums', routes.albums);
