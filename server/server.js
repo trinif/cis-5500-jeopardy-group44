@@ -41,6 +41,8 @@ app.get('/unanswered_category', routes.unanswered_category);
 app.get('/incorrect_questions_category', routes.incorrect_questions_category)
 app.get('/final_jeopardy_questions', routes.final_jeopardy_questions)
 
+app.get('/random', routes.random);
+
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
 });

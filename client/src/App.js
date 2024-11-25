@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CssBaseline, ThemeProvider } from '@mui/material'
-import { amber } from '@mui/material/colors'
-import { createTheme } from "@mui/material/styles";
 
 import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
@@ -10,14 +8,27 @@ import StatisticsPage from './pages/StatisticsPage';
 import AlbumInfoPage from './pages/AlbumInfoPage'
 import Login from "./pages/LoginPage";
 
-// createTheme enables you to customize the look and feel of your app past the default
-// in this case, we only change the color scheme
+import { createTheme } from "@mui/material/styles";
+
 export const theme = createTheme({
   palette: {
-    primary: {main: '#081484'},
-    secondary: amber,
+    primary: { main: '#081484' }, // Jeopardy Blue
+    secondary: { main: '#FFD700' }, // Gold
+    background: { default: '#F2F2F2' },
+  },
+  typography: {
+    fontFamily: 'Roboto, sans-serif',
+    h5: {
+      fontWeight: 'bold',
+      color: '#FFD700',
+    },
+    h6: {
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+    },
   },
 });
+
 
 // App is the root component of our application and as children contain all our pages
 // We use React Router's BrowserRouter and Routes components to define the pages for

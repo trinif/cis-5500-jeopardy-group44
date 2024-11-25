@@ -151,13 +151,14 @@ const best_worst_category = async function (req, res) {
 const unanswered_category = async function (req, res) {
   const user_id = req.query.user_id;
   connection.query(`
-    SELECT DISTINCT c.label
+    SELECT c.category
     FROM Categories c
-    WHERE EXISTS (SELECT ua.category
-      FROM UserAnswers ua
-      WHERE ua.category = c.category
-      GROUP BY ua.category
-      HAVING COUNT(ua.is_correct) = 0)
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM UserAnswers ua
+    WHERE ua.category = c.category
+    AND ua.is_correct = 1
+  )
   `, (err, data) => {
     if (err) {
       console.log(err)
@@ -215,8 +216,8 @@ const final_jeopardy_questions = async function (req, res) {
   })
 }
 
-// 6
-const general_trivia_questions = function(req, res) {
+const unanswered_categories_questions = async function (req, res) {
+  const user_id = req.query.user_id;
   connection.query(`
     SELECT g.question_id, 
       g.question, 
@@ -229,52 +230,30 @@ const general_trivia_questions = function(req, res) {
       console.log(err)
       res.json({})
     } else {
-      res.json(data.rows)
+      res.json({})
     }
   })
 }
 
-// 7
-const unanswered_categories_questions = function(req, res) {
-  const userId = req.query.user_id;
+// Route: GET /random
+const random = async function(req, res) {
   connection.query(`
-    WITH unfamiliar_categories AS (
-      SELECT DISTINCT category AS not_answered_category
-      FROM Jeopardy
-      WHERE category NOT IN (
-        SELECT DISTINCT category
-        FROM UserAnswers
-        WHERE user_id = '${userId}'
-      )
-    )
-    SELECT question_id, question, answer
-    FROM Jeopardy j
-    WHERE j.category IN (SELECT not_answered_category FROM unfamiliar_categories)
+    SELECT *
+    FROM Jeopardy
+    ORDER BY RANDOM()
+    LIMIT 1
   `, (err, data) => {
     if (err) {
-      console.log(err)
-      res.json({})
+      console.log(err);
+      res.json({});
     } else {
-        res.json(data.rows)
+      res.json(data.rows);
     }
-  })
+  });
 }
 
-// 9
-const round_accuracy = function(req, res) {
-  connection.query(`
-    SELECT j.round, AVG(ua.is_correct) AS mean_correctness
-    FROM (UserAnswers ua JOIN Questions q ON ua.question_id == q.question_id) uaq JOIN Jeopardy j ON uaq.question_id == j.question_id
-    GROUP BY j.round;
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.json({})
-    } else {
-      res.json(data.rows)
-    }
-  })
-}
+
+
 
 module.exports = {
   signup,
@@ -283,5 +262,7 @@ module.exports = {
   best_worst_category,
   unanswered_category,
   incorrect_questions_category,
-  final_jeopardy_questions
+  final_jeopardy_questions,
+  unanswered_categories_questions,
+  random
 }

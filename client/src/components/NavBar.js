@@ -1,18 +1,37 @@
-import { AppBar, Container, Toolbar, Typography } from '@mui/material'
+import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 
-// The hyperlinks in the NavBar contain a lot of repeated formatting code so a
-// helper component NavText local to the file is defined to prevent repeated code.
-function NavText({ href, text, isMain }) {
+
+function NavText({ href, text }) {
   return (
     <Typography
-      variant={isMain ? 'h5' : 'h7'}
+      variant="h6"
       noWrap
-      style={{
-        marginRight: '30px',
-        fontFamily: 'monospace',
+      sx={{
+        fontFamily: 'Anton, sans-serif',
         fontWeight: 700,
         letterSpacing: '.3rem',
+        color: 'inherit',
+        textDecoration: 'none',
+        textAlign: 'center',
+        flex: 1,
+        position: 'relative',
+        '&:hover': {
+          color: '#FFD700', // Gold on hover
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          bottom: -5,
+          left: 0,
+          width: 0,
+          height: 3,
+          backgroundColor: '#FFD700', // Gold underline effect
+          transition: 'width 0.3s ease-in-out',
+        },
+        '&:hover::after': {
+          width: '100%',
+        },
       }}
     >
       <NavLink
@@ -25,23 +44,33 @@ function NavText({ href, text, isMain }) {
         {text}
       </NavLink>
     </Typography>
-  )
+  );
 }
 
-// Here, we define the NavBar. Note that we heavily leverage MUI components
-// to make the component look nice. Feel free to try changing the formatting
-// props to how it changes the look of the component.
 export default function NavBar() {
   return (
-    <AppBar position='static'>
-      <Container maxWidth='xl'>
-        <Toolbar disableGutters>
-          <NavText href='/' text='Jeopardy Helper' isMain />
-          <NavText href='/question_selection' text='Question Selection' />
-          <NavText href='/statistics' text='Statistics' />
-          <NavText href='/login' text='Login' />
-        </Toolbar>
-      </Container>
+    <AppBar
+      position="static"
+      sx={{
+        background: 'linear-gradient(90deg, #081484 0%, #4B0082 100%)', // Gradient background
+        padding: '10px 0',
+        borderBottom: '4px solid #FFD700', // Golden border
+      }}
+    >
+      <Toolbar
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-evenly',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', width: '100%' }}>
+          {/* Navigation Links */}
+          <NavText href="/" text="Home" />
+          <NavText href="/question_selection" text="Question Selection" />
+          <NavText href="/statistics" text="Statistics" />
+          <NavText href="/login" text="Login | Signup"
+        </Box>
+      </Toolbar>
     </AppBar>
   );
 }
