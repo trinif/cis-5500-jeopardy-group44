@@ -3,7 +3,7 @@
   "rds_port": "5432",
   "rds_user": "group44",
   "rds_password": "lylamiatrinisarah266",
-  "rds_db": "jeopardy_database",
+  "rds_db": "postgres",
   "server_host": "localhost",
   "server_port": "8080"
 }

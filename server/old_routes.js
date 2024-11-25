@@ -18,28 +18,6 @@ const connection = new Pool({
 });
 connection.connect((err) => err && console.log(err));
 
-// Route 1: GET /overall_accuracy
-const overall_accuracy = async function(req, res) {
-  const user_id = req.query.user_id;
-
-  connection.query(`
-    SELECT 
-        (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
-    FROM UserAnswers
-    WHERE user_id = '${user_id}';
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.json({})
-    } else {
-      res.json({
-        accuracy: data.rows[0].accuracy
-      })
-    }
-  })
-}
-
-
 ////////////////////////////////////////////////////// old routes /////////////////////////////////////
 
 // Route 2: GET /random
@@ -75,22 +53,6 @@ const random = async function(req, res) {
         title: data.rows[0].title
       });
     }
-  });
-}
-
-// new routes
-const accuracy = function(req, res) {
-  const id = req.query.user_id;
-  connection.query(`
-    SELECT (COUNT(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS percentage_correct
-    FROM UserAnswers;
-    `, (err, data) => {
-      if (err) {
-        console.log(err);
-        res.json({});
-      } else {
-        res.json({accuracy: parseFloat(data.rows[0].percentage_correct)});
-      }
   });
 }
     

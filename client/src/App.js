@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import QuestionSelectionPage from './pages/QuestionSelectionPage';
 import StatisticsPage from './pages/StatisticsPage';
 import AlbumInfoPage from './pages/AlbumInfoPage'
+import Login from "./pages/LoginPage";
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -23,6 +24,7 @@ export const theme = createTheme({
 // our application, with each Route component representing a page and the common
 // NavBar component allowing us to navigate between pages (with hyperlinks)
 export default function App() {
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -33,6 +35,7 @@ export default function App() {
           <Route path="/question_selection" element={<QuestionSelectionPage />} />
           <Route path="/question_selection/:album_id" element={<AlbumInfoPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/login" element={ <Login/> } />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

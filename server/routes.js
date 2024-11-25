@@ -1,5 +1,5 @@
 const { Pool, types } = require('pg');
-const config = require('./config.json')
+const config = require('./config.json');
 
 // Override the default parsing for BIGINT (PostgreSQL type ID 20)
 types.setTypeParser(20, val => parseInt(val, 10)); //DO NOT DELETE THIS
@@ -18,9 +18,48 @@ const connection = new Pool({
 });
 connection.connect((err) => err && console.log(err));
 
+const signup = async function(req, res) {
+  const {username, password} = req.body
+  connection.query(`
+      INSERT INTO Users(user_id, password)
+      VALUES ('${username}', '${password}')
+  `, (err, data) => {
+      if (err) {
+          console.log(err)
+          res.status(500).json({error: err})
+      } else {
+          res.status(201).json({message: 'Signup successful'})
+      }
+  })
+}
+
+const login = async function(req, res) {
+  const {username, password} = req.body;
+  connection.query(`
+      SELECT password
+      FROM Users
+      WHERE Users.user_id = '${username}'
+  `, (err, data) => {
+      if (err) {
+          console.log(err)
+          res.status(500)
+      } else {
+          if (data.length == 0) {
+              res.status(401).json({message: 'Username not found'})
+          } else if (data.rows[0].password == password) {
+              
+              res.status(201).json({message: 'Login successful'})
+          } else {
+              res.status(401).json({message: 'Incorrect password'})
+          }
+      }
+  })
+}
+
+
 // 1
 const overall_accuracy = async function(req, res) {
-  const user_id = req.query.user_id;
+  const user_id = req.params.user_id;
 
   connection.query(`
     SELECT 
@@ -146,8 +185,7 @@ const incorrect_questions_category = async function (req, res) {
 const final_jeopardy_questions = async function (req, res) {
   const user_id = req.query.user_id;
   connection.query(`
-    SELECT 
-      j.question_id,
+    SELECT j.question_id,
       j.question, 
       j.answer
     FROM Jeopardy j 
@@ -167,9 +205,11 @@ const final_jeopardy_questions = async function (req, res) {
 // 6
 const general_trivia_questions = function(req, res) {
   connection.query(`
-    SELECT g.question_id, g.question, g.answer
+    SELECT g.question_id, 
+      g.question, 
+      g.answer
     FROM GeneralQuestions g
-    LEFT JOIN Jeopardy j ON g.question = j.question
+      LEFT JOIN Jeopardy j ON g.question = j.question
     WHERE j.question IS NULL
   `, (err, data) => {
     if (err) {
@@ -224,6 +264,8 @@ const round_accuracy = function(req, res) {
 }
 
 module.exports = {
+  signup,
+  login,
   overall_accuracy,
   best_worst_category,
   unanswered_category,

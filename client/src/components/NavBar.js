@@ -39,6 +39,7 @@ export default function NavBar() {
           <NavText href='/' text='Jeopardy Helper' isMain />
           <NavText href='/question_selection' text='Question Selection' />
           <NavText href='/statistics' text='Statistics' />
+          <NavText href='/login' text='Login' />
         </Toolbar>
       </Container>
     </AppBar>

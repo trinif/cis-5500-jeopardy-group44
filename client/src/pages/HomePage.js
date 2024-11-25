@@ -63,8 +63,18 @@ export default function HomePage() {
     }
   ]
 
+  const the_button_handler = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/final_jeopardy_questions?user_id=sarah`)
+      .then(res => res.json())
+      .then(resJson => {
+        console.log(resJson)
+      })
+  }
+
   return (
     <Container>
+      <button onClick={the_button_handler()}>hello</button>
+
       {/* SongCard is a custom component that we made. selectedSongId && <SongCard .../> makes use of short-circuit logic to only render the SongCard if a non-null song is selected */}
       {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
       <h2>Check out your question of the day:&nbsp;
