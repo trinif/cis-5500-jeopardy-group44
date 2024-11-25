@@ -224,5 +224,7 @@ module.exports = {
   best_worst_category,
   unanswered_category,
   incorrect_questions_category,
-  final_jeopardy_questions
+  final_jeopardy_questions,
+  unanswered_categories_questions,
+  random
 }
