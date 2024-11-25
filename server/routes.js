@@ -21,15 +21,28 @@ connection.connect((err) => err && console.log(err));
 const signup = async function(req, res) {
   const {username, password} = req.body
   connection.query(`
-      INSERT INTO Users(user_id, password)
-      VALUES ('${username}', '${password}')
+    SELECT *
+    FROM Users
+    WHERE Users.user_id = '${username}'
   `, (err, data) => {
-      if (err) {
-          console.log(err)
-          res.status(500).json({error: err})
-      } else {
-          res.status(201).json({username: username})
-      }
+    if (err) {
+      console.log(err)
+      res.status(500).json({})
+    } else if (data.rows.length != 0) {
+      res.status(400).json({})
+    } else {
+      connection.query(`
+        INSERT INTO Users(user_id, password)
+        VALUES ('${username}', '${password}')
+      `, (err, data) => {
+          if (err) {
+              console.log(err)
+              res.status(500).json({})
+          } else {
+              res.status(201).json({username: username})
+          }
+      })
+    }
   })
 }
 
@@ -45,12 +58,12 @@ const login = async function(req, res) {
           res.status(500)
       } else {
           if (data.length == 0) {
-              res.status(401).json({message: 'Username not found'})
+              res.status(401).json({})
           } else if (data.rows[0].password == password) {
               
               res.status(201).json({username: username})
           } else {
-              res.status(401).json({message: 'Incorrect password'})
+              res.status(401).json({})
           }
       }
   })
