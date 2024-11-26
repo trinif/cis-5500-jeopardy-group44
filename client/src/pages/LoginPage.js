@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { useState } from 'react';
+import { Box, Button, Container, TextField, Typography, Divider } from '@mui/material';
 import { useAuth } from '../components/Context';
 
 const config = require('../config.json');
@@ -9,67 +10,149 @@ export default function Login() {
 
     const { userId, setUserId } = useAuth();
 
-    // handles registration after clicking 'Register' button
+    // Handles registration
     const registerButtonHandler = () => {
         fetch(`http://${config.server_host}:${config.server_port}/signup`, {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({username, password}),
-            credentials: 'same-origin'
-        }).then(res => {
-            if (!res.ok) {
-                throw new Error('Username already exists')
-            }
-            return res.json()
-        }).then(resJson => {
-            setUserId(resJson.username)
-        }).catch(err => {
-            console.log(err)
+            body: JSON.stringify({ username, password }),
+            credentials: 'same-origin',
         })
-    }
-    
-    // handles login after clicking 'Login' button
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error('Username already exists');
+                }
+                return res.json();
+            })
+            .then((resJson) => {
+                setUserId(resJson.username);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
+
+    // Handles login
     const loginButtonHandler = () => {
         fetch(`http://${config.server_host}:${config.server_port}/login`, {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({username, password}),
-            credentials: 'same-origin'
-        }).then(res => {
-            if (!res.ok) {
-                if (res.status == 401) {
-                    throw new Error('Incorrect username or password')
-                }
-            }
-
-            return res.json()
-        }).then(resJson => {
-            setUserId(resJson.username)
-        }).catch(err => {
-            console.log(err)
+            body: JSON.stringify({ username, password }),
+            credentials: 'same-origin',
         })
-    }
+            .then((res) => {
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        throw new Error('Incorrect username or password');
+                    }
+                }
+                return res.json();
+            })
+            .then((resJson) => {
+                setUserId(resJson.username);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
 
     return (
-        <>
-            <div>
-                <p>Enter Username:</p>
-                <input type='text' onChange={e => setUsername(e.target.value)}></input>
-            </div>
-
-            <div>
-                <p>Enter Password:</p>
-                <input type='text' onChange={e => setPassword(e.target.value)}></input>
-            </div>
-
-            <div>
-                <button onClick={registerButtonHandler}>Register</button>
-                <button onClick={loginButtonHandler}>Login</button>
-            </div>
-        </>
+        <Box
+            sx={{
+                background: 'linear-gradient(135deg, #081484 30%, #4B0082 100%)', // Match gradient
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                padding: '20px',
+            }}
+        >
+            <Container
+                maxWidth="sm"
+                sx={{
+                    backgroundColor: '#081484',
+                    borderRadius: '10px',
+                    padding: '30px',
+                    border: '3px solid #FFD700',
+                    textAlign: 'center',
+                }}
+            >
+                <Typography variant="h4" gutterBottom>
+                    Login or Register
+                </Typography>
+                <Divider sx={{ backgroundColor: 'gold', marginY: 2 }} />
+                <Box mb={3}>
+                    <TextField
+                        fullWidth
+                        label="Username"
+                        variant="outlined"
+                        onChange={(e) => setUsername(e.target.value)}
+                        InputProps={{
+                            sx: { color: 'white' },
+                        }}
+                        InputLabelProps={{
+                            sx: { color: 'white' },
+                        }}
+                        sx={{
+                            marginBottom: 2,
+                            input: { color: 'white' },
+                        }}
+                    />
+                    <TextField
+                        fullWidth
+                        label="Password"
+                        type="password"
+                        variant="outlined"
+                        onChange={(e) => setPassword(e.target.value)}
+                        InputProps={{
+                            sx: { color: 'white' },
+                        }}
+                        InputLabelProps={{
+                            sx: { color: 'white' },
+                        }}
+                        sx={{
+                            marginBottom: 2,
+                            input: { color: 'white' },
+                        }}
+                    />
+                </Box>
+                <Box>
+                    <Button
+                        variant="contained"
+                        sx={{
+                            backgroundColor: 'gold',
+                            color: '#081484',
+                            '&:hover': {
+                                backgroundColor: 'white',
+                                color: '#081484',
+                            },
+                            marginRight: 2,
+                        }}
+                        onClick={loginButtonHandler}
+                    >
+                        Login
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        sx={{
+                            borderColor: 'gold',
+                            color: 'gold',
+                            '&:hover': {
+                                backgroundColor: 'gold',
+                                color: '#081484',
+                            },
+                        }}
+                        onClick={registerButtonHandler}
+                    >
+                        Register
+                    </Button>
+                </Box>
+            </Container>
+        </Box>
     );
 }
