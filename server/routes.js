@@ -29,7 +29,7 @@ const signup = async function(req, res) {
       console.log(err)
       res.status(500).json({})
     } else if (data.rows.length != 0) {
-      res.status(400).json({})
+      res.status(201).json({status: 'Account already exists.', username: username})
     } else {
       connection.query(`
         INSERT INTO Users(user_id, password)
@@ -39,7 +39,7 @@ const signup = async function(req, res) {
               console.log(err)
               res.status(500).json({})
           } else {
-              res.status(201).json({username: username})
+              res.status(201).json({status: 'Success', username: username})
           }
       })
     }
@@ -57,17 +57,94 @@ const login = async function(req, res) {
           console.log(err)
           res.status(500)
       } else {
-          if (data.length == 0) {
-              res.status(401).json({})
+          if (data.rows.length == 0) {
+              res.status(201).json({status: `Username doesn't exists.`, username, username})
           } else if (data.rows[0].password == password) {
-              
-              res.status(201).json({username: username})
+              res.status(201).json({status: 'Success', username: username})
           } else {
-              res.status(401).json({})
+              res.status(201).json({status: `Password is incorrect.`, username: username})
           }
       }
   })
 }
+
+const update_user_answer = async function(req, res) {
+  const {userId, questionId, is_correct} = req.body;
+
+  // first check if user_id exists in users table
+  // if not, then add guest user_id to users table
+  connection.query(`
+    SELECT *
+    FROM Users
+    WHERE user_id = '${userId}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else if (data.rows.length == 0) {
+      connection.query(`
+        INSERT INTO Users(user_id, password)
+        VALUES ('${userId}', '${userId}')
+      `)
+    }
+  })
+
+  connection.query(`
+    SELECT *
+    FROM UserAnswers
+    WHERE question_id = '${questionId}'
+      AND user_id = '${userId}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else if (data.rows.length == 0) {
+      // question_id and user_id don't exist yet
+      connection.query(`
+        INSERT INTO UserAnswers (question_id, user_id, is_correct)
+        VALUES ('${questionId}', '${userId}', B'${is_correct}')
+      `, (err, data) => {
+        if (err) {
+          console.log(err)
+        }
+        res.json({})
+      })
+    } else {
+      // user_id and question_id already exist
+      connection.query(`
+        UPDATE UserAnswers
+        SET is_correct = B'${is_correct}'
+        WHERE user_id = '${userId}'
+          AND question_id = '${questionId}'
+      `, (err, data) => {
+        if (err) {
+          console.log(err)
+        }
+        res.json({})
+      })
+    }
+  })
+}
+
+const check_answer = async function(req, res) {
+  const question_id = req.params.question_id;
+  const answer = req.params.answer;
+  connection.query(`
+    SELECT answer
+    FROM Questions
+    WHERE Questions.question_id = '${question_id}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else if (data.rows[0].answer == answer) {
+      res.status(201).json({status: 'Correct', message: data.rows[0].answer})
+    } else {
+      res.status(201).json({status: 'Incorrect', message: data.rows[0].answer})
+    }
+  })
+}
+
 
 
 // 1
@@ -247,7 +324,7 @@ const random = async function(req, res) {
       console.log(err);
       res.json({});
     } else {
-      res.json(data.rows);
+      res.json(data.rows[0]);
     }
   });
 }
@@ -258,6 +335,8 @@ const random = async function(req, res) {
 module.exports = {
   signup,
   login,
+  update_user_answer,
+  check_answer,
   overall_accuracy,
   best_worst_category,
   unanswered_category,

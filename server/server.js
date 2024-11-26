@@ -34,6 +34,9 @@ app.use(cookieParser());
 
 app.post('/signup', routes.signup);
 app.post('/login', routes.login)
+app.post('/update_user_answer', routes.update_user_answer)
+
+app.post('/check_answer/:question_id/:answer', routes.check_answer)
 
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
 app.get('/best_worst_category', routes.best_worst_category);
