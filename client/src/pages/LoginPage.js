@@ -8,6 +8,8 @@ export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
+    const[status, setStatus] = useState('')
+
     const { userId, setUserId } = useAuth();
 
     // Handles registration
@@ -17,8 +19,19 @@ export default function Login() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, password }),
-            credentials: 'same-origin',
+            body: JSON.stringify({username, password}),
+            credentials: 'same-origin'
+        }).then(res => {
+            return res.json()
+        }).then(resJson => {
+            if (resJson.status == 'Success') {
+                setUserId(resJson.username)
+                setStatus(`Registration successful! You are now logged in as ${resJson.username}`)
+            } else {
+                setStatus(resJson.status)
+            }
+        }).catch(err => {
+            console.log(err)
         })
             .then((res) => {
                 if (!res.ok) {
@@ -41,8 +54,20 @@ export default function Login() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, password }),
-            credentials: 'same-origin',
+            body: JSON.stringify({username, password}),
+            credentials: 'same-origin'
+        }).then(res => {
+            return res.json()
+        }).then(resJson => {
+            if (resJson.status == 'Success') {
+                setUserId(resJson.username)
+                setStatus(`Login successful! You are now logged in as ${resJson.username}`)
+            } else {
+                console.log(resJson.status)
+                setStatus(resJson.status)
+            }
+        }).catch(err => {
+            console.log(err)
         })
             .then((res) => {
                 if (!res.ok) {
@@ -153,6 +178,8 @@ export default function Login() {
                     </Button>
                 </Box>
             </Container>
+
+            {status && <p>{status}</p>}
         </Box>
     );
 }

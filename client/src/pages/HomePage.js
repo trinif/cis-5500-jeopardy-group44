@@ -8,7 +8,7 @@ export default function HomePage() {
   const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/random_question`)
+    fetch(`http://${config.server_host}:${config.server_port}/random`)
       .then((res) => res.json())
       .then((resJson) => setQuestionOfTheDay(resJson));
   }, []);
