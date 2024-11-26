@@ -33,18 +33,6 @@ export default function Login() {
         }).catch(err => {
             console.log(err)
         })
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error('Username already exists');
-                }
-                return res.json();
-            })
-            .then((resJson) => {
-                setUserId(resJson.username);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
     };
 
     // Handles login
@@ -69,20 +57,6 @@ export default function Login() {
         }).catch(err => {
             console.log(err)
         })
-            .then((res) => {
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        throw new Error('Incorrect username or password');
-                    }
-                }
-                return res.json();
-            })
-            .then((resJson) => {
-                setUserId(resJson.username);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
     };
 
     return (
