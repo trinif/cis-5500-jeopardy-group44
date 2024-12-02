@@ -4,19 +4,13 @@ import {
   Container,
   Typography,
   Slider,
-  Checkbox,
-  FormGroup,
-  FormControlLabel,
   TextField,
+  Chip,
+  Button,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
+  Select,
+  OutlinedInput,
+  Grid,
 } from '@mui/material';
 
 const config = require('../config.json');
@@ -25,15 +19,14 @@ export default function QuestionSelectionPage() {
   const [questions, setQuestions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [metaCategories, setMetaCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedMetaCategories, setSelectedMetaCategories] = useState([]);
-  const [jeopardyRound, setJeopardyRound] = useState('');
+  const [selectedRounds, setSelectedRounds] = useState([]);
   const [valueRange, setValueRange] = useState([100, 9800]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
 
-  // Pagination
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [page, setPage] = useState(0);
+  const defaultValueRange = [100, 9800];
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/question_selection`)
@@ -51,25 +44,39 @@ export default function QuestionSelectionPage() {
 
   useEffect(() => {
     const filtered = questions.filter((question) => {
+      const matchesSearchTerm = question.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
         selectedCategories.length === 0 || selectedCategories.includes(question.category);
       const matchesMetaCategory =
         selectedMetaCategories.length === 0 || selectedMetaCategories.includes(question.meta_category);
-      const matchesRound = jeopardyRound ? question.round === jeopardyRound : true;
+      const matchesRound =
+        selectedRounds.length === 0 || selectedRounds.includes(question.round);
       const matchesValue = question.value >= valueRange[0] && question.value <= valueRange[1];
 
-      return matchesCategory && matchesMetaCategory && matchesRound && matchesValue;
+      return (
+        matchesSearchTerm && matchesCategory && matchesMetaCategory && matchesRound && matchesValue
+      );
     });
     setFilteredQuestions(filtered);
-  }, [questions, selectedCategories, selectedMetaCategories, jeopardyRound, valueRange]);
+  }, [
+    questions,
+    searchTerm,
+    selectedCategories,
+    selectedMetaCategories,
+    selectedRounds,
+    valueRange,
+  ]);
 
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
+  const handleDeleteCategory = (category) => {
+    setSelectedCategories(selectedCategories.filter((c) => c !== category));
   };
 
-  const handleRowsPerPageChange = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleDeleteMetaCategory = (metaCategory) => {
+    setSelectedMetaCategories(selectedMetaCategories.filter((m) => m !== metaCategory));
+  };
+
+  const handleDeleteRound = (round) => {
+    setSelectedRounds(selectedRounds.filter((r) => r !== round));
   };
 
   const valueMarks = [
@@ -91,159 +98,213 @@ export default function QuestionSelectionPage() {
         <Typography variant="h2" align="center" gutterBottom>
           Select Your Question
         </Typography>
+
+        {/* Filter Bar */}
         <Box
-          display="flex"
           sx={{
             backgroundColor: '#081484',
-            borderRadius: '10px',
             padding: '20px',
+            borderRadius: '10px',
             border: '3px solid #FFD700',
-            overflow: 'hidden',
+            marginBottom: '20px',
           }}
         >
-          {/* Sidebar Filters */}
-          <Box
-            sx={{
-              width: '300px',
-              marginRight: '20px',
-              backgroundColor: '#4B0082',
-              padding: '20px',
-              borderRadius: '10px',
-              color: 'white',
-            }}
-          >
-            <Typography variant="h4" gutterBottom>
-              Filters
-            </Typography>
+          <Grid container spacing={2}>
+            {/* Search Bar */}
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                variant="outlined"
+                placeholder="Search by keyword"
+                fullWidth
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}
+              />
+            </Grid>
 
             {/* Categories */}
-            <Typography variant="h6" gutterBottom>
-              Categories
-            </Typography>
-            <FormGroup>
-              {categories.map((category) => (
-                <FormControlLabel
-                  key={category}
-                  control={
-                    <Checkbox
-                      checked={selectedCategories.includes(category)}
-                      onChange={(e) => {
-                        const newSelected = e.target.checked
-                          ? [...selectedCategories, category]
-                          : selectedCategories.filter((c) => c !== category);
-                        setSelectedCategories(newSelected);
-                      }}
-                      sx={{ color: 'gold' }}
-                    />
-                  }
-                  label={category}
-                />
-              ))}
-            </FormGroup>
+            <Grid item xs={12} sm={6} md={4}>
+              <Select
+                multiple
+                value={selectedCategories}
+                onChange={(e) => setSelectedCategories(e.target.value)}
+                displayEmpty
+                input={<OutlinedInput />}
+                renderValue={() => 'Search by Category'}
+                fullWidth
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
 
             {/* Meta Categories */}
-            <Typography variant="h6" gutterBottom>
-              Meta Categories
-            </Typography>
-            <FormGroup>
-              {metaCategories.map((metaCategory) => (
-                <FormControlLabel
-                  key={metaCategory}
-                  control={
-                    <Checkbox
-                      checked={selectedMetaCategories.includes(metaCategory)}
-                      onChange={(e) => {
-                        const newSelected = e.target.checked
-                          ? [...selectedMetaCategories, metaCategory]
-                          : selectedMetaCategories.filter((m) => m !== metaCategory);
-                        setSelectedMetaCategories(newSelected);
-                      }}
-                      sx={{ color: 'gold' }}
-                    />
-                  }
-                  label={metaCategory}
-                />
-              ))}
-            </FormGroup>
+            <Grid item xs={12} sm={6} md={4}>
+              <Select
+                multiple
+                value={selectedMetaCategories}
+                onChange={(e) => setSelectedMetaCategories(e.target.value)}
+                displayEmpty
+                input={<OutlinedInput />}
+                renderValue={() => 'Search by Meta Category'}
+                fullWidth
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}
+              >
+                {metaCategories.map((metaCategory) => (
+                  <MenuItem key={metaCategory} value={metaCategory}>
+                    {metaCategory}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
 
-            {/* Jeopardy Round */}
-            <Typography variant="h6" gutterBottom>
-              Jeopardy Round
-            </Typography>
-            <TextField
-              select
-              fullWidth
-              variant="outlined"
-              value={jeopardyRound}
-              onChange={(e) => setJeopardyRound(e.target.value)}
-              sx={{ backgroundColor: 'white', marginBottom: '20px', borderRadius: '5px' }}
-            >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="Jeopardy">Jeopardy</MenuItem>
-              <MenuItem value="Double Jeopardy">Double Jeopardy</MenuItem>
-              <MenuItem value="Final Jeopardy">Final Jeopardy</MenuItem>
-            </TextField>
+            {/* Jeopardy Rounds */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Select
+                multiple
+                value={selectedRounds}
+                onChange={(e) => setSelectedRounds(e.target.value)}
+                displayEmpty
+                input={<OutlinedInput />}
+                renderValue={() => 'Search by Round'}
+                fullWidth
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}
+              >
+                <MenuItem value="Jeopardy">Jeopardy</MenuItem>
+                <MenuItem value="Double Jeopardy">Double Jeopardy</MenuItem>
+                <MenuItem value="Final Jeopardy">Final Jeopardy</MenuItem>
+              </Select>
+            </Grid>
 
             {/* Value Slider */}
-            <Typography variant="h6" gutterBottom>
-              Value
-            </Typography>
-            <Slider
-              value={valueRange}
-              onChange={(e, newValue) => setValueRange(newValue)}
-              valueLabelDisplay="auto"
-              min={100}
-              max={9800}
-              marks={valueMarks}
-              step={100}
-              sx={{ color: 'gold' }}
-            />
-          </Box>
-
-          {/* Question Results Table */}
-          <Box
-            sx={{
-              flexGrow: 1,
-              backgroundColor: '#4B0082',
-              borderRadius: '10px',
-              padding: '20px',
-              border: '3px solid #FFD700',
-            }}
-          >
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{ color: 'white', backgroundColor: '#081484' }}>Title</TableCell>
-                    <TableCell style={{ color: 'white', backgroundColor: '#081484' }}>Category</TableCell>
-                    <TableCell style={{ color: 'white', backgroundColor: '#081484' }}>Value</TableCell>
-                    <TableCell style={{ color: 'white', backgroundColor: '#081484' }}>Round</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredQuestions
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((question) => (
-                      <TableRow key={question.question_id}>
-                        <TableCell>{question.title}</TableCell>
-                        <TableCell>{question.category}</TableCell>
-                        <TableCell>${question.value}</TableCell>
-                        <TableCell>{question.round}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-              <TablePagination
-                rowsPerPageOptions={[10, 25]}
-                component="div"
-                count={filteredQuestions.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleRowsPerPageChange}
+            <Grid item xs={12} sm={6} md={4}>
+              <Typography variant="caption" sx={{ color: 'gold', fontWeight: 'bold' }}>
+                Value Range
+              </Typography>
+              <Slider
+                value={valueRange}
+                onChange={(e, newValue) => setValueRange(newValue)}
+                valueLabelDisplay="auto"
+                min={100}
+                max={9800}
+                marks={valueMarks}
+                step={100}
+                sx={{
+                  color: 'gold',
+                }}
               />
-            </TableContainer>
-          </Box>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Selected Filters */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px',
+            marginBottom: '20px',
+          }}
+        >
+          {selectedCategories.map((category) => (
+            <Chip
+              key={category}
+              label={category}
+              onDelete={() => handleDeleteCategory(category)}
+              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+            />
+          ))}
+          {selectedMetaCategories.map((metaCategory) => (
+            <Chip
+              key={metaCategory}
+              label={metaCategory}
+              onDelete={() => handleDeleteMetaCategory(metaCategory)}
+              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+            />
+          ))}
+          {selectedRounds.map((round) => (
+            <Chip
+              key={round}
+              label={`Round: ${round}`}
+              onDelete={() => handleDeleteRound(round)}
+              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+            />
+          ))}
+          {JSON.stringify(valueRange) !== JSON.stringify(defaultValueRange) && (
+            <Chip
+              label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
+              onDelete={() => setValueRange(defaultValueRange)}
+              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+            />
+          )}
+        </Box>
+
+        {/* Results */}
+        <Box>
+          {filteredQuestions.map((question) => (
+            <Box
+              key={question.question_id}
+              sx={{
+                backgroundColor: '#FFD700',
+                color: '#081484',
+                borderRadius: '10px',
+                padding: '20px',
+                marginBottom: '20px',
+                border: '3px solid #4B0082',
+              }}
+            >
+              <Typography variant="h5">{question.title}</Typography>
+              <Typography>Category: {question.category}</Typography>
+              <Typography>Value: ${question.value}</Typography>
+              <Typography>Round: {question.round}</Typography>
+              <Box
+                sx={{
+                  marginTop: '10px',
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'center',
+                }}
+              >
+                <TextField
+                  placeholder="Type your answer here"
+                  variant="outlined"
+                  fullWidth
+                  sx={{
+                    backgroundColor: 'white',
+                    borderRadius: '5px',
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: '#4B0082',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#081484',
+                    },
+                  }}
+                >
+                  View Answer
+                </Button>
+              </Box>
+            </Box>
+          ))}
         </Box>
       </Container>
     </Box>
