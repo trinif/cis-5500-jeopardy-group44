@@ -41,10 +41,12 @@ app.post('/check_answer/:question_id/:answer', routes.check_answer)
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
 app.get('/best_worst_category', routes.best_worst_category);
 app.get('/unanswered_category', routes.unanswered_category);
-app.get('/incorrect_questions_category', routes.incorrect_questions_category)
-app.get('/final_jeopardy_questions', routes.final_jeopardy_questions)
+app.get('/incorrect_questions_category', routes.incorrect_questions_category);
+app.get('/final_jeopardy_questions', routes.final_jeopardy_questions);
 
 app.get('/random', routes.random);
+//app.get('/question_selection', routes.question_selection);
+//app.get('/meta_categories', routes.meta_categories);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)

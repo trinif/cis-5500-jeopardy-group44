@@ -329,6 +329,41 @@ const random = async function(req, res) {
   });
 }
 
+// Route: GET /question_selection
+// const question_selection = async function(req, res) {
+//   connection.query(`
+//     SELECT *
+//     FROM Jeopardy
+//     LIMIT 1
+//   `, (err, data) => {
+//     if (err) {
+//       console.log(err);
+//       res.status(500).json({ message: 'Error fetching questions' });
+//     } else {
+//       res.status(200).json(data.rows);
+//     }
+//   });
+// };
+
+// // Route: GET /meta_categories
+// const meta_categories = async function(req, res) {
+//   connection.query(`
+//     SELECT DISTINCT meta_category
+//     FROM Jeopardy
+//     ORDER BY meta_category ASC
+//   `, (err, data) => {
+//     if (err) {
+//       console.log("Error fetching meta categories:", err);
+//       res.status(500).json({ message: 'Error fetching meta categories' });
+//     } else {
+//       const metaCategoriesList = data.rows.map(row => row.meta_category);
+//       res.status(200).json(metaCategoriesList);
+//     }
+//   });
+// };
+
+
+
 
 
 
@@ -343,5 +378,7 @@ module.exports = {
   incorrect_questions_category,
   final_jeopardy_questions,
   unanswered_categories_questions,
-  random
+  random,
+  //question_selection,
+  //meta_categories
 }

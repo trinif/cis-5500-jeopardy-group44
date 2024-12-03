@@ -11,6 +11,13 @@ import {
   Select,
   OutlinedInput,
   Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 
 const config = require('../config.json');
@@ -25,6 +32,7 @@ export default function QuestionSelectionPage() {
   const [selectedRounds, setSelectedRounds] = useState([]);
   const [valueRange, setValueRange] = useState([100, 9800]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'single'
 
   const defaultValueRange = [100, 9800];
 
@@ -48,7 +56,8 @@ export default function QuestionSelectionPage() {
       const matchesCategory =
         selectedCategories.length === 0 || selectedCategories.includes(question.category);
       const matchesMetaCategory =
-        selectedMetaCategories.length === 0 || selectedMetaCategories.includes(question.meta_category);
+        selectedMetaCategories.length === 0 ||
+        selectedMetaCategories.includes(question.meta_category);
       const matchesRound =
         selectedRounds.length === 0 || selectedRounds.includes(question.round);
       const matchesValue = question.value >= valueRange[0] && question.value <= valueRange[1];
@@ -85,6 +94,12 @@ export default function QuestionSelectionPage() {
     { value: 9800, label: '9800' },
   ];
 
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % filteredQuestions.length);
+  };
+
   return (
     <Box
       sx={{
@@ -98,6 +113,31 @@ export default function QuestionSelectionPage() {
         <Typography variant="h2" align="center" gutterBottom>
           Select Your Question
         </Typography>
+
+        {/* View Mode Selection */}
+        <Box mb={2} textAlign="center">
+          <Button
+            variant={viewMode === 'table' ? 'contained' : 'outlined'}
+            onClick={() => setViewMode('table')}
+            sx={{
+              marginRight: '10px',
+              backgroundColor: viewMode === 'table' ? '#FFD700' : undefined,
+              color: viewMode === 'table' ? '#081484' : 'white',
+            }}
+          >
+            View as Table
+          </Button>
+          <Button
+            variant={viewMode === 'single' ? 'contained' : 'outlined'}
+            onClick={() => setViewMode('single')}
+            sx={{
+              backgroundColor: viewMode === 'single' ? '#FFD700' : undefined,
+              color: viewMode === 'single' ? '#081484' : 'white',
+            }}
+          >
+            View One at a Time
+          </Button>
+        </Box>
 
         {/* Filter Bar */}
         <Box
@@ -255,57 +295,87 @@ export default function QuestionSelectionPage() {
           )}
         </Box>
 
-        {/* Results */}
-        <Box>
-          {filteredQuestions.map((question) => (
-            <Box
-              key={question.question_id}
-              sx={{
-                backgroundColor: '#FFD700',
-                color: '#081484',
-                borderRadius: '10px',
-                padding: '20px',
-                marginBottom: '20px',
-                border: '3px solid #4B0082',
-              }}
-            >
-              <Typography variant="h5">{question.title}</Typography>
-              <Typography>Category: {question.category}</Typography>
-              <Typography>Value: ${question.value}</Typography>
-              <Typography>Round: {question.round}</Typography>
-              <Box
-                sx={{
-                  marginTop: '10px',
-                  display: 'flex',
-                  gap: '10px',
-                  alignItems: 'center',
-                }}
-              >
-                <TextField
-                  placeholder="Type your answer here"
-                  variant="outlined"
-                  fullWidth
+        {/* Results - Render based on View Mode */}
+        {viewMode === 'table' ? (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Value</TableCell>
+                  <TableCell>Round</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredQuestions.map((question) => (
+                  <TableRow key={question.question_id}>
+                    <TableCell>{question.title}</TableCell>
+                    <TableCell>{question.category}</TableCell>
+                    <TableCell>${question.value}</TableCell>
+                    <TableCell>{question.round}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box
+            key={filteredQuestions[currentQuestionIndex]?.question_id}
+            sx={{
+              backgroundColor: '#FFD700',
+              color: '#081484',
+              borderRadius: '10px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: '3px solid #4B0082',
+            }}
+          >
+            {filteredQuestions.length > 0 ? (
+              <>
+                <Typography variant="h5">
+                  {filteredQuestions[currentQuestionIndex].title}
+                </Typography>
+                <Typography>Category: {filteredQuestions[currentQuestionIndex].category}</Typography>
+                <Typography>Value: ${filteredQuestions[currentQuestionIndex].value}</Typography>
+                <Typography>Round: {filteredQuestions[currentQuestionIndex].round}</Typography>
+                <Box
                   sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '5px',
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: '#4B0082',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#081484',
-                    },
+                    marginTop: '10px',
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
                   }}
                 >
-                  View Answer
-                </Button>
-              </Box>
-            </Box>
-          ))}
-        </Box>
+                  <TextField
+                    placeholder="Type your answer here"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      backgroundColor: 'white',
+                      borderRadius: '5px',
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: '#4B0082',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#081484',
+                      },
+                    }}
+                    onClick={handleNextQuestion}
+                  >
+                    Next Question
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <Typography>No questions match your filters.</Typography>
+            )}
+          </Box>
+        )}
       </Container>
     </Box>
   );

@@ -6,12 +6,33 @@ const config = require('../config.json');
 export default function HomePage() {
   const [questionOfTheDay, setQuestionOfTheDay] = useState({});
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/random`)
-      .then((res) => res.json())
-      .then((resJson) => setQuestionOfTheDay(resJson));
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    const savedQuestion = localStorage.getItem('questionOfTheDay');
+    const savedDate = localStorage.getItem('questionDate');
+
+    if (savedQuestion && savedDate === today) {
+      // If we have a saved question for today, use it
+      setQuestionOfTheDay(JSON.parse(savedQuestion));
+    } else {
+      // Otherwise, fetch a new question
+      fetch(`http://${config.server_host}:${config.server_port}/random`)
+        .then((res) => res.json())
+        .then((resJson) => {
+          setQuestionOfTheDay(resJson);
+          localStorage.setItem('questionOfTheDay', JSON.stringify(resJson));
+          localStorage.setItem('questionDate', today);
+        });
+    }
   }, []);
+
+  // Function to format air date to YYYY-MM-DD
+  const formatAirDate = (airDate) => {
+    if (!airDate) return '';
+    return airDate.split('T')[0]; // Extract only the date part
+  };
 
   return (
     <Box
@@ -70,10 +91,24 @@ export default function HomePage() {
                   backgroundColor: 'white',
                 },
               }}
+              onClick={() => setShowDetails(!showDetails)}
             >
-              View More
+              {showDetails ? 'Hide Details' : 'View More'}
             </Button>
           </Box>
+          {showDetails && (
+            <Box mt={3}>
+              <Typography variant="body2" mt={2}>
+                <strong>Category:</strong> {questionOfTheDay.category}
+              </Typography>
+              <Typography variant="body2" mt={2}>
+                <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
+              </Typography>
+              <Typography variant="body2" mt={2}>
+                <strong>Value:</strong> {questionOfTheDay.value}
+              </Typography>
+            </Box>
+          )}
         </Box>
         <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
         <Box mt={4}>
