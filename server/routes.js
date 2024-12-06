@@ -170,19 +170,19 @@ const overall_accuracy = async function(req, res) {
 
 // not working
 const best_worst_category = async function (req, res) {
-  const user_id = req.query.user_id;
+  const user_id = req.params.user_id;
 
   connection.query(`
     WITH category_correct_counts AS (
       SELECT 
-        q.category,
+        q.subject,
         COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
       FROM 
         UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
       WHERE 
         ua.user_id = '${user_id}'
       GROUP BY 
-        q.category
+        q.subject
     ),
     max_min_correct_counts AS (
       SELECT 
@@ -192,7 +192,7 @@ const best_worst_category = async function (req, res) {
         category_correct_counts
     )
     SELECT 
-      c.category,
+      c.subject,
       c.correct_count,
       CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
       CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
@@ -208,10 +208,10 @@ const best_worst_category = async function (req, res) {
 
       data.rows.forEach(row => {
         console.log(row)
-        if (row.max_category === 'Most Successful') {
-          best_category = row.category;
+        if (row.max_category === 'Most Successful') { //these checks are failing
+          best_category = row.subject;
         } else if (row.min_category === 'Least Successful') {
-          worst_category = row.category;
+          worst_category = row.subject;
         }
       });
 
@@ -226,56 +226,58 @@ const best_worst_category = async function (req, res) {
   })
 }
 
+// categories that haven't been answered
 const unanswered_category = async function (req, res) {
-  const user_id = req.query.user_id;
+  const user_id = req.params.user_id;
   connection.query(`
-    SELECT c.category
-    FROM Categories c
-    WHERE NOT EXISTS (
-    SELECT 1
-    FROM UserAnswers ua
-    WHERE ua.category = c.category
-    AND ua.is_correct = 1
-  )
+    SELECT DISTINCT q.subject
+    FROM Questions q
+    WHERE q.subject NOT IN
+      (SELECT qu.subject
+      FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
+      WHERE ua.user_id='${user_id}')
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      res.json({})
+      console.log(data.rows)
+      res.json(data.rows)
     }
   })
 }
 
+//gives all questions that are in a subject that the user has answered incorrectly before
+//this seems unnecessary but could do something with incorrect answers?
 const incorrect_questions_category = async function (req, res) {
-  const user_id = req.query.user_id;
+  const user_id = req.params.user_id;
 
   connection.query(`
     WITH incorrect_questions AS (
-      SELECT q.question_id, q.question, q.answer, q.category, c.label
+      SELECT q.question_id, q.question, q.answer, q.subject
       FROM UserAnswers ua 
         JOIN Questions q ON ua.question_id = q.question_id
-        JOIN Categories c ON q.category = c.category
       WHERE ua.is_correct = B'0'
         AND ua.user_id = '${user_id}'
     )
 
-    SELECT q.question, q.answer, c.category
-    FROM Questions q JOIN Categories c ON q.category = c.category
-    WHERE c.label IN (SELECT label FROM incorrect_questions)
+    SELECT question, answer, subject
+    FROM Questions q
+    WHERE subject IN (SELECT q.subject FROM incorrect_questions)
 
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
+      console.log(data.rows)
       res.json(data.rows)
     }
   })
 }
 
 const final_jeopardy_questions = async function (req, res) {
-  const user_id = req.query.user_id;
+  const user_id = req.params.user_id;
   connection.query(`
     SELECT j.question_id,
       j.question, 
@@ -289,6 +291,7 @@ const final_jeopardy_questions = async function (req, res) {
       console.log(err);
       res.json({});
     } else{
+      console.log(data.rows);
       res.json(data.rows);
     }
   })
