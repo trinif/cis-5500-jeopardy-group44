@@ -33,19 +33,20 @@ app.use(cookieParser());
 // provide their handlers that we implemented in routes.js
 
 app.post('/signup', routes.signup);
-app.post('/login', routes.login)
-app.post('/update_user_answer', routes.update_user_answer)
+app.post('/login', routes.login);
+app.post('/update_user_answer', routes.update_user_answer);
 
-app.post('/check_answer/:question_id/:answer', routes.check_answer)
+app.post('/check_answer/:question_id/:answer', routes.check_answer);
 
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
-app.get('/best_worst_category', routes.best_worst_category);
-app.get('/unanswered_category', routes.unanswered_category);
-app.get('/incorrect_questions_category', routes.incorrect_questions_category);
-app.get('/final_jeopardy_questions', routes.final_jeopardy_questions);
+
+app.get('/best_worst_category/:user_id', routes.best_worst_category); //not working
+app.get('/unanswered_category/:user_id', routes.unanswered_category); //not working
+app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category); //not working
+app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions); //not working
 
 app.get('/random', routes.random);
-//app.get('/question_selection', routes.question_selection);
+app.get('/question_selection', routes.question_selection);
 //app.get('/meta_categories', routes.meta_categories);
 
 app.listen(config.server_port, () => {

@@ -168,8 +168,9 @@ const overall_accuracy = async function(req, res) {
   })
 }
 
+// not working
 const best_worst_category = async function (req, res) {
-  const user_id = req.query.user_id
+  const user_id = req.query.user_id;
 
   connection.query(`
     WITH category_correct_counts AS (
@@ -214,8 +215,8 @@ const best_worst_category = async function (req, res) {
         }
       });
 
-      console.log(best_category)
-      console.log(worst_category)
+      console.log(best_category);
+      console.log(worst_category);
 
       res.json({
         best_category,
@@ -285,14 +286,15 @@ const final_jeopardy_questions = async function (req, res) {
       AND j.round = 'Final Jeopardy!'
   `, (err, data) => {
     if (err) {
-      console.log(err)
-      res.json({})
+      console.log(err);
+      res.json({});
     } else{
-      res.json(data.rows)
+      res.json(data.rows);
     }
   })
 }
 
+// just questions that are not in the jeopardy dataset
 const unanswered_categories_questions = async function (req, res) {
   const user_id = req.query.user_id;
   connection.query(`
@@ -330,20 +332,21 @@ const random = async function(req, res) {
 }
 
 // Route: GET /question_selection
-// const question_selection = async function(req, res) {
-//   connection.query(`
-//     SELECT *
-//     FROM Jeopardy
-//     LIMIT 1
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err);
-//       res.status(500).json({ message: 'Error fetching questions' });
-//     } else {
-//       res.status(200).json(data.rows);
-//     }
-//   });
-// };
+// need to update req fields
+const question_selection = async function(req, res) {
+   connection.query(`
+     SELECT *
+     FROM Jeopardy
+     LIMIT 1
+   `, (err, data) => {
+     if (err) {
+       console.log(err);
+       res.json({ message: 'Error fetching questions' });
+     } else {
+       res.json(data.rows[0]);
+     }
+   });
+ };
 
 // // Route: GET /meta_categories
 // const meta_categories = async function(req, res) {
@@ -379,6 +382,6 @@ module.exports = {
   final_jeopardy_questions,
   unanswered_categories_questions,
   random,
-  //question_selection,
+  question_selection,
   //meta_categories
 }
