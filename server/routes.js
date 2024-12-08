@@ -168,21 +168,20 @@ const overall_accuracy = async function(req, res) {
   })
 }
 
-// not working
 const best_worst_category = async function (req, res) {
-  const user_id = req.params.user_id;
+  const user_id = req.query.user_id
 
   connection.query(`
     WITH category_correct_counts AS (
       SELECT 
-        q.subject,
+        q.category,
         COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
       FROM 
         UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
       WHERE 
         ua.user_id = '${user_id}'
       GROUP BY 
-        q.subject
+        q.category
     ),
     max_min_correct_counts AS (
       SELECT 
@@ -192,7 +191,7 @@ const best_worst_category = async function (req, res) {
         category_correct_counts
     )
     SELECT 
-      c.subject,
+      c.category,
       c.correct_count,
       CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
       CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
@@ -208,15 +207,15 @@ const best_worst_category = async function (req, res) {
 
       data.rows.forEach(row => {
         console.log(row)
-        if (row.max_category === 'Most Successful') { //these checks are failing
-          best_category = row.subject;
+        if (row.max_category === 'Most Successful') {
+          best_category = row.category;
         } else if (row.min_category === 'Least Successful') {
-          worst_category = row.subject;
+          worst_category = row.category;
         }
       });
 
-      console.log(best_category);
-      console.log(worst_category);
+      console.log(best_category)
+      console.log(worst_category)
 
       res.json({
         best_category,
@@ -226,58 +225,56 @@ const best_worst_category = async function (req, res) {
   })
 }
 
-// categories that haven't been answered
 const unanswered_category = async function (req, res) {
-  const user_id = req.params.user_id;
+  const user_id = req.query.user_id;
   connection.query(`
-    SELECT DISTINCT q.subject
-    FROM Questions q
-    WHERE q.subject NOT IN
-      (SELECT qu.subject
-      FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
-      WHERE ua.user_id='${user_id}')
+    SELECT c.category
+    FROM Categories c
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM UserAnswers ua
+    WHERE ua.category = c.category
+    AND ua.is_correct = 1
+  )
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      console.log(data.rows)
-      res.json(data.rows)
+      res.json({})
     }
   })
 }
 
-//gives all questions that are in a subject that the user has answered incorrectly before
-//this seems unnecessary but could do something with incorrect answers?
 const incorrect_questions_category = async function (req, res) {
-  const user_id = req.params.user_id;
+  const user_id = req.query.user_id;
 
   connection.query(`
     WITH incorrect_questions AS (
-      SELECT q.question_id, q.question, q.answer, q.subject
+      SELECT q.question_id, q.question, q.answer, q.category, c.label
       FROM UserAnswers ua 
         JOIN Questions q ON ua.question_id = q.question_id
+        JOIN Categories c ON q.category = c.category
       WHERE ua.is_correct = B'0'
         AND ua.user_id = '${user_id}'
     )
 
-    SELECT question, answer, subject
-    FROM Questions q
-    WHERE subject IN (SELECT q.subject FROM incorrect_questions)
+    SELECT q.question, q.answer, c.category
+    FROM Questions q JOIN Categories c ON q.category = c.category
+    WHERE c.label IN (SELECT label FROM incorrect_questions)
 
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      console.log(data.rows)
       res.json(data.rows)
     }
   })
 }
 
 const final_jeopardy_questions = async function (req, res) {
-  const user_id = req.params.user_id;
+  const user_id = req.query.user_id;
   connection.query(`
     SELECT j.question_id,
       j.question, 
@@ -288,16 +285,14 @@ const final_jeopardy_questions = async function (req, res) {
       AND j.round = 'Final Jeopardy!'
   `, (err, data) => {
     if (err) {
-      console.log(err);
-      res.json({});
+      console.log(err)
+      res.json({})
     } else{
-      console.log(data.rows);
-      res.json(data.rows);
+      res.json(data.rows)
     }
   })
 }
 
-// just questions that are not in the jeopardy dataset
 const unanswered_categories_questions = async function (req, res) {
   const user_id = req.query.user_id;
   connection.query(`
@@ -334,44 +329,92 @@ const random = async function(req, res) {
   });
 }
 
-// Route: GET /question_selection
-// need to update req fields
-const question_selection = async function(req, res) {
-   connection.query(`
-     SELECT *
-     FROM Jeopardy
-     LIMIT 1
-   `, (err, data) => {
-     if (err) {
-       console.log(err);
-       res.json({ message: 'Error fetching questions' });
-     } else {
-       res.json(data.rows[0]);
-     }
-   });
- };
+const question_selection = async function (req, res) {
+  const title = req.query.title || '';
+  const valueLow = req.query.value_low && !isNaN(req.query.value_low)
+    ? parseInt(req.query.value_low, 10)
+    : null;
+  const valueHigh = req.query.value_high && !isNaN(req.query.value_high)
+    ? parseInt(req.query.value_high, 10)
+    : null;
+  const metaCategories = req.query.meta_category
+    ? req.query.meta_category.split(',') // Handle multiple meta categories
+    : [];
+  const round = req.query.round || '';
+  const source = req.query.source || 'both';
 
-// // Route: GET /meta_categories
-// const meta_categories = async function(req, res) {
-//   connection.query(`
-//     SELECT DISTINCT meta_category
-//     FROM Jeopardy
-//     ORDER BY meta_category ASC
-//   `, (err, data) => {
-//     if (err) {
-//       console.log("Error fetching meta categories:", err);
-//       res.status(500).json({ message: 'Error fetching meta categories' });
-//     } else {
-//       const metaCategoriesList = data.rows.map(row => row.meta_category);
-//       res.status(200).json(metaCategoriesList);
-//     }
-//   });
-// };
+  try {
+    // Base query
+    let query = `
+      SELECT q.question_id, q.question, q.answer, 
+             CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
+             q.subject AS meta_category,
+             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.round ELSE NULL END AS round,
+             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.value ELSE NULL END AS value
+      FROM questions q
+      LEFT JOIN jeopardy j ON q.question_id = j.question_id
+    `;
 
+    // Array to hold WHERE conditions and query parameters
+    const conditions = [];
+    const params = [];
 
+    // Add filters
+    if (title) {
+      conditions.push(`q.question ILIKE $${params.length + 1}`);
+      params.push(`%${title}%`);
+    }
 
+    if (metaCategories.length > 0) {
+      // Use an IN clause for multiple meta categories
+      const metaCategoryPlaceholders = metaCategories
+        .map((_, index) => `$${params.length + index + 1}`)
+        .join(', ');
+      conditions.push(`q.subject ILIKE ANY(ARRAY[${metaCategoryPlaceholders}])`);
+      params.push(...metaCategories.map((cat) => `%${cat}%`)); // Add each category as a parameter
+    }
 
+    if (round && source === 'jeopardy') {
+      conditions.push(`j.round = $${params.length + 1}`);
+      params.push(round);
+    }
 
+    if (valueLow !== null && valueHigh !== null && source === 'jeopardy') {
+      conditions.push(`(j.value BETWEEN $${params.length + 1} AND $${params.length + 2})`);
+      params.push(valueLow, valueHigh);
+    }
+
+    if (source === 'jeopardy') {
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
+    } else if (source === 'trivia') {
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
+    }
+
+    // Append WHERE clause only if there are conditions
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    // Add ORDER BY, LIMIT, and OFFSET
+    const page = parseInt(req.query.page, 10) || 1; // Default to page 1
+    const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
+    const offset = (page - 1) * pageSize;
+
+    query += ` ORDER BY RANDOM() LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(pageSize, offset);
+
+    // Debugging: Print final query and parameters
+    console.log('Final Query:', query);
+    console.log('Query Parameters:', params);
+
+    // Execute query
+    const { rows } = await connection.query(query, params);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error fetching questions:', err);
+    res.status(500).json({ message: 'Error fetching questions' });
+  }
+};
 
 module.exports = {
   signup,
@@ -386,5 +429,4 @@ module.exports = {
   unanswered_categories_questions,
   random,
   question_selection,
-  //meta_categories
 }
