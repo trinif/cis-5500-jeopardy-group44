@@ -45,7 +45,7 @@ app.get('/incorrect_questions_category', routes.incorrect_questions_category);
 app.get('/final_jeopardy_questions', routes.final_jeopardy_questions);
 
 app.get('/random', routes.random);
-//app.get('/question_selection', routes.question_selection);
+app.get('/question_selection', routes.question_selection);
 //app.get('/meta_categories', routes.meta_categories);
 
 app.listen(config.server_port, () => {
