@@ -42,8 +42,8 @@ app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
 
 app.get('/best_worst_category/:user_id', routes.best_worst_category);
 app.get('/unanswered_category/:user_id', routes.unanswered_category);
-app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category); //not working
-app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions); //not working
+app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category);
+app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions);
 
 app.get('/random', routes.random);
 app.get('/question_selection', routes.question_selection);
