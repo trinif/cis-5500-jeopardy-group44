@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { NavLink } from 'react-router-dom';
-
+import { useAuth } from './Context'; // Import the useAuth hook
 
 function NavText({ href, text }) {
   return (
@@ -48,6 +48,8 @@ function NavText({ href, text }) {
 }
 
 export default function NavBar() {
+  const { userId } = useAuth(); // Get the current user ID from the AuthContext
+
   return (
     <AppBar
       position="static"
@@ -68,8 +70,24 @@ export default function NavBar() {
           <NavText href="/" text="Home" />
           <NavText href="/question_selection" text="Question Selection" />
           <NavText href="/statistics" text="Statistics" />
-          <NavText href="/questions" text="Test Yourself" />
-          <NavText href="/login" text="Login | Signup" />
+          {userId && !userId.startsWith('guest_') ? (
+            // Show the username if logged in
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: 'Anton, sans-serif',
+                fontWeight: 700,
+                letterSpacing: '.3rem',
+                color: '#FFD700',
+                textAlign: 'center',
+              }}
+            >
+              {`${userId}`}
+            </Typography>
+          ) : (
+            // Show Login | Signup if not logged in
+            <NavText href="/login" text="Login | Signup" />
+          )}
         </Box>
       </Toolbar>
     </AppBar>

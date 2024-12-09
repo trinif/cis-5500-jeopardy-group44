@@ -7,9 +7,7 @@ const config = require('../config.json');
 export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-
-    const[status, setStatus] = useState('')
-
+    const [status, setStatus] = useState('');
     const { userId, setUserId } = useAuth();
 
     // Handles registration
@@ -19,20 +17,21 @@ export default function Login() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({username, password}),
-            credentials: 'same-origin'
-        }).then(res => {
-            return res.json()
-        }).then(resJson => {
-            if (resJson.status == 'Success') {
-                setUserId(resJson.username)
-                setStatus(`Registration successful! You are now logged in as ${resJson.username}`)
-            } else {
-                setStatus(resJson.status)
-            }
-        }).catch(err => {
-            console.log(err)
+            body: JSON.stringify({ username, password }),
+            credentials: 'same-origin',
         })
+            .then((res) => res.json())
+            .then((resJson) => {
+                if (resJson.status === 'Success') {
+                    setUserId(resJson.username);
+                    setStatus(`Registration successful! You are now logged in as ${resJson.username}`);
+                } else {
+                    setStatus(resJson.status);
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     };
 
     // Handles login
@@ -42,35 +41,37 @@ export default function Login() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({username, password}),
-            credentials: 'same-origin'
-        }).then(res => {
-            return res.json()
-        }).then(resJson => {
-            if (resJson.status == 'Success') {
-                setUserId(resJson.username)
-                setStatus(`Login successful! You are now logged in as ${resJson.username}`)
-            } else {
-                console.log(resJson.status)
-                setStatus(resJson.status)
-            }
-        }).catch(err => {
-            console.log(err)
+            body: JSON.stringify({ username, password }),
+            credentials: 'same-origin',
         })
+            .then((res) => res.json())
+            .then((resJson) => {
+                if (resJson.status === 'Success') {
+                    setUserId(resJson.username);
+                    setStatus(`Login successful! You are now logged in as ${resJson.username}`);
+                } else {
+                    setStatus(resJson.status);
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     };
 
     return (
         <Box
             sx={{
-                background: 'linear-gradient(135deg, #081484 30%, #4B0082 100%)', // Match gradient
+                background: 'linear-gradient(135deg, #081484 30%, #4B0082 100%)',
                 minHeight: '100vh',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 padding: '20px',
             }}
         >
+            {/* Login/Register Container */}
             <Container
                 maxWidth="sm"
                 sx={{
@@ -153,7 +154,25 @@ export default function Login() {
                 </Box>
             </Container>
 
-            {status && <p>{status}</p>}
+            {/* Status Message */}
+            {status && (
+                <Box
+                    mt={3}
+                    sx={{
+                        textAlign: 'center',
+                        backgroundColor: '#FFD700',
+                        color: '#081484',
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        maxWidth: 'sm',
+                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
+                    }}
+                >
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                        {status}
+                    </Typography>
+                </Box>
+            )}
         </Box>
     );
 }

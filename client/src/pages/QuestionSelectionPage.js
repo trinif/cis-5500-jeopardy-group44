@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Slider,
-  Button,
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
 
@@ -87,7 +86,6 @@ export default function QuestionSelectionPage() {
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
   };
 
-  // Apply the search function
   const applySearch = () => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -129,7 +127,8 @@ export default function QuestionSelectionPage() {
           Select Your Question
         </Typography>
 
-        {/* Filter Bar */}<Box
+        {/* Filter Bar */}
+        <Box
           sx={{
             backgroundColor: '#081484',
             padding: '20px',
@@ -285,13 +284,15 @@ export default function QuestionSelectionPage() {
               sx={{ backgroundColor: '#FFD700', color: '#081484' }}
             />
           ))}
-          {selectedSource === 'jeopardy' && (
-            <Chip
-              label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
-              onDelete={handleDeleteValueRange}
-              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
-            />
-          )}
+          {selectedSource === 'jeopardy' &&
+            (valueRange[0] !== defaultValueRange[0] ||
+              valueRange[1] !== defaultValueRange[1]) && (
+              <Chip
+                label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
+                onDelete={handleDeleteValueRange}
+                sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+              />
+            )}
         </Box>
 
         {/* Questions Table */}
@@ -299,7 +300,7 @@ export default function QuestionSelectionPage() {
           route={buildRoute()}
           columns={columns}
           defaultPageSize={10}
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[1, 5, 10, 25]}
         />
       </Container>
     </Box>

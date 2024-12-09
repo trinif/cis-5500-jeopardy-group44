@@ -333,6 +333,7 @@ const random = async function(req, res) {
   });
 }
 
+// Route: GET /question_selection
 const question_selection = async function (req, res) {
   const title = req.query.title || '';
   const valueLow = req.query.value_low ?? null;
@@ -340,7 +341,9 @@ const question_selection = async function (req, res) {
   const metaCategories = req.query.meta_category
     ? req.query.meta_category.split(',') // Handle multiple meta categories
     : [];
-  const round = req.query.round || '';
+  const rounds = req.query.round
+    ? req.query.round.split(',') // Handle multiple rounds
+    : [];
   const source = req.query.source || 'both';
 
   try {
@@ -355,53 +358,57 @@ const question_selection = async function (req, res) {
       LEFT JOIN jeopardy j ON q.question_id = j.question_id
     `;
 
-    // Dynamically construct WHERE clause and parameters
-    const whereClauses = [];
-    let paramIndex = 1;
+    // Array to hold WHERE conditions and query parameters
+    const conditions = [];
+    const params = [];
 
+    // Add filters
     if (title) {
-      whereClauses.push(`q.question ILIKE $${paramIndex++}`);
+      conditions.push(`q.question ILIKE $${params.length + 1}`);
+      params.push(`%${title}%`);
     }
 
     if (metaCategories.length > 0) {
-      const placeholders = metaCategories.map(() => `$${paramIndex++}`).join(', ');
-      whereClauses.push(`q.subject ILIKE ANY(ARRAY[${placeholders}])`);
+      // Use an IN clause for multiple meta categories
+      const metaCategoryPlaceholders = metaCategories
+        .map((_, index) => `$${params.length + index + 1}`)
+        .join(', ');
+      conditions.push(`q.subject ILIKE ANY(ARRAY[${metaCategoryPlaceholders}])`);
+      params.push(...metaCategories.map((cat) => `%${cat}%`));
     }
 
-    if (round && source === 'jeopardy') {
-      whereClauses.push(`j.round = $${paramIndex++}`);
+    if (rounds.length > 0 && source === 'jeopardy') {
+      // Use an IN clause for multiple rounds
+      const roundPlaceholders = rounds
+        .map((_, index) => `$${params.length + index + 1}`)
+        .join(', ');
+      conditions.push(`j.round IN (${roundPlaceholders})`);
+      params.push(...rounds);
     }
 
     if (valueLow !== null && valueHigh !== null && source === 'jeopardy') {
-      whereClauses.push(`(j.value BETWEEN $${paramIndex++} AND $${paramIndex++})`);
+      conditions.push(`(j.value BETWEEN $${params.length + 1} AND $${params.length + 2})`);
+      params.push(valueLow, valueHigh);
     }
 
     if (source === 'jeopardy') {
-      whereClauses.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
     } else if (source === 'trivia') {
-      whereClauses.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
     }
 
-    if (whereClauses.length > 0) {
-      query += ` WHERE ${whereClauses.join(' AND ')}`;
+    // Append WHERE clause only if there are conditions
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
     }
 
-    // Add deterministic ORDER BY, LIMIT, and OFFSET
+    // Add ORDER BY, LIMIT, and OFFSET
     const page = parseInt(req.query.page, 10) || 1; // Default to page 1
     const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
     const offset = (page - 1) * pageSize;
 
-    query += ` ORDER BY q.question_id LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
-
-    // Inline parameter assignment
-    const params = [
-      ...(title ? [`%${title}%`] : []),
-      ...(metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : []),
-      ...(round && source === 'jeopardy' ? [round] : []),
-      ...(valueLow !== null && valueHigh !== null && source === 'jeopardy' ? [valueLow, valueHigh] : []),
-      pageSize,
-      offset,
-    ];
+    query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(pageSize, offset);
 
     // Execute query
     const { rows } = await connection.query(query, params);
@@ -411,6 +418,7 @@ const question_selection = async function (req, res) {
     res.status(500).json({ message: 'Error fetching questions' });
   }
 };
+
 
 module.exports = {
   signup,
