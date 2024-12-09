@@ -337,12 +337,8 @@ const random = async function(req, res) {
 // need to update req fields
 const question_selection = async function (req, res) {
   const title = req.query.title || '';
-  const valueLow = req.query.value_low && !isNaN(req.query.value_low)
-    ? parseInt(req.query.value_low, 10)
-    : null;
-  const valueHigh = req.query.value_high && !isNaN(req.query.value_high)
-    ? parseInt(req.query.value_high, 10)
-    : null;
+  const valueLow = req.query.value_low ?? null;
+  const valueHigh = req.query.value_high ?? null;
   const metaCategories = req.query.meta_category
     ? req.query.meta_category.split(',') // Handle multiple meta categories
     : [];
