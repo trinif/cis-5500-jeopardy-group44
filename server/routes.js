@@ -335,20 +335,90 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 // need to update req fields
-const question_selection = async function(req, res) {
-   connection.query(`
-     SELECT *
-     FROM Jeopardy
-     LIMIT 1
-   `, (err, data) => {
-     if (err) {
-       console.log(err);
-       res.json({ message: 'Error fetching questions' });
-     } else {
-       res.json(data.rows[0]);
-     }
-   });
- };
+
+ const question_selection = async function (req, res) {
+  const title = req.query.title || '';
+  const valueLow = req.query.value_low && !isNaN(req.query.value_low)
+    ? parseInt(req.query.value_low, 10)
+    : null;
+  const valueHigh = req.query.value_high && !isNaN(req.query.value_high)
+    ? parseInt(req.query.value_high, 10)
+    : null;
+  const metaCategories = req.query.meta_category
+    ? req.query.meta_category.split(',') // Handle multiple meta categories
+    : [];
+  const round = req.query.round || '';
+  const source = req.query.source || 'both';
+
+  try {
+    // Base query
+    let query = `
+      SELECT q.question_id, q.question, q.answer, 
+             CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
+             q.subject AS meta_category,
+             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.round ELSE NULL END AS round,
+             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.value ELSE NULL END AS value
+      FROM questions q
+      LEFT JOIN jeopardy j ON q.question_id = j.question_id
+    `;
+
+    // Array to hold WHERE conditions and query parameters
+    const conditions = [];
+    const params = [];
+
+    // Add filters
+    if (title) {
+      conditions.push(`q.question ILIKE $${params.length + 1}`);
+      params.push(`%${title}%`);
+    }
+
+    if (metaCategories.length > 0) {
+      // Use an IN clause for multiple meta categories
+      const metaCategoryPlaceholders = metaCategories
+        .map((_, index) => `$${params.length + index + 1}`)
+        .join(', ');
+      conditions.push(`q.subject ILIKE ANY(ARRAY[${metaCategoryPlaceholders}])`);
+      params.push(...metaCategories.map((cat) => `%${cat}%`)); // Add each category as a parameter
+    }
+
+    if (round && source === 'jeopardy') {
+      conditions.push(`j.round = $${params.length + 1}`);
+      params.push(round);
+    }
+
+    if (valueLow !== null && valueHigh !== null && source === 'jeopardy') {
+      conditions.push(`(j.value BETWEEN $${params.length + 1} AND $${params.length + 2})`);
+      params.push(valueLow, valueHigh);
+    }
+
+    if (source === 'jeopardy') {
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
+    } else if (source === 'trivia') {
+      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
+    }
+
+    // Append WHERE clause only if there are conditions
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    // Add ORDER BY, LIMIT, and OFFSET
+    const page = parseInt(req.query.page, 10) || 1; // Default to page 1
+    const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
+    const offset = (page - 1) * pageSize;
+
+    query += ` ORDER BY RANDOM() LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(pageSize, offset);
+
+    // Execute query
+    const { rows } = await connection.query(query, params);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error fetching questions:', err);
+    res.status(500).json({ message: 'Error fetching questions' });
+  }
+};
+
 
 // // Route: GET /meta_categories
 // const meta_categories = async function(req, res) {
