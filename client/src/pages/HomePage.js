@@ -116,7 +116,11 @@ export default function HomePage() {
             About the Site
           </Typography>
           <Typography variant="body1" align="center">
-            Explore questions, track analytics, and test your knowledge with our Jeopardy Helper!
+          Discover, analyze, and sharpen your trivia skills with our Jeopardy Helper! <br />
+          Explore a vast collection of questions, dive into analytics, and challenge yourself to become a trivia master. <br />
+          Whether you're a Jeopardy! enthusiast or just curious, we've got everything you need to elevate your game! <br /> <br />
+          By Mia Kim, Lyla Waitman, Sarah Zhang and Trini Feng
+
           </Typography>
         </Box>
       </Container>
