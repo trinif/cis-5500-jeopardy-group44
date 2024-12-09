@@ -333,8 +333,6 @@ const random = async function(req, res) {
   });
 }
 
-// Route: GET /question_selection
-// need to update req fields
 const question_selection = async function (req, res) {
   const title = req.query.title || '';
   const valueLow = req.query.value_low ?? null;
@@ -357,53 +355,53 @@ const question_selection = async function (req, res) {
       LEFT JOIN jeopardy j ON q.question_id = j.question_id
     `;
 
-    // Array to hold WHERE conditions and query parameters
-    const conditions = [];
-    const params = [];
+    // Dynamically construct WHERE clause and parameters
+    const whereClauses = [];
+    let paramIndex = 1;
 
-    // Add filters
     if (title) {
-      conditions.push(`q.question ILIKE $${params.length + 1}`);
-      params.push(`%${title}%`);
+      whereClauses.push(`q.question ILIKE $${paramIndex++}`);
     }
 
     if (metaCategories.length > 0) {
-      // Use an IN clause for multiple meta categories
-      const metaCategoryPlaceholders = metaCategories
-        .map((_, index) => `$${params.length + index + 1}`)
-        .join(', ');
-      conditions.push(`q.subject ILIKE ANY(ARRAY[${metaCategoryPlaceholders}])`);
-      params.push(...metaCategories.map((cat) => `%${cat}%`)); // Add each category as a parameter
+      const placeholders = metaCategories.map(() => `$${paramIndex++}`).join(', ');
+      whereClauses.push(`q.subject ILIKE ANY(ARRAY[${placeholders}])`);
     }
 
     if (round && source === 'jeopardy') {
-      conditions.push(`j.round = $${params.length + 1}`);
-      params.push(round);
+      whereClauses.push(`j.round = $${paramIndex++}`);
     }
 
     if (valueLow !== null && valueHigh !== null && source === 'jeopardy') {
-      conditions.push(`(j.value BETWEEN $${params.length + 1} AND $${params.length + 2})`);
-      params.push(valueLow, valueHigh);
+      whereClauses.push(`(j.value BETWEEN $${paramIndex++} AND $${paramIndex++})`);
     }
 
     if (source === 'jeopardy') {
-      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
+      whereClauses.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
     } else if (source === 'trivia') {
-      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
+      whereClauses.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
     }
 
-    // Append WHERE clause only if there are conditions
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
+    if (whereClauses.length > 0) {
+      query += ` WHERE ${whereClauses.join(' AND ')}`;
     }
 
-    // Add ORDER BY, LIMIT, and OFFSET
+    // Add deterministic ORDER BY, LIMIT, and OFFSET
     const page = parseInt(req.query.page, 10) || 1; // Default to page 1
     const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
     const offset = (page - 1) * pageSize;
 
-    query += ` ORDER BY RANDOM() LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(pageSize, offset);
+    query += ` ORDER BY q.question_id LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+
+    // Inline parameter assignment
+    const params = [
+      ...(title ? [`%${title}%`] : []),
+      ...(metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : []),
+      ...(round && source === 'jeopardy' ? [round] : []),
+      ...(valueLow !== null && valueHigh !== null && source === 'jeopardy' ? [valueLow, valueHigh] : []),
+      pageSize,
+      offset,
+    ];
 
     // Execute query
     const { rows } = await connection.query(query, params);

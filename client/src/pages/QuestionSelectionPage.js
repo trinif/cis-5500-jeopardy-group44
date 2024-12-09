@@ -65,7 +65,7 @@ export default function QuestionSelectionPage() {
           { headerName: 'Value', field: 'value' },
         ]
       : []),
-    { headerName: 'Answer', field: 'answer' },
+    { headerName: 'Answer', field: 'answerCheck' },
     {
       headerName: 'Source',
       field: 'jeopardy_or_general',
