@@ -335,8 +335,7 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 // need to update req fields
-
- const question_selection = async function (req, res) {
+const question_selection = async function (req, res) {
   const title = req.query.title || '';
   const valueLow = req.query.value_low && !isNaN(req.query.value_low)
     ? parseInt(req.query.value_low, 10)
@@ -419,29 +418,6 @@ const random = async function(req, res) {
   }
 };
 
-
-// // Route: GET /meta_categories
-// const meta_categories = async function(req, res) {
-//   connection.query(`
-//     SELECT DISTINCT meta_category
-//     FROM Jeopardy
-//     ORDER BY meta_category ASC
-//   `, (err, data) => {
-//     if (err) {
-//       console.log("Error fetching meta categories:", err);
-//       res.status(500).json({ message: 'Error fetching meta categories' });
-//     } else {
-//       const metaCategoriesList = data.rows.map(row => row.meta_category);
-//       res.status(200).json(metaCategoriesList);
-//     }
-//   });
-// };
-
-
-
-
-
-
 module.exports = {
   signup,
   login,
@@ -455,5 +431,4 @@ module.exports = {
   unanswered_categories_questions,
   random,
   question_selection,
-  //meta_categories
 }

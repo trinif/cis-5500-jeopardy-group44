@@ -10,22 +10,12 @@ export default function HomePage() {
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
-    const savedQuestion = localStorage.getItem('questionOfTheDay');
-    const savedDate = localStorage.getItem('questionDate');
 
-    if (savedQuestion && savedDate === today) {
-      // If we have a saved question for today, use it
-      setQuestionOfTheDay(JSON.parse(savedQuestion));
-    } else {
-      // Otherwise, fetch a new question
-      fetch(`http://${config.server_host}:${config.server_port}/random`)
-        .then((res) => res.json())
-        .then((resJson) => {
-          setQuestionOfTheDay(resJson);
-          localStorage.setItem('questionOfTheDay', JSON.stringify(resJson));
-          localStorage.setItem('questionDate', today);
-        });
-    }
+    fetch(`http://${config.server_host}:${config.server_port}/random`)
+      .then((res) => res.json())
+      .then((resJson) => {
+        setQuestionOfTheDay(resJson);
+      });
   }, []);
 
   // Function to format air date to YYYY-MM-DD
