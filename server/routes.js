@@ -168,7 +168,6 @@ const overall_accuracy = async function(req, res) {
   })
 }
 
-// not working
 const best_worst_category = async function (req, res) {
   const user_id = req.params.user_id;
 
@@ -208,7 +207,7 @@ const best_worst_category = async function (req, res) {
 
       data.rows.forEach(row => {
         console.log(row)
-        if (row.max_category === 'Most Successful') { //these checks are failing
+        if (row.max_category === 'Most Successful') {
           best_category = row.subject;
         } else if (row.min_category === 'Least Successful') {
           worst_category = row.subject;
@@ -298,8 +297,8 @@ const final_jeopardy_questions = async function (req, res) {
 }
 
 // just questions that are not in the jeopardy dataset
+// route doesn't exist in server
 const unanswered_categories_questions = async function (req, res) {
-  const user_id = req.query.user_id;
   connection.query(`
     SELECT g.question_id, 
       g.question, 
@@ -312,7 +311,7 @@ const unanswered_categories_questions = async function (req, res) {
       console.log(err)
       res.json({})
     } else {
-      res.json({})
+      res.json(data.rows)
     }
   })
 }
