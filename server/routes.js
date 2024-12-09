@@ -403,10 +403,6 @@ const question_selection = async function (req, res) {
     query += ` ORDER BY RANDOM() LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(pageSize, offset);
 
-    // Debugging: Print final query and parameters
-    console.log('Final Query:', query);
-    console.log('Query Parameters:', params);
-
     // Execute query
     const { rows } = await connection.query(query, params);
     res.status(200).json(rows);
