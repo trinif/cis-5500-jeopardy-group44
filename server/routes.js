@@ -345,9 +345,9 @@ const question_selection = async function (req, res) {
     ? req.query.round.split(',') // Handle multiple rounds
     : [];
   const source = req.query.source || 'both';
+  const shuffle = req.query.shuffle === 'true'; // Check if shuffle is true
 
   try {
-    // Base query
     let query = `
       SELECT q.question_id, q.question, q.answer, 
              CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
@@ -358,18 +358,15 @@ const question_selection = async function (req, res) {
       LEFT JOIN jeopardy j ON q.question_id = j.question_id
     `;
 
-    // Array to hold WHERE conditions and query parameters
     const conditions = [];
     const params = [];
 
-    // Add filters
     if (title) {
       conditions.push(`q.question ILIKE $${params.length + 1}`);
       params.push(`%${title}%`);
     }
 
     if (metaCategories.length > 0) {
-      // Use an IN clause for multiple meta categories
       const metaCategoryPlaceholders = metaCategories
         .map((_, index) => `$${params.length + index + 1}`)
         .join(', ');
@@ -378,7 +375,6 @@ const question_selection = async function (req, res) {
     }
 
     if (rounds.length > 0 && source === 'jeopardy') {
-      // Use an IN clause for multiple rounds
       const roundPlaceholders = rounds
         .map((_, index) => `$${params.length + index + 1}`)
         .join(', ');
@@ -397,20 +393,23 @@ const question_selection = async function (req, res) {
       conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
     }
 
-    // Append WHERE clause only if there are conditions
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
 
-    // Add ORDER BY, LIMIT, and OFFSET
-    const page = parseInt(req.query.page, 10) || 1; // Default to page 1
-    const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
+    if (shuffle) {
+      query += ` ORDER BY RANDOM()`;
+    } else {
+      query += ` ORDER BY q.question_id`;
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.page_size, 10) || 10;
     const offset = (page - 1) * pageSize;
 
     query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(pageSize, offset);
 
-    // Execute query
     const { rows } = await connection.query(query, params);
     res.status(200).json(rows);
   } catch (err) {
@@ -418,6 +417,7 @@ const question_selection = async function (req, res) {
     res.status(500).json({ message: 'Error fetching questions' });
   }
 };
+
 
 
 module.exports = {

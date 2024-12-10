@@ -13,8 +13,6 @@ function NavText({ href, text }) {
         letterSpacing: '.3rem',
         color: 'inherit',
         textDecoration: 'none',
-        textAlign: 'center',
-        flex: 1,
         position: 'relative',
         '&:hover': {
           color: '#FFD700', // Gold on hover
@@ -62,10 +60,20 @@ export default function NavBar() {
       <Toolbar
         sx={{
           display: 'flex',
-          justifyContent: 'space-evenly',
+          justifyContent: 'center', // Center all items in the toolbar
+          padding: '0',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', width: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between', // Evenly distribute items
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '1200px', // Limit max width for the nav bar content
+            padding: '0 20px', // Add some padding on the sides
+          }}
+        >
           {/* Navigation Links */}
           <NavText href="/" text="Home" />
           <NavText href="/question_selection" text="Question Selection" />
@@ -79,7 +87,6 @@ export default function NavBar() {
                 fontWeight: 700,
                 letterSpacing: '.3rem',
                 color: '#FFD700',
-                textAlign: 'center',
               }}
             >
               {`${userId}`}

@@ -25,6 +25,7 @@ export default function QuestionSelectionPage() {
   const [valueRange, setValueRange] = useState([100, 9800]);
   const [metaCategories, setMetaCategories] = useState([]);
   const [filters, setFilters] = useState({}); // Holds dynamically applied filters
+  const [isShuffled, setIsShuffled] = useState(false);
 
   const defaultValueRange = [100, 9800];
 
@@ -85,9 +86,10 @@ export default function QuestionSelectionPage() {
       round: (filters.rounds || []).join(',') || '',
       value_low: filters.valueRange ? filters.valueRange[0] : null,
       value_high: filters.valueRange ? filters.valueRange[1] : null,
+      shuffle: isShuffled,
     });
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
-  };
+  };  
 
   const applySearch = () => {
     setFilters((prevFilters) => ({
@@ -116,6 +118,10 @@ export default function QuestionSelectionPage() {
     setValueRange(defaultValueRange);
   };
 
+  const toggleShuffle = () => {
+    setIsShuffled((prev) => !prev);
+  };
+
   return (
     <Box
       sx={{
@@ -138,7 +144,6 @@ export default function QuestionSelectionPage() {
             padding: '20px',
             borderRadius: '10px',
             border: '3px solid #FFD700',
-            marginBottom: '10px',
           }}
         >
           {/* Top Row: Search Bar, Meta Categories, and Source Filter */}
@@ -211,11 +216,7 @@ export default function QuestionSelectionPage() {
           {/* Bottom Row: Jeopardy-Specific Filters */}
           {selectedSource === 'jeopardy' && (
             <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ marginTop: '15px' }}
+              container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
             >
               {/* Round Filter */}
               <Grid item xs={12} sm={6} md={4}>
@@ -261,9 +262,39 @@ export default function QuestionSelectionPage() {
               </Grid>
             </Grid>
           )}
+            <Grid
+              container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '10px' }}
+            ></Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box
+                onClick={toggleShuffle} // Trigger shuffle on click
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: isShuffled ? '#FFD700' : 'transparent', // Highlight when shuffled
+                  borderRadius: '50%',
+                  border: '2px solid #FFD700',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#FFD700', // Highlight on hover
+                  },
+                }}
+              >
+                <img
+                  src="/shuffle.png"
+                  alt="Shuffle"
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                  }}
+                />
+              </Box>
+            </Grid>
         </Box>
-
-        
 
         {/* Selected Filters (Chips) */}
         <Box
@@ -306,7 +337,7 @@ export default function QuestionSelectionPage() {
           route={buildRoute()}
           columns={columns}
           defaultPageSize={10}
-          rowsPerPageOptions={[1, 5, 10, 25]}
+          rowsPerPageOptions={[1, 5, 10]}
         />
       </Container>
     </Box>

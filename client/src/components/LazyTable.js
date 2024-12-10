@@ -228,7 +228,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
       }}
     >
       <TablePagination
-        rowsPerPageOptions={rowsPerPageOptions ?? [1, 5, 10, 25]}
+        rowsPerPageOptions={rowsPerPageOptions ?? [1, 5, 10]}
         count={-1} // -1 indicates we don't know the total number of rows
         rowsPerPage={pageSize}
         page={page - 1} // Convert 1-indexed to 0-indexed for pagination
