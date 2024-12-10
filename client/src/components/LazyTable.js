@@ -227,6 +227,27 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
         boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
       }}
     >
+      <TablePagination
+        rowsPerPageOptions={rowsPerPageOptions ?? [1, 5, 10, 25]}
+        count={-1} // -1 indicates we don't know the total number of rows
+        rowsPerPage={pageSize}
+        page={page - 1} // Convert 1-indexed to 0-indexed for pagination
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangePageSize}
+        sx={{
+          backgroundColor: 'transparent',
+          display: 'flex', // Make the component flexible
+          justifyContent: 'flex-end', // Align the pagination to the right
+          padding: 0, 
+          color: 'white',
+          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+            color: '#FFD700',
+          },
+          '.MuiTablePagination-actions button': {
+            color: '#FFD700',
+          },
+        }}
+      />
       <TableContainer
         component={Paper}
         sx={{
@@ -289,24 +310,6 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={rowsPerPageOptions ?? [5, 10, 25]}
-        count={-1} // -1 indicates we don't know the total number of rows
-        rowsPerPage={pageSize}
-        page={page - 1} // Convert 1-indexed to 0-indexed for pagination
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangePageSize}
-        sx={{
-          backgroundColor: '#081484',
-          color: 'white',
-          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-            color: '#FFD700',
-          },
-          '.MuiTablePagination-actions button': {
-            color: '#FFD700',
-          },
-        }}
-      />
     </Box>
   );
 }

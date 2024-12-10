@@ -123,6 +123,7 @@ export default function QuestionSelectionPage() {
         minHeight: '100vh',
         color: 'white',
         paddingTop: '20px',
+        paddingBottom: '50px',
       }}
     >
       <Container>
@@ -137,7 +138,7 @@ export default function QuestionSelectionPage() {
             padding: '20px',
             borderRadius: '10px',
             border: '3px solid #FFD700',
-            marginBottom: '20px',
+            marginBottom: '10px',
           }}
         >
           {/* Top Row: Search Bar, Meta Categories, and Source Filter */}
@@ -270,7 +271,7 @@ export default function QuestionSelectionPage() {
             display: 'flex',
             flexWrap: 'wrap',
             gap: '10px',
-            marginBottom: '20px',
+            marginBottom: '10px',
           }}
         >
           {selectedMetaCategories.map((metaCategory) => (
