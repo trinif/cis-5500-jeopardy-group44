@@ -235,7 +235,11 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           borderRadius: '10px',
         }}
       >
-        <Table>
+        <Table
+          sx={{
+            width: '100%',
+          }}
+        >
           <TableHead>
             <TableRow>
               {columns.map((col) => (
@@ -243,10 +247,12 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
                   key={col.headerName}
                   sx={{
                     backgroundColor: '#4B0082',
+                    width: col.width,
                     color: '#FFD700',
                     fontWeight: 'bold',
                     textAlign: 'center',
                     fontSize: '1rem',
+                    minWidth: col.field === 'answerCheck' ? '200px' : 'auto', // Wider column for the Answer field
                   }}
                 >
                   {col.headerName}
@@ -268,6 +274,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
                   <TableCell
                     key={col.headerName}
                     sx={{
+                      width: col.width,
                       color: 'white',
                       textAlign: 'center',
                       fontSize: '0.9rem',

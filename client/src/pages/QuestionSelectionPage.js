@@ -56,22 +56,25 @@ export default function QuestionSelectionPage() {
 
   // Define the columns for LazyTable
   const columns = [
-    { headerName: 'Question', field: 'question' },
-    { headerName: 'Meta Category', field: 'meta_category' },
+    { headerName: 'Question', field: 'question', width: selectedSource === 'jeopardy' ? '44%' : '60%' },
     ...(selectedSource === 'jeopardy'
       ? [
-          { headerName: 'Round', field: 'round' },
-          { headerName: 'Value', field: 'value' },
+          { headerName: 'Round', field: 'round', width: '8%' },
+          { headerName: 'Value', field: 'value', width: '8%' },
         ]
       : []),
-    { headerName: 'Answer', field: 'answerCheck' },
+    { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
+    { headerName: 'Answer', field: 'answerCheck', width: '22%' },
     {
       headerName: 'Source',
       field: 'jeopardy_or_general',
+      width: '8%',
       renderCell: (row) =>
         row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
     },
   ];
+  
+  
 
   // Build the route dynamically based on filters
   const buildRoute = () => {
@@ -258,6 +261,8 @@ export default function QuestionSelectionPage() {
             </Grid>
           )}
         </Box>
+
+        
 
         {/* Selected Filters (Chips) */}
         <Box
