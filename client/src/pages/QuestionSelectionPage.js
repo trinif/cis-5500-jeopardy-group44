@@ -57,7 +57,15 @@ export default function QuestionSelectionPage() {
 
   // Define the columns for LazyTable
   const columns = [
-    { headerName: 'Question', field: 'question', width: selectedSource === 'jeopardy' ? '44%' : '60%' },
+    ...(selectedSource === 'both'
+      ? [
+          { headerName: 'Source', field: 'jeopardy_or_general', width: '8%',
+            renderCell: (row) =>
+              row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
+          },
+        ]
+      : []),
+    { headerName: 'Question', field: 'question', width: selectedSource === 'jeopardy' ? '52%' : selectedSource === 'both' ? '60%' : '68%' },
     ...(selectedSource === 'jeopardy'
       ? [
           { headerName: 'Round', field: 'round', width: '8%' },
@@ -66,13 +74,6 @@ export default function QuestionSelectionPage() {
       : []),
     { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
     { headerName: 'Answer', field: 'answerCheck', width: '22%' },
-    {
-      headerName: 'Source',
-      field: 'jeopardy_or_general',
-      width: '8%',
-      renderCell: (row) =>
-        row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
-    },
   ];
   
   
@@ -302,6 +303,7 @@ export default function QuestionSelectionPage() {
             display: 'flex',
             flexWrap: 'wrap',
             gap: '10px',
+            marginTop: '10px',
             marginBottom: '10px',
           }}
         >

@@ -98,14 +98,16 @@ export default function HomePage() {
           </Box>
           {showDetails && (
             <Box mt={3}>
-              <Typography variant="body2" mt={2}>
-                <strong>Category:</strong> {questionOfTheDay.category}
-              </Typography>
-              <Typography variant="body2" mt={2}>
-                <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
-              </Typography>
-              <Typography variant="body2" mt={2}>
-                <strong>Value:</strong> {questionOfTheDay.value}
+              <Typography variant="body2" mt={2} sx={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                <Box>
+                  <strong>Category:</strong> {questionOfTheDay.category}
+                </Box>
+                <Box>
+                  <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
+                </Box>
+                <Box>
+                  <strong>Value:</strong> {questionOfTheDay.value}
+                </Box>
               </Typography>
             </Box>
           )}
