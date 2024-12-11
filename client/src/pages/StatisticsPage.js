@@ -119,40 +119,20 @@ export default function SongsPage() {
         <h1>User Statistics</h1>
         <p>Overall Accuracy: {overallUserAccuracy}</p>
         <p>Categorical Accuracy:</p>
-        <BarChart
-          xAxis={[
-            {
-              scaleType: 'band',
-              data: categoryUserAccuracy.map(row => row.subject)
-            }
-          ]}
-          series={
-            categoryUserAccuracy.map(row => {'data': row.accuracy})
-          }
-          width={500}
-          height={300}
-        />
         {categoryUserAccuracy && 
-          <table>
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Accuracy</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryUserAccuracy.map((row, idx) => {
-                return (
-                  <tr
-                    key={idx}
-                  >
-                    <td>{row.subject}</td>
-                    <td>{row.accuracy}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <BarChart
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: categoryUserAccuracy.map(row => row.subject)
+              }
+            ]}
+            series={
+              [{data: categoryUserAccuracy.map(row => row.accuracy)}]
+            }
+            width={1000}
+            height={600}
+          />
         }
       </div>
 
@@ -160,27 +140,20 @@ export default function SongsPage() {
         <h1>Overall Statistics</h1>
         <p>Overall Accuracy: {overallAccuracy}</p>
         <p>Categorical Accuracy:</p>
-        {categoryUserAccuracy && 
-          <table>
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Accuracy</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryAccuracy.map((row, idx) => {
-                return (
-                  <tr
-                    key={idx}
-                  > 
-                    <td>{row.subject}</td>
-                    <td>{row.accuracy}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        {categoryAccuracy && 
+          <BarChart
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: categoryAccuracy.map(row => row.subject)
+              }
+            ]}
+            series={
+              [{data: categoryAccuracy.map(row => row.accuracy)}]
+            }
+            width={1000}
+            height={600}
+          />
         }
       </div>
 
