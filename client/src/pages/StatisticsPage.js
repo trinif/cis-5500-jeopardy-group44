@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../components/Context';
 
+import { BarChart } from '@mui/x-charts';
+
 const config = require('../config.json');
 
 export default function SongsPage() {
@@ -84,19 +86,18 @@ export default function SongsPage() {
     
     if (!userId.startsWith('guest_')) {
       Promise.all(
-        topUsers.map(async values => {
-          let top_user_id = values.user_id
+        topUsers.map(async (row) => {
+          let top_user_id = row.user_id
           try {
             let res = await fetch(`http://${config.server_host}:${config.server_port}/check_follow_status/${userId}/${top_user_id}`)
             let resJson = await res.json()
-            return { ...values, follow: resJson.length > 0 }; 
+            return { ...row, follow: resJson.length > 0 }; 
           } catch (err) {
             console.log(err)
             return
           } 
         })
       ).then(updatedUsers => {
-        console.log(updatedUsers)
         setTopUsers(updatedUsers)
       }).catch(err => {
         console.log(err)
@@ -118,6 +119,19 @@ export default function SongsPage() {
         <h1>User Statistics</h1>
         <p>Overall Accuracy: {overallUserAccuracy}</p>
         <p>Categorical Accuracy:</p>
+        <BarChart
+          xAxis={[
+            {
+              scaleType: 'band',
+              data: categoryUserAccuracy.map(row => row.subject)
+            }
+          ]}
+          series={
+            categoryUserAccuracy.map(row => {'data': row.accuracy})
+          }
+          width={500}
+          height={300}
+        />
         {categoryUserAccuracy && 
           <table>
             <thead>
