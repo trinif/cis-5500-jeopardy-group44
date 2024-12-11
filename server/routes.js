@@ -145,6 +145,27 @@ const check_answer = async function(req, res) {
   })
 }
 
+const check_follow_status = async function(req, res) {
+  const following = req.params.following;
+  const person_of_interest = req.params.person_of_interest;
+
+  console.log("check follow status")
+
+  connection.query(`
+    SELECT *
+    FROM Following
+    WHERE following = '${following}'
+      AND person_of_interest = '${person_of_interest}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
 const follow_user = async function(req, res) {
   const following = req.params.following;
   const person_of_interest = req.params.person_of_interest;
@@ -162,12 +183,52 @@ const follow_user = async function(req, res) {
   })
 }
 
+const unfollow_user = async function(req, res) {
+  const following = req.params.following;
+  const person_of_interest = req.params.person_of_interest;
+
+  connection.query(`
+    DELETE FROM Following
+    WHERE following = '${following}'
+      AND person_of_interest = '${person_of_interest}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json({})
+    }
+  })
+}
+
 const top_users = async function(req, res) {
   connection.query(`
     SELECT user_id,
       ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
     FROM UserAnswers
     WHERE user_id NOT LIKE 'guest_%'
+    GROUP BY user_id
+    ORDER BY accuracy DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json([])
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
+const top_users_friends = async function(req, res) {
+  const user_id = req.params.user_id
+  connection.query(`
+    SELECT user_id,
+      ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+    FROM UserAnswers
+      JOIN Following ON UserAnswers.user_id = following.person_of_interest
+    WHERE user_id NOT LIKE 'guest_%'
+      AND Following.following = '${user_id}'
     GROUP BY user_id
     ORDER BY accuracy DESC
     LIMIT 5
@@ -608,8 +669,11 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  check_follow_status,
   follow_user,
+  unfollow_user,
   top_users,
+  top_users_friends,
   overall_accuracy,
   overall_accuracy_universal,
   best_worst_category,
