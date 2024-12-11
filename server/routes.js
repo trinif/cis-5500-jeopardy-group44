@@ -603,6 +603,85 @@ const question_selection = async function (req, res) {
   }
 };
 
+// gets the questions that the top 5 users (on leaderboard) did worst on
+// const least_accurate_questions_top_users = async function(req, res) {
+//   connection.query(`
+//     WITH top_users AS (
+//      SELECT user_id,
+//       ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+//     FROM UserAnswers
+//     WHERE user_id NOT LIKE 'guest_%'
+//     GROUP BY user_id
+//     ORDER BY accuracy DESC
+//     LIMIT 5
+//     )
+//     SELECT 
+//       ua.user_id,
+//       q.question_id,
+//       q.question,
+//       q.subject,
+//       COUNT(ua.is_correct) AS total_answers,
+//       COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
+//       (COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)) AS accuracy
+//     FROM 
+//       UserAnswers ua
+//     JOIN 
+//       Questions q ON ua.question_id = q.question_id
+//     WHERE 
+//       ua.user_id IN (SELECT user_id FROM top_users)
+//     GROUP BY 
+//       ua.user_id, q.question_id, q.question, q.subject
+//     ORDER BY 
+//       accuracy ASC
+//   `, (err, data) => {
+//     if (err) {
+//       console.log(err);
+//       res.json([]);
+//     } else {
+//       res.json(data.rows);
+//     }
+//   });
+// };
+
+const least_accurate_questions_top_users = async function(req, res) {
+    connection.query(`
+      WITH top_users AS (
+       SELECT user_id,
+        ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+      FROM UserAnswers
+      WHERE user_id NOT LIKE 'guest_%'
+      GROUP BY user_id
+      ORDER BY accuracy DESC
+      LIMIT 5
+      )
+      SELECT 
+        q.question_id,
+        q.question,
+        q.subject,
+        COUNT(ua.is_correct) AS total_answers,
+        COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
+        ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)),2) AS accuracy
+      FROM 
+        UserAnswers ua
+      JOIN 
+        Questions q ON ua.question_id = q.question_id
+      WHERE 
+        ua.user_id IN (SELECT user_id FROM top_users)
+      GROUP BY 
+        q.question_id, q.question, q.subject
+      ORDER BY 
+        accuracy ASC
+    `, (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    });
+  };
+
+
 module.exports = {
   signup,
   login,
@@ -623,4 +702,5 @@ module.exports = {
   category_accuracy,
   random,
   question_selection,
+  least_accurate_questions_top_users,
 }
