@@ -10,6 +10,7 @@ import Login from "./pages/LoginPage";
 
 import { createTheme } from "@mui/material/styles";
 import JeopardyQuestions from "./pages/JeopardyQuestionsPage";
+import SongsPage from "./pages/StatisticsPage";
 
 export const theme = createTheme({
   palette: {
@@ -46,7 +47,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/question_selection" element={<QuestionSelectionPage />} />
           <Route path="/question_selection/:album_id" element={<AlbumInfoPage />} />
-          <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/statistics" element={<SongsPage key={Date.now()}/>} />
           <Route path="/questions" element={<JeopardyQuestions />} />
           <Route path="/login" element={ <Login/> } />
         </Routes>
