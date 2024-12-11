@@ -38,7 +38,10 @@ app.post('/update_user_answer', routes.update_user_answer);
 
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 
+app.get('/top_users', routes.top_users);
+
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
+app.get('/overall_accuracy_universal', routes.overall_accuracy_universal);
 
 app.get('/best_worst_category/:user_id', routes.best_worst_category);
 app.get('/unanswered_category/:user_id', routes.unanswered_category);

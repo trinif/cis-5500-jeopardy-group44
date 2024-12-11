@@ -145,6 +145,25 @@ const check_answer = async function(req, res) {
   })
 }
 
+const top_users = async function(req, res) {
+  connection.query(`
+    SELECT user_id,
+      ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+    FROM UserAnswers
+    WHERE user_id NOT LIKE 'guest_%'
+    GROUP BY user_id
+    ORDER BY accuracy DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json([])
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
 
 
 // 1
@@ -170,12 +189,18 @@ const overall_accuracy = async function(req, res) {
 
 const overall_accuracy_universal = async function(req, res) {
   connection.query(`
+    SELECT 
+      (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM UserAnswers
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      
+      const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2)
+      res.json({
+        accuracy: accuracy
+      })
     }
   })
 }
@@ -512,7 +537,9 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  top_users,
   overall_accuracy,
+  overall_accuracy_universal,
   best_worst_category,
   best_worst_category_universal,
   unanswered_category,
