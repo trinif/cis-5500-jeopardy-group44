@@ -6,11 +6,16 @@ const config = require('../config.json');
 export default function SongsPage() {
   const { userId } = useAuth();
 
-  const [overallUserAccuracy, setOverallUserAccuracy] = useState('')
-  const [categoryUserAccuracy, setCategoryUserAccuracy] = useState([])
+  const [overallUserAccuracy, setOverallUserAccuracy] = useState('');
+  const [categoryUserAccuracy, setCategoryUserAccuracy] = useState([]);
+  const [bestCategoryAccuracy, setBestCategoryAccuracy] = useState('');
+  const [worstCategoryAccuracy, setWorstCategoryAccuracy] = useState('');
 
-  const [overallAccuracy, setOverallAccuracy] = useState('')
-  const [categoryAccuracy, setcategoryAccuracy] = useState([])
+
+  const [overallAccuracy, setOverallAccuracy] = useState('');
+  const [categoryAccuracy, setcategoryAccuracy] = useState([]);
+  const [bestCategoryAccuracyUniversal, setBestCategoryAccuracyUniversal] = useState('');
+  const [worstCategoryAccuracyUniversal, setWorstCategoryAccuracyUniversal] = useState('');
 
   const [topUsers, setTopUsers] = useState([])
 
@@ -31,6 +36,16 @@ export default function SongsPage() {
         console.log(err)
       })      
     
+    fetch(`http://${config.server_host}:${config.server_port}/best_worst_category/${userId}`)
+      .then(res => res.json())
+      .then(resJson => {
+        setBestCategoryAccuracy(resJson.best_category);
+        setWorstCategoryAccuracy(resJson.worst_category);
+      })
+      .catch(err => {
+        console.log(err);
+      })
+    
     fetch(`http://${config.server_host}:${config.server_port}/overall_accuracy_universal`)
       .then(res => res.json())
       .then(resJson => {
@@ -46,6 +61,16 @@ export default function SongsPage() {
       }).catch(err => {
         console.log(err)
       })
+    
+    fetch(`http://${config.server_host}:${config.server_port}/best_worst_category_universal`)
+      .then(res => res.json())
+      .then(resJson => {
+        setBestCategoryAccuracyUniversal(resJson.best_category);
+        setWorstCategoryAccuracyUniversal(resJson.worst_category);
+      })
+      .catch(err => {
+        console.log(err);
+      })
       
     fetch(`http://${config.server_host}:${config.server_port}/top_users`)
       .then(res => res.json())
@@ -54,7 +79,7 @@ export default function SongsPage() {
       }).catch(err => {
         console.log(err)
       })
-  }, [])
+    }, [])
 
   const followHandler = (user_id) => {
     console.log(user_id)
@@ -97,6 +122,8 @@ export default function SongsPage() {
             </tbody>
           </table>
         }
+        <p>Your Best Category: {bestCategoryAccuracy}</p>
+        <p>Your Worst Category: {worstCategoryAccuracy}</p> 
       </div>
 
       <div className="overall statistics">
@@ -125,6 +152,8 @@ export default function SongsPage() {
             </tbody>
           </table>
         }
+        <p>Overall Best Category: {bestCategoryAccuracyUniversal}</p>
+        <p>Overall Worst Category: {worstCategoryAccuracyUniversal}</p> 
       </div>
 
       <div className="leaderboard">
