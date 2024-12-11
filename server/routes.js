@@ -168,6 +168,7 @@ const overall_accuracy = async function(req, res) {
   })
 }
 
+//make universal?
 const best_worst_category = async function (req, res) {
   const user_id = req.params.user_id;
 
@@ -297,8 +298,7 @@ const final_jeopardy_questions = async function (req, res) {
 }
 
 // just questions that are not in the jeopardy dataset
-// route doesn't exist in server
-const unanswered_categories_questions = async function (req, res) {
+const general_trivia_questions = async function (req, res) {
   connection.query(`
     SELECT g.question_id, 
       g.question, 
@@ -314,6 +314,40 @@ const unanswered_categories_questions = async function (req, res) {
       res.json(data.rows)
     }
   })
+}
+
+// to-do
+const unanswered_categories_questions = async function(req, res) {
+  connection.query(`
+    SELECT *
+    FROM Jeopardy
+    ORDER BY RANDOM()
+    LIMIT 1
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows[0]);
+    }
+  });
+}
+
+// to-do
+const category_accuracy = async function(req, res) {
+  connection.query(`
+    SELECT *
+    FROM Jeopardy
+    ORDER BY RANDOM()
+    LIMIT 1
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows[0]);
+    }
+  });
 }
 
 // Route: GET /random
@@ -424,7 +458,9 @@ module.exports = {
   unanswered_category,
   incorrect_questions_category,
   final_jeopardy_questions,
+  general_trivia_questions,
   unanswered_categories_questions,
+  category_accuracy,
   random,
   question_selection,
 }

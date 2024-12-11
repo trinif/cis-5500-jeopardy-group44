@@ -44,10 +44,12 @@ app.get('/best_worst_category/:user_id', routes.best_worst_category);
 app.get('/unanswered_category/:user_id', routes.unanswered_category);
 app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category);
 app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions);
+app.get('/general_trivia_questions', routes.general_trivia_questions);
+app.get('/unanswered_categories_questions/:user_id', routes.unanswered_categories_questions);
+app.get('/category_accuracy/:user_id', routes.category_accuracy);
 
 app.get('/random', routes.random);
 app.get('/question_selection', routes.question_selection);
-//app.get('/meta_categories', routes.meta_categories);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
