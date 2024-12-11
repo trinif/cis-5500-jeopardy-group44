@@ -182,6 +182,18 @@ const overall_accuracy = async function(req, res) {
   })
 }
 
+const overall_accuracy_universal = async function(req, res) {
+  connection.query(`
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      
+    }
+  })
+}
+
 //make universal?
 const best_worst_category = async function (req, res) {
   const user_id = req.params.user_id;
