@@ -226,6 +226,63 @@ const best_worst_category = async function (req, res) {
   })
 }
 
+//to-do
+const best_worst_category_universal = async function (req, res) {
+
+  connection.query(`
+    WITH category_correct_counts AS (
+      SELECT 
+        q.subject,
+        COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
+      FROM 
+        UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
+      WHERE 
+        ua.user_id = '${user_id}'
+      GROUP BY 
+        q.subject
+    ),
+    max_min_correct_counts AS (
+      SELECT 
+        MAX(correct_count) AS max_correct_count,
+        MIN(correct_count) AS min_correct_count
+      FROM 
+        category_correct_counts
+    )
+    SELECT 
+      c.subject,
+      c.correct_count,
+      CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
+      CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
+    FROM 
+      category_correct_counts c, max_min_correct_counts m;
+
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      let best_category, worst_category;
+
+      data.rows.forEach(row => {
+        console.log(row)
+        if (row.max_category === 'Most Successful') {
+          best_category = row.subject;
+        } else if (row.min_category === 'Least Successful') {
+          worst_category = row.subject;
+        }
+      });
+
+      console.log(best_category);
+      console.log(worst_category);
+
+      res.json({
+        best_category,
+        worst_category
+      });
+    }
+  })
+}
+
 // categories that haven't been answered
 const unanswered_category = async function (req, res) {
   const user_id = req.params.user_id;
@@ -445,6 +502,7 @@ module.exports = {
   check_answer,
   overall_accuracy,
   best_worst_category,
+  best_worst_category_universal,
   unanswered_category,
   incorrect_questions_category,
   final_jeopardy_questions,
