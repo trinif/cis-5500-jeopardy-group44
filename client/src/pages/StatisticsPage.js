@@ -4,7 +4,7 @@ import { useAuth } from '../components/Context';
 const config = require('../config.json');
 
 export default function SongsPage() {
-  const userId = useAuth();
+  const { userId } = useAuth();
 
   const [overallUserAccuracy, setOverallUserAccuracy] = useState('')
   const [categoryUserAccuracy, setCategoryUserAccuracy] = useState([])
@@ -13,11 +13,10 @@ export default function SongsPage() {
   const [categoricalAccuracy, setCategoricalAccuracy] = useState([])
 
   useEffect(() => {
-    // get all fields we want
     fetch(`http://${config.server_host}:${config.server_port}/overall_accuracy/${userId}`)
       .then(res => res.json())
       .then(resJson => {
-        console.log(resJson)
+        setOverallUserAccuracy(resJson.accuracy)
       }).catch(err => {
         console.log(err)
       })
@@ -26,14 +25,14 @@ export default function SongsPage() {
 
   return (
     <>
-      <div class="user statistics">
+      <div className="user statistics">
         <p>User Statistics</p>
         <p>Overall Accuracy: {overallUserAccuracy}</p>
         <p>Categorical Accuracy:</p>
         {/* some way to format categorical accuracy */}
       </div>
 
-      <div class="overall statistics">
+      <div className="overall statistics">
         <p>Overall Statistics</p>
         <p>Overall Accuracy: {overallAccuracy}</p>
         <p>Categorical Accuracy:</p>

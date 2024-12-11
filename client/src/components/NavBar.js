@@ -78,6 +78,7 @@ export default function NavBar() {
           <NavText href="/" text="Home" />
           <NavText href="/question_selection" text="Question Selection" />
           <NavText href="/statistics" text="Statistics" />
+          <NavText href="/questions" text="Test Yourself" />
           {userId && !userId.startsWith('guest_') ? (
             // Show the username if logged in
             <Typography
