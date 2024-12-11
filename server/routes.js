@@ -145,7 +145,41 @@ const check_answer = async function(req, res) {
   })
 }
 
-
+// 0
+const all_users_accuracy = async function(req, res) {
+  connection.query(`
+    SELECT 
+      (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM 
+      UserAnswers
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2);
+      res.json({
+        accuracy: accuracy
+      });
+    }
+  });
+};
+// const all_users_accuracy = async function(req, res) {
+//   connection.query(`
+//     SELECT 
+//       (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+//     FROM UserAnswers
+//   `, (err, data) => {
+//     if (err) {
+//       res.json({})
+//     } else {
+//       const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2)
+//       res.json({
+//         accuracy: accuracy
+//       })
+//     }
+//   })
+// }
 
 // 1
 const overall_accuracy = async function(req, res) {
@@ -316,34 +350,53 @@ const unanswered_category = async function (req, res) {
   })
 }
 
-//gives all questions that are in a subject that the user has answered incorrectly before
-//this seems unnecessary but could do something with incorrect answers?
-const incorrect_questions_category = async function (req, res) {
+//gives all questions answered incorrectly
+const incorrect_questions_category = async function(req, res) {
   const user_id = req.params.user_id;
-
   connection.query(`
-    WITH incorrect_questions AS (
-      SELECT q.question_id, q.question, q.answer, q.subject
+    SELECT q.question_id, q.question, q.answer, q.subject
       FROM UserAnswers ua 
         JOIN Questions q ON ua.question_id = q.question_id
       WHERE ua.is_correct = B'0'
         AND ua.user_id = '${user_id}'
-    )
-
-    SELECT question, answer, subject
-    FROM Questions q
-    WHERE subject IN (SELECT q.subject FROM incorrect_questions)
-
   `, (err, data) => {
     if (err) {
-      console.log(err)
-      res.json({})
+      console.log(err);
+      res.json({});
     } else {
-      console.log(data.rows)
-      res.json(data.rows)
+      console.log(data.rows);
+      res.json(data.rows);
     }
-  })
-}
+  });
+};
+
+// //this seems unnecessary but could do something with incorrect answers?
+// const incorrect_questions_category = async function (req, res) {
+//   const user_id = req.params.user_id;
+
+//   connection.query(`
+//     WITH incorrect_questions AS (
+//       SELECT q.question_id, q.question, q.answer, q.subject
+//       FROM UserAnswers ua 
+//         JOIN Questions q ON ua.question_id = q.question_id
+//       WHERE ua.is_correct = B'0'
+//         AND ua.user_id = '${user_id}'
+//     )
+
+//     SELECT question, answer, subject
+//     FROM Questions q
+//     WHERE subject IN (SELECT q.subject FROM incorrect_questions)
+
+//   `, (err, data) => {
+//     if (err) {
+//       console.log(err)
+//       res.json({})
+//     } else {
+//       console.log(data.rows)
+//       res.json(data.rows)
+//     }
+//   })
+// }
 
 const final_jeopardy_questions = async function (req, res) {
   const user_id = req.params.user_id;
@@ -429,34 +482,6 @@ const category_accuracy = async function(req, res) {
     }
   });
 };
-// const category_accuracy = async function(req, res) {
-//   const user_id = req.params.user_id;
-//   connection.query(`
-//     SELECT 
-//       j.category,
-//       (COUNT(*) FILTER (WHERE ua.is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
-//     FROM 
-//       UserAnswers ua
-//     JOIN 
-//       Jeopardy j ON ua.question_id = j.question_id
-//     WHERE 
-//       ua.user_id = '${user_id}'
-//     GROUP BY 
-//       j.category;
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err);
-//       res.json({});
-//     } else {
-//       const result = data.rows.map(row => ({
-//         category: row.category,
-//         accuracy: parseFloat(row.accuracy).toFixed(2)
-//       }));
-      
-//       res.json(result);
-//     }
-//   });
-// };
 
 // Route: GET /random
 const random = async function(req, res) {
@@ -551,6 +576,7 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  all_users_accuracy,
   overall_accuracy,
   best_worst_category,
   best_worst_category_universal,
