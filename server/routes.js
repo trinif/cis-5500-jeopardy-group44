@@ -145,6 +145,27 @@ const check_answer = async function(req, res) {
   })
 }
 
+const check_follow_status = async function(req, res) {
+  const following = req.params.following;
+  const person_of_interest = req.params.person_of_interest;
+
+  console.log("check follow status")
+
+  connection.query(`
+    SELECT *
+    FROM Following
+    WHERE following = '${following}'
+      AND person_of_interest = '${person_of_interest}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
 const follow_user = async function(req, res) {
   const following = req.params.following;
   const person_of_interest = req.params.person_of_interest;
@@ -658,7 +679,9 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  check_follow_status,
   follow_user,
+  unfollow_user,
   top_users,
   top_users_friends,
   overall_accuracy,

@@ -15,6 +15,32 @@ export default function SongsPage() {
   const [topUsers, setTopUsers] = useState([])
   const [topUsersFriends, setTopUsersFriends] = useState([])
 
+  const [triggerEffect, setTriggerEffect] = useState(false)
+ 
+  const followHandler = (user_id) => {
+    fetch(`http://${config.server_host}:${config.server_port}/follow_user/${userId}/${user_id}`, {
+      method: 'POST'
+    })
+      .then(res => res.json())
+      .then(resJson => {
+        setTriggerEffect(!triggerEffect)
+      }).catch(err => {
+        console.log(err)
+      })
+  }
+
+  const unfollowHandler = (user_id) => {
+    fetch(`http://${config.server_host}:${config.server_port}/unfollow_user/${userId}/${user_id}`, {
+      method: 'POST'
+    })
+      .then(res => res.json())
+      .then(resJson => {
+        setTriggerEffect(!triggerEffect)
+      }).catch(err => {
+        console.log(err)
+      })
+  }
+
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/overall_accuracy/${userId}`)
       .then(res => res.json())
@@ -56,6 +82,27 @@ export default function SongsPage() {
         console.log(err)
       })
     
+    if (!userId.startsWith('guest_')) {
+      Promise.all(
+        topUsers.map(async values => {
+          let top_user_id = values.user_id
+          try {
+            let res = await fetch(`http://${config.server_host}:${config.server_port}/check_follow_status/${userId}/${top_user_id}`)
+            let resJson = await res.json()
+            return { ...values, follow: resJson.length > 0 }; 
+          } catch (err) {
+            console.log(err)
+            return
+          } 
+        })
+      ).then(updatedUsers => {
+        console.log(updatedUsers)
+        setTopUsers(updatedUsers)
+      }).catch(err => {
+        console.log(err)
+      })
+    }   
+    
     fetch(`http://${config.server_host}:${config.server_port}/top_users_friends/${userId}`)
       .then(res => res.json())
       .then(resJson => {
@@ -63,20 +110,7 @@ export default function SongsPage() {
       }).catch(err => {
         console.log(err)
       })
-  }, [])
-
-  const followHandler = (user_id) => {
-    console.log(user_id)
-    fetch(`http://${config.server_host}:${config.server_port}/follow_user/${userId}/${user_id}`, {
-      method: 'POST'
-    })
-      .then(res => res.json())
-      .then(resJson => {
-      }).catch(err => {
-        console.log(err)
-      })
-  }
-
+  }, [userId, triggerEffect])
 
   return (
     <>
@@ -142,7 +176,7 @@ export default function SongsPage() {
           <table>
             <thead>
               <tr>
-                <th></th>
+                {!userId.startsWith("guest_") && (<th></th>)}
                 <th>Username</th>
                 <th>Accuracy</th>
               </tr>
@@ -153,9 +187,25 @@ export default function SongsPage() {
                   <tr
                     key={idx}
                   >
-                    <td><button onClick={e => {
-                      followHandler(row.user_id)
-                    }}>Follow</button></td>
+                    {!userId.startsWith("guest_") && (
+                      row.follow ? (
+                        <td><button
+                          onClick={e => {
+                            unfollowHandler(row.user_id)
+                          }}
+                        >
+                          Unfollow
+                        </button></td>
+                      ) : (
+                        <td><button
+                          onClick={e => {
+                            followHandler(row.user_id)
+                          }}
+                        >
+                          Follow
+                        </button></td>
+                      )
+                    )}
                     <td>{row.user_id}</td>
                     <td>{row.accuracy}</td>
                   </tr>

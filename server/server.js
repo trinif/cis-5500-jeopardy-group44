@@ -37,7 +37,10 @@ app.post('/login', routes.login);
 app.post('/update_user_answer', routes.update_user_answer);
 
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
+app.get('/check_follow_status/:following/:person_of_interest', routes.check_follow_status)
 app.post('/follow_user/:following/:person_of_interest', routes.follow_user)
+app.post('/unfollow_user/:following/:person_of_interest', routes.unfollow_user)
+
 
 app.get('/top_users', routes.top_users);
 app.get('/top_users_friends/:user_id', routes.top_users_friends)
