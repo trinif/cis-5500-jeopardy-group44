@@ -427,22 +427,61 @@ const unanswered_categories_questions = async function(req, res) {
   });
 }
 
-// to-do
+// DONE
 const category_accuracy = async function(req, res) {
+  const user_id = req.params.user_id;
   connection.query(`
-    SELECT *
-    FROM Jeopardy
-    ORDER BY RANDOM()
-    LIMIT 1
+    SELECT 
+      q.subject,
+      (COUNT(*) FILTER (WHERE ua.is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM 
+      UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
+    WHERE 
+      ua.user_id = '${user_id}'
+    GROUP BY 
+      q.subject;
   `, (err, data) => {
     if (err) {
       console.log(err);
       res.json({});
     } else {
-      res.json(data.rows[0]);
+      const result = data.rows.map(row => ({
+        subject: row.subject,
+        accuracy: parseFloat(row.accuracy).toFixed(2)
+      }));
+      
+      res.json(result);  // Send the result as a JSON array
     }
   });
-}
+};
+// const category_accuracy = async function(req, res) {
+//   const user_id = req.params.user_id;
+//   connection.query(`
+//     SELECT 
+//       j.category,
+//       (COUNT(*) FILTER (WHERE ua.is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+//     FROM 
+//       UserAnswers ua
+//     JOIN 
+//       Jeopardy j ON ua.question_id = j.question_id
+//     WHERE 
+//       ua.user_id = '${user_id}'
+//     GROUP BY 
+//       j.category;
+//   `, (err, data) => {
+//     if (err) {
+//       console.log(err);
+//       res.json({});
+//     } else {
+//       const result = data.rows.map(row => ({
+//         category: row.category,
+//         accuracy: parseFloat(row.accuracy).toFixed(2)
+//       }));
+      
+//       res.json(result);
+//     }
+//   });
+// };
 
 // Route: GET /random
 const random = async function(req, res) {
