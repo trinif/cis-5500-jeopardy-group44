@@ -13,6 +13,7 @@ export default function SongsPage() {
   const [categoryAccuracy, setcategoryAccuracy] = useState([])
 
   const [topUsers, setTopUsers] = useState([])
+  const [topUsersFriends, setTopUsersFriends] = useState([])
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/overall_accuracy/${userId}`)
@@ -51,6 +52,14 @@ export default function SongsPage() {
       .then(res => res.json())
       .then(resJson => {
         setTopUsers(resJson)
+      }).catch(err => {
+        console.log(err)
+      })
+    
+    fetch(`http://${config.server_host}:${config.server_port}/top_users_friends/${userId}`)
+      .then(res => res.json())
+      .then(resJson => {
+        setTopUsersFriends(resJson)
       }).catch(err => {
         console.log(err)
       })
@@ -157,6 +166,28 @@ export default function SongsPage() {
         }
 
         <h1>Friend Leaderboard</h1>
+        {topUsersFriends && 
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topUsersFriends.map((row, idx) => {
+                return (
+                  <tr
+                    key={idx}
+                  >
+                    <td>{row.user_id}</td>
+                    <td>{row.accuracy}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        }
       </div>
     </>
   );

@@ -40,6 +40,7 @@ app.post('/check_answer/:question_id/:answer', routes.check_answer);
 app.post('/follow_user/:following/:person_of_interest', routes.follow_user)
 
 app.get('/top_users', routes.top_users);
+app.get('/top_users_friends/:user_id', routes.top_users_friends)
 
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
 app.get('/overall_accuracy_universal', routes.overall_accuracy_universal);
