@@ -37,15 +37,21 @@ app.post('/login', routes.login);
 app.post('/update_user_answer', routes.update_user_answer);
 
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
+app.post('/follow_user/:following/:person_of_interest', routes.follow_user)
+
+app.get('/top_users', routes.top_users);
 
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
+app.get('/overall_accuracy_universal', routes.overall_accuracy_universal);
 
 app.get('/best_worst_category/:user_id', routes.best_worst_category);
+app.get('/best_worst_category_universal', routes.best_worst_category_universal);
 app.get('/unanswered_category/:user_id', routes.unanswered_category);
 app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category);
 app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions);
 app.get('/general_trivia_questions', routes.general_trivia_questions);
 app.get('/unanswered_categories_questions/:user_id', routes.unanswered_categories_questions);
+app.get('/category_accuracy_universal', routes.category_accuracy_universal);
 app.get('/category_accuracy/:user_id', routes.category_accuracy);
 
 app.get('/random', routes.random);

@@ -145,41 +145,43 @@ const check_answer = async function(req, res) {
   })
 }
 
-// 0
-const all_users_accuracy = async function(req, res) {
+const follow_user = async function(req, res) {
+  const following = req.params.following;
+  const person_of_interest = req.params.person_of_interest;
+
   connection.query(`
-    SELECT 
-      (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
-    FROM 
-      UserAnswers
+    INSERT INTO Following (following, person_of_interest)
+    VALUES ('${following}', '${person_of_interest}')
   `, (err, data) => {
     if (err) {
-      console.log(err);
-      res.json({});
+      console.log(err)
+      res.json({})
     } else {
-      const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2);
-      res.json({
-        accuracy: accuracy
-      });
+      res.json({})
     }
-  });
-};
-// const all_users_accuracy = async function(req, res) {
-//   connection.query(`
-//     SELECT 
-//       (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
-//     FROM UserAnswers
-//   `, (err, data) => {
-//     if (err) {
-//       res.json({})
-//     } else {
-//       const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2)
-//       res.json({
-//         accuracy: accuracy
-//       })
-//     }
-//   })
-// }
+  })
+}
+
+const top_users = async function(req, res) {
+  connection.query(`
+    SELECT user_id,
+      ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+    FROM UserAnswers
+    WHERE user_id NOT LIKE 'guest_%'
+    GROUP BY user_id
+    ORDER BY accuracy DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json([])
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
+
 
 // 1
 const overall_accuracy = async function(req, res) {
@@ -204,17 +206,23 @@ const overall_accuracy = async function(req, res) {
 
 const overall_accuracy_universal = async function(req, res) {
   connection.query(`
+    SELECT 
+      (COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM UserAnswers
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      
+      const accuracy = parseFloat(data.rows[0].accuracy).toFixed(2)
+      res.json({
+        accuracy: accuracy
+      })
     }
   })
 }
 
-//make universal?
+//DONE
 const best_worst_category = async function (req, res) {
   const user_id = req.params.user_id;
 
@@ -256,7 +264,8 @@ const best_worst_category = async function (req, res) {
         console.log(row)
         if (row.max_category === 'Most Successful') {
           best_category = row.subject;
-        } else if (row.min_category === 'Least Successful') {
+        }
+        if (row.min_category === 'Least Successful') {
           worst_category = row.subject;
         }
       });
@@ -272,9 +281,8 @@ const best_worst_category = async function (req, res) {
   })
 }
 
-//to-do
+//DONE
 const best_worst_category_universal = async function (req, res) {
-
   connection.query(`
     WITH category_correct_counts AS (
       SELECT 
@@ -282,8 +290,6 @@ const best_worst_category_universal = async function (req, res) {
         COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
       FROM 
         UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
-      WHERE 
-        ua.user_id = '${user_id}'
       GROUP BY 
         q.subject
     ),
@@ -313,7 +319,8 @@ const best_worst_category_universal = async function (req, res) {
         console.log(row)
         if (row.max_category === 'Most Successful') {
           best_category = row.subject;
-        } else if (row.min_category === 'Least Successful') {
+        }
+        if (row.min_category === 'Least Successful') {
           worst_category = row.subject;
         }
       });
@@ -455,6 +462,31 @@ const unanswered_categories_questions = async function(req, res) {
   });
 }
 
+const category_accuracy_universal = async function(req, res) {
+  const user_id = req.params.user_id;
+  connection.query(`
+    SELECT 
+      q.subject,
+      (COUNT(*) FILTER (WHERE ua.is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM 
+      UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
+    GROUP BY 
+      q.subject;
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      const result = data.rows.map(row => ({
+        subject: row.subject,
+        accuracy: parseFloat(row.accuracy).toFixed(2)
+      }));
+      
+      res.json(result);  // Send the result as a JSON array
+    }
+  });
+};
+
 // DONE
 const category_accuracy = async function(req, res) {
   const user_id = req.params.user_id;
@@ -576,8 +608,10 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
-  all_users_accuracy,
+  follow_user,
+  top_users,
   overall_accuracy,
+  overall_accuracy_universal,
   best_worst_category,
   best_worst_category_universal,
   unanswered_category,
@@ -585,6 +619,7 @@ module.exports = {
   final_jeopardy_questions,
   general_trivia_questions,
   unanswered_categories_questions,
+  category_accuracy_universal,
   category_accuracy,
   random,
   question_selection,
