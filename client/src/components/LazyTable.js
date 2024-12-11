@@ -10,23 +10,24 @@ import {
   Paper,
   Button,
   Box,
+  TextField,
+  IconButton,
 } from '@mui/material';
 
 export default function LazyTable({ route, columns, defaultPageSize, rowsPerPageOptions }) {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1); // 1 indexed
   const [pageSize, setPageSize] = useState(defaultPageSize ?? 10);
-  const [answersVisible, setAnswersVisible] = useState({}); // Tracks visibility for answers
+  const [activeQuestionId, setActiveQuestionId] = useState(null); // Tracks the active question
+  const [userAnswers, setUserAnswers] = useState({}); // Tracks user inputs
+  const [feedback, setFeedback] = useState({}); // Tracks feedback for each question
+  const [revealedAnswers, setRevealedAnswers] = useState({}); // Tracks revealed answers
 
   // Fetch data when the route, page, or pageSize changes
   useEffect(() => {
-    console.log('Fetching data from:', `${route}&page=${page}&page_size=${pageSize}`);
     fetch(`${route}&page=${page}&page_size=${pageSize}`)
       .then((res) => res.json())
-      .then((resJson) => {
-        console.log('Fetched Data:', resJson); // Debug the fetched data
-        setData(resJson);
-      })
+      .then((resJson) => setData(resJson))
       .catch((err) => console.error('Error fetching data:', err));
   }, [route, page, pageSize]);
 
@@ -35,56 +36,185 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
       setPage(newPage + 1); // Convert zero-indexed page to one-indexed
     }
   };
-  
+
   const handleChangePageSize = (e) => {
     const newPageSize = parseInt(e.target.value, 10);
     setPageSize(newPageSize);
     setPage(1); // Reset to first page
   };
 
-  const toggleAnswerVisibility = (id) => {
-    setAnswersVisible((prev) => ({
+  const toggleInputVisibility = (questionId) => {
+    setActiveQuestionId((prev) => (prev === questionId ? null : questionId)); // Toggle visibility
+    setFeedback((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [questionId]: undefined, // Reset feedback when toggling
+    }));
+    setRevealedAnswers((prev) => ({
+      ...prev,
+      [questionId]: false, // Reset revealed answer state when toggling
     }));
   };
 
-  const defaultRenderCell = (col, row) => {
-    if (col.field === 'answer') {
+  const handleInputChange = (questionId, value) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: value,
+    }));
+  };
+
+  const handleCheckAnswer = (questionId, correctAnswer) => {
+    const userAnswer = userAnswers[questionId]?.trim().toLowerCase() || '';
+    const isCorrect = userAnswer === correctAnswer.trim().toLowerCase();
+
+    setFeedback((prev) => ({
+      ...prev,
+      [questionId]: isCorrect ? 'Correct!' : 'Incorrect.',
+    }));
+  };
+
+  const toggleRevealAnswer = (questionId) => {
+    setRevealedAnswers((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId], // Toggle revealed state
+    }));
+  };
+
+  const renderAnswerCell = (row) => {
+    const questionId = row.question_id;
+  
+    if (activeQuestionId !== questionId) {
       return (
-        <Box textAlign="center">
-          {answersVisible[row.question_id] ? (
-            <div>
-              <span>{row.answer}</span>
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => toggleAnswerVisibility(row.question_id)}
-                sx={{
-                  color: '#FFD700',
-                  textTransform: 'none',
-                  fontWeight: 'bold',
-                }}
-              >
-                Hide Answer
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="text"
-              size="small"
-              onClick={() => toggleAnswerVisibility(row.question_id)}
-              sx={{
-                color: '#FFD700',
-                textTransform: 'none',
-                fontWeight: 'bold',
-              }}
-            >
-              Show Answer
-            </Button>
-          )}
-        </Box>
+        <Button
+          variant="text"
+          size="small"
+          onClick={() => toggleInputVisibility(questionId)}
+          sx={{
+            color: '#FFD700',
+            textTransform: 'none',
+            fontWeight: 'bold',
+          }}
+        >
+          Try Answering
+        </Button>
       );
+    }
+  
+    return (
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%', // Ensures it stays inside its table cell
+        }}
+      >
+        {/* Close Button */}
+        <IconButton
+          size="small"
+          onClick={() => toggleInputVisibility(questionId)}
+          sx={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            padding: '4px',
+            color: '#FFD700',
+            fontSize: '1rem',
+            zIndex: 10,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            },
+          }}
+        >
+          <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>×</span>
+        </IconButton>
+  
+        {/* Input Field */}
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Enter your answer"
+          value={userAnswers[questionId] || ''}
+          onChange={(e) => handleInputChange(questionId, e.target.value)}
+          sx={{
+            input: { color: 'white' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': { borderColor: '#FFD700' },
+              '&:hover fieldset': { borderColor: '#FFD700' },
+              '&.Mui-focused fieldset': { borderColor: '#FFD700' },
+            },
+            width: '100%',
+            marginBottom: '12px',
+          }}
+        />
+  
+        {/* Action Buttons */}
+        <Box
+          sx={{
+            display: 'flex',
+            gap: '12px', // Space between buttons
+            justifyContent: 'center',
+            marginBottom: '8px',
+          }}
+        >
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => handleCheckAnswer(questionId, row.answer)}
+            sx={{
+              backgroundColor: '#FFD700',
+              color: '#2E0854',
+              fontWeight: 'bold',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              textTransform: 'capitalize',
+              fontSize: '0.8rem',
+            }}
+          >
+            Check
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => toggleRevealAnswer(questionId)}
+            sx={{
+              backgroundColor: revealedAnswers[questionId] ? '#FF5733' : '#FFD700', // Change color on toggle
+              color: '#2E0854',
+              fontWeight: 'bold',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              textTransform: 'capitalize',
+              fontSize: '0.8rem',
+            }}
+          >
+            {revealedAnswers[questionId] ? 'Hide' : 'Reveal'}
+          </Button>
+        </Box>
+  
+        {/* Feedback */}
+        {feedback[questionId] && (
+          <Box
+            sx={{
+              color: feedback[questionId] === 'Correct!' ? '#00FF00' : '#FF0000',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              textAlign: 'center',
+            }}
+          >
+            {feedback[questionId]}
+          </Box>
+        )}
+  
+        {/* Correct Answer */}
+        {revealedAnswers[questionId] && (
+          <Box sx={{ color: 'white', fontStyle: 'italic', fontSize: '0.85rem', textAlign: 'center' }}>
+            Correct Answer: {row.answer}
+          </Box>
+        )}
+      </Box>
+    );
+  };  
+
+  const defaultRenderCell = (col, row) => {
+    if (col.field === 'answerCheck') {
+      return renderAnswerCell(row);
     }
     return <div>{row[col.field]}</div>;
   };
@@ -97,6 +227,27 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
         boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
       }}
     >
+      <TablePagination
+        rowsPerPageOptions={rowsPerPageOptions ?? [1, 5, 10]}
+        count={-1} // -1 indicates we don't know the total number of rows
+        rowsPerPage={pageSize}
+        page={page - 1} // Convert 1-indexed to 0-indexed for pagination
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangePageSize}
+        sx={{
+          backgroundColor: 'transparent',
+          display: 'flex', // Make the component flexible
+          justifyContent: 'flex-end', // Align the pagination to the right
+          padding: 0, 
+          color: 'white',
+          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+            color: '#FFD700',
+          },
+          '.MuiTablePagination-actions button': {
+            color: '#FFD700',
+          },
+        }}
+      />
       <TableContainer
         component={Paper}
         sx={{
@@ -105,7 +256,11 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           borderRadius: '10px',
         }}
       >
-        <Table>
+        <Table
+          sx={{
+            width: '100%',
+          }}
+        >
           <TableHead>
             <TableRow>
               {columns.map((col) => (
@@ -113,10 +268,12 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
                   key={col.headerName}
                   sx={{
                     backgroundColor: '#4B0082',
+                    width: col.width,
                     color: '#FFD700',
                     fontWeight: 'bold',
                     textAlign: 'center',
                     fontSize: '1rem',
+                    minWidth: col.field === 'answerCheck' ? '200px' : 'auto', // Wider column for the Answer field
                   }}
                 >
                   {col.headerName}
@@ -138,6 +295,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
                   <TableCell
                     key={col.headerName}
                     sx={{
+                      width: col.width,
                       color: 'white',
                       textAlign: 'center',
                       fontSize: '0.9rem',
@@ -152,24 +310,6 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={rowsPerPageOptions ?? [5, 10, 25]}
-        count={-1} // -1 indicates we don't know the total number of rows
-        rowsPerPage={pageSize}
-        page={page - 1} // Convert 1-indexed to 0-indexed for pagination
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangePageSize}
-        sx={{
-          backgroundColor: '#081484',
-          color: 'white',
-          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-            color: '#FFD700',
-          },
-          '.MuiTablePagination-actions button': {
-            color: '#FFD700',
-          },
-        }}
-      />
     </Box>
   );
 }

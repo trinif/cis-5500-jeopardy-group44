@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Slider,
-  Button,
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
 
@@ -26,6 +25,7 @@ export default function QuestionSelectionPage() {
   const [valueRange, setValueRange] = useState([100, 9800]);
   const [metaCategories, setMetaCategories] = useState([]);
   const [filters, setFilters] = useState({}); // Holds dynamically applied filters
+  const [isShuffled, setIsShuffled] = useState(false);
 
   const defaultValueRange = [100, 9800];
 
@@ -57,22 +57,26 @@ export default function QuestionSelectionPage() {
 
   // Define the columns for LazyTable
   const columns = [
-    { headerName: 'Question', field: 'question' },
-    { headerName: 'Meta Category', field: 'meta_category' },
-    ...(selectedSource === 'jeopardy'
+    ...(selectedSource === 'both'
       ? [
-          { headerName: 'Round', field: 'round' },
-          { headerName: 'Value', field: 'value' },
+          { headerName: 'Source', field: 'jeopardy_or_general', width: '8%',
+            renderCell: (row) =>
+              row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
+          },
         ]
       : []),
-    { headerName: 'Answer', field: 'answer' },
-    {
-      headerName: 'Source',
-      field: 'jeopardy_or_general',
-      renderCell: (row) =>
-        row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
-    },
+    { headerName: 'Question', field: 'question', width: selectedSource === 'jeopardy' ? '52%' : selectedSource === 'both' ? '60%' : '68%' },
+    ...(selectedSource === 'jeopardy'
+      ? [
+          { headerName: 'Round', field: 'round', width: '8%' },
+          { headerName: 'Value', field: 'value', width: '8%' },
+        ]
+      : []),
+    { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
+    { headerName: 'Answer', field: 'answerCheck', width: '22%' },
   ];
+  
+  
 
   // Build the route dynamically based on filters
   const buildRoute = () => {
@@ -83,11 +87,11 @@ export default function QuestionSelectionPage() {
       round: (filters.rounds || []).join(',') || '',
       value_low: filters.valueRange ? filters.valueRange[0] : null,
       value_high: filters.valueRange ? filters.valueRange[1] : null,
+      shuffle: isShuffled,
     });
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
-  };
+  };  
 
-  // Apply the search function
   const applySearch = () => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -115,6 +119,10 @@ export default function QuestionSelectionPage() {
     setValueRange(defaultValueRange);
   };
 
+  const toggleShuffle = () => {
+    setIsShuffled((prev) => !prev);
+  };
+
   return (
     <Box
       sx={{
@@ -122,6 +130,7 @@ export default function QuestionSelectionPage() {
         minHeight: '100vh',
         color: 'white',
         paddingTop: '20px',
+        paddingBottom: '50px',
       }}
     >
       <Container>
@@ -129,13 +138,13 @@ export default function QuestionSelectionPage() {
           Select Your Question
         </Typography>
 
-        {/* Filter Bar */}<Box
+        {/* Filter Bar */}
+        <Box
           sx={{
             backgroundColor: '#081484',
             padding: '20px',
             borderRadius: '10px',
             border: '3px solid #FFD700',
-            marginBottom: '20px',
           }}
         >
           {/* Top Row: Search Bar, Meta Categories, and Source Filter */}
@@ -208,11 +217,7 @@ export default function QuestionSelectionPage() {
           {/* Bottom Row: Jeopardy-Specific Filters */}
           {selectedSource === 'jeopardy' && (
             <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ marginTop: '15px' }}
+              container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
             >
               {/* Round Filter */}
               <Grid item xs={12} sm={6} md={4}>
@@ -258,6 +263,38 @@ export default function QuestionSelectionPage() {
               </Grid>
             </Grid>
           )}
+            <Grid
+              container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '10px' }}
+            ></Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box
+                onClick={toggleShuffle} // Trigger shuffle on click
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: isShuffled ? '#FFD700' : 'transparent', // Highlight when shuffled
+                  borderRadius: '50%',
+                  border: '2px solid #FFD700',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#FFD700', // Highlight on hover
+                  },
+                }}
+              >
+                <img
+                  src="/shuffle.png"
+                  alt="Shuffle"
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                  }}
+                />
+              </Box>
+            </Grid>
         </Box>
 
         {/* Selected Filters (Chips) */}
@@ -266,7 +303,8 @@ export default function QuestionSelectionPage() {
             display: 'flex',
             flexWrap: 'wrap',
             gap: '10px',
-            marginBottom: '20px',
+            marginTop: '10px',
+            marginBottom: '10px',
           }}
         >
           {selectedMetaCategories.map((metaCategory) => (
@@ -285,13 +323,15 @@ export default function QuestionSelectionPage() {
               sx={{ backgroundColor: '#FFD700', color: '#081484' }}
             />
           ))}
-          {selectedSource === 'jeopardy' && (
-            <Chip
-              label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
-              onDelete={handleDeleteValueRange}
-              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
-            />
-          )}
+          {selectedSource === 'jeopardy' &&
+            (valueRange[0] !== defaultValueRange[0] ||
+              valueRange[1] !== defaultValueRange[1]) && (
+              <Chip
+                label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
+                onDelete={handleDeleteValueRange}
+                sx={{ backgroundColor: '#FFD700', color: '#081484' }}
+              />
+            )}
         </Box>
 
         {/* Questions Table */}
@@ -299,7 +339,7 @@ export default function QuestionSelectionPage() {
           route={buildRoute()}
           columns={columns}
           defaultPageSize={10}
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[1, 5, 10]}
         />
       </Container>
     </Box>

@@ -368,78 +368,68 @@ const random = async function(req, res) {
 }
 
 // Route: GET /question_selection
-// need to update req fields
 const question_selection = async function (req, res) {
   const title = req.query.title || '';
-  const valueLow = req.query.value_low ?? null;
-  const valueHigh = req.query.value_high ?? null;
+  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) || null : null;
+  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) || null : null;  
   const metaCategories = req.query.meta_category
-    ? req.query.meta_category.split(',') // Handle multiple meta categories
+    ? req.query.meta_category.split(',')
     : [];
-  const round = req.query.round || '';
+  const rounds = req.query.round
+    ? req.query.round.split(',')
+    : [];
   const source = req.query.source || 'both';
+  const shuffle = req.query.shuffle === 'true';
+  const page = parseInt(req.query.page, 10) || 1;
+  const pageSize = parseInt(req.query.page_size, 10) || 10;
+  const offset = (page - 1) * pageSize;
 
   try {
-    // Base query
-    let query = `
-      SELECT q.question_id, q.question, q.answer, 
-             CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
-             q.subject AS meta_category,
-             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.round ELSE NULL END AS round,
-             CASE WHEN CAST(q.jeopardy_or_general AS INTEGER) = 0 THEN j.value ELSE NULL END AS value
-      FROM questions q
-      LEFT JOIN jeopardy j ON q.question_id = j.question_id
+    const query = `
+      WITH base_questions AS (
+        SELECT 
+          q.question_id, 
+          q.question, 
+          q.answer,
+          CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
+          q.subject AS meta_category,
+          j.round,
+          j.value
+        FROM 
+          questions q
+          LEFT JOIN jeopardy j ON q.question_id = j.question_id
+      ),
+      filtered_questions AS (
+        SELECT * 
+        FROM base_questions
+        WHERE 
+          ($1::text IS NULL OR question ILIKE $1)
+          AND ($2::text[] IS NULL OR meta_category ILIKE ANY($2))
+          AND ($3::text[] IS NULL OR round = ANY($3))
+          AND ($4::int IS NULL OR $5::int IS NULL OR value BETWEEN $4 AND $5)
+          AND (
+            $6::text = 'both' OR
+            ($6::text = 'jeopardy' AND jeopardy_or_general = 0) OR
+            ($6::text = 'trivia' AND jeopardy_or_general = 1)
+          )
+      )
+      SELECT * 
+      FROM filtered_questions
+      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'}
+      LIMIT $7 OFFSET $8;
     `;
 
-    // Array to hold WHERE conditions and query parameters
-    const conditions = [];
-    const params = [];
+    const params = [
+      title ? `%${title}%` : null, // $1: Title search
+      metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : null, // $2: Meta cats
+      rounds.length > 0 ? rounds : null, // $3: Rounds
+      valueLow, // $4: Minimum value
+      valueHigh, // $5: Maximum value
+      source, // $6: Source (jeopardy, trivia, both)
+      pageSize, // $7: Limit
+      offset, // $8: Offset
+    ];
 
-    // Add filters
-    if (title) {
-      conditions.push(`q.question ILIKE $${params.length + 1}`);
-      params.push(`%${title}%`);
-    }
-
-    if (metaCategories.length > 0) {
-      // Use an IN clause for multiple meta categories
-      const metaCategoryPlaceholders = metaCategories
-        .map((_, index) => `$${params.length + index + 1}`)
-        .join(', ');
-      conditions.push(`q.subject ILIKE ANY(ARRAY[${metaCategoryPlaceholders}])`);
-      params.push(...metaCategories.map((cat) => `%${cat}%`)); // Add each category as a parameter
-    }
-
-    if (round && source === 'jeopardy') {
-      conditions.push(`j.round = $${params.length + 1}`);
-      params.push(round);
-    }
-
-    if (valueLow !== null && valueHigh !== null && source === 'jeopardy') {
-      conditions.push(`(j.value BETWEEN $${params.length + 1} AND $${params.length + 2})`);
-      params.push(valueLow, valueHigh);
-    }
-
-    if (source === 'jeopardy') {
-      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 0');
-    } else if (source === 'trivia') {
-      conditions.push('CAST(q.jeopardy_or_general AS INTEGER) = 1');
-    }
-
-    // Append WHERE clause only if there are conditions
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    // Add ORDER BY, LIMIT, and OFFSET
-    const page = parseInt(req.query.page, 10) || 1; // Default to page 1
-    const pageSize = parseInt(req.query.page_size, 10) || 10; // Default to 10 rows per page
-    const offset = (page - 1) * pageSize;
-
-    query += ` ORDER BY RANDOM() LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(pageSize, offset);
-
-    // Execute query
     const { rows } = await connection.query(query, params);
     res.status(200).json(rows);
   } catch (err) {

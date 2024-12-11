@@ -10,12 +10,22 @@ export default function HomePage() {
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    const savedQuestion = localStorage.getItem('questionOfTheDay');
+    const savedDate = localStorage.getItem('questionDate');
 
-    fetch(`http://${config.server_host}:${config.server_port}/random`)
-      .then((res) => res.json())
-      .then((resJson) => {
-        setQuestionOfTheDay(resJson);
-      });
+    if (savedQuestion && savedDate === today) {
+      // If we have a saved question for today, use it
+      setQuestionOfTheDay(JSON.parse(savedQuestion));
+    } else {
+      // Otherwise, fetch a new question
+      fetch(`http://${config.server_host}:${config.server_port}/random`)
+        .then((res) => res.json())
+        .then((resJson) => {
+          setQuestionOfTheDay(resJson);
+          localStorage.setItem('questionOfTheDay', JSON.stringify(resJson));
+          localStorage.setItem('questionDate', today);
+        });
+    }
   }, []);
 
   // Function to format air date to YYYY-MM-DD
@@ -88,14 +98,16 @@ export default function HomePage() {
           </Box>
           {showDetails && (
             <Box mt={3}>
-              <Typography variant="body2" mt={2}>
-                <strong>Category:</strong> {questionOfTheDay.category}
-              </Typography>
-              <Typography variant="body2" mt={2}>
-                <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
-              </Typography>
-              <Typography variant="body2" mt={2}>
-                <strong>Value:</strong> {questionOfTheDay.value}
+              <Typography variant="body2" mt={2} sx={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                <Box>
+                  <strong>Category:</strong> {questionOfTheDay.category}
+                </Box>
+                <Box>
+                  <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
+                </Box>
+                <Box>
+                  <strong>Value:</strong> {questionOfTheDay.value}
+                </Box>
               </Typography>
             </Box>
           )}
@@ -106,7 +118,11 @@ export default function HomePage() {
             About the Site
           </Typography>
           <Typography variant="body1" align="center">
-            Explore questions, track analytics, and test your knowledge with our Jeopardy Helper!
+          Discover, analyze, and sharpen your trivia skills with our Jeopardy Helper! <br />
+          Explore a vast collection of questions, dive into analytics, and challenge yourself to become a trivia master. <br />
+          Whether you're a Jeopardy! enthusiast or just curious, we've got everything you need to elevate your game! <br /> <br />
+          By Mia Kim, Lyla Waitman, Sarah Zhang and Trini Feng
+
           </Typography>
         </Box>
       </Container>

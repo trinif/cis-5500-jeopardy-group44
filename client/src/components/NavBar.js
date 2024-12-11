@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { NavLink } from 'react-router-dom';
-
+import { useAuth } from './Context'; // Import the useAuth hook
 
 function NavText({ href, text }) {
   return (
@@ -13,8 +13,6 @@ function NavText({ href, text }) {
         letterSpacing: '.3rem',
         color: 'inherit',
         textDecoration: 'none',
-        textAlign: 'center',
-        flex: 1,
         position: 'relative',
         '&:hover': {
           color: '#FFD700', // Gold on hover
@@ -48,6 +46,8 @@ function NavText({ href, text }) {
 }
 
 export default function NavBar() {
+  const { userId } = useAuth(); // Get the current user ID from the AuthContext
+
   return (
     <AppBar
       position="static"
@@ -60,16 +60,41 @@ export default function NavBar() {
       <Toolbar
         sx={{
           display: 'flex',
-          justifyContent: 'space-evenly',
+          justifyContent: 'center', // Center all items in the toolbar
+          padding: '0',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-evenly', width: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between', // Evenly distribute items
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '1200px', // Limit max width for the nav bar content
+            padding: '0 20px', // Add some padding on the sides
+          }}
+        >
           {/* Navigation Links */}
           <NavText href="/" text="Home" />
           <NavText href="/question_selection" text="Question Selection" />
           <NavText href="/statistics" text="Statistics" />
-          <NavText href="/questions" text="Test Yourself" />
-          <NavText href="/login" text="Login | Signup" />
+          {userId && !userId.startsWith('guest_') ? (
+            // Show the username if logged in
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: 'Anton, sans-serif',
+                fontWeight: 700,
+                letterSpacing: '.3rem',
+                color: '#FFD700',
+              }}
+            >
+              {`${userId}`}
+            </Typography>
+          ) : (
+            // Show Login | Signup if not logged in
+            <NavText href="/login" text="Login | Signup" />
+          )}
         </Box>
       </Toolbar>
     </AppBar>
