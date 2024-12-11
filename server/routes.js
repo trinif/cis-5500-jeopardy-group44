@@ -145,7 +145,21 @@ const check_answer = async function(req, res) {
   })
 }
 
-
+const question = async function(req, res) {
+  const question_id = req.params.question_id;
+  connection.query(`
+    SELECT *
+    FROM Questions
+    WHERE Questions.question_id = '${question_id}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
 
 // 1
 const overall_accuracy = async function(req, res) {
@@ -305,7 +319,7 @@ const unanswered_category = async function (req, res) {
 }
 
 //gives all questions that are in a subject that the user has answered incorrectly before
-//this seems unnecessary but could do something with incorrect answers?
+//change to incorrect answers
 const incorrect_questions_category = async function (req, res) {
   const user_id = req.params.user_id;
 
@@ -500,6 +514,7 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  question,
   overall_accuracy,
   best_worst_category,
   best_worst_category_universal,
