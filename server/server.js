@@ -38,7 +38,8 @@ app.post('/update_user_answer', routes.update_user_answer);
 
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 
-app.post('/question/:question_id', routes.question);
+app.get('/question/:question_id', routes.question);
+app.get('/questions', routes.questions);
 
 app.get('/overall_accuracy/:user_id', routes.overall_accuracy);
 

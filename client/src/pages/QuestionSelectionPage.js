@@ -12,26 +12,29 @@ import {
   Grid,
   Chip,
   Slider,
+  Link
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
+//import { questions } from '../../../server/routes';
 
 const config = require('../config.json'); // Import server configuration
 
 export default function QuestionSelectionPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMetaCategories, setSelectedMetaCategories] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedSource, setSelectedSource] = useState('both'); // 'jeopardy', 'trivia', or 'both'
   const [selectedRounds, setSelectedRounds] = useState([]);
   const [valueRange, setValueRange] = useState([100, 9800]);
-  const [metaCategories, setMetaCategories] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [filters, setFilters] = useState({}); // Holds dynamically applied filters
   const [isShuffled, setIsShuffled] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
 
   const defaultValueRange = [100, 9800];
 
-  // Predefined metaCategories
+  // Predefined Subjects
   useEffect(() => {
-    const predefinedMetaCategories = [
+    const predefinedSubjects = [
       'History',
       'Pop Culture',
       'Geography',
@@ -41,19 +44,44 @@ export default function QuestionSelectionPage() {
       'Vocabulary',
       'Math',
     ];
-    setMetaCategories(predefinedMetaCategories);
+    setSubjects(predefinedSubjects);
   }, []);
 
   // Dynamically apply filters except for search
   useEffect(() => {
     setFilters({
       searchTerm,
-      metaCategories: selectedMetaCategories,
+      subjects: selectedSubjects,
       source: selectedSource,
       rounds: selectedRounds,
       valueRange: selectedSource === 'jeopardy' ? valueRange : null, // Only apply value range for Jeopardy
     });
-  }, [selectedMetaCategories, selectedSource, selectedRounds, valueRange]);
+  }, [selectedSubjects, selectedSource, selectedRounds, valueRange]);
+
+  /* useEffect(() => {
+    fetch(`http://${config.server_host}:${config.server_port}/questions`)
+      .then(res => res.json())
+      .then(resJson => {
+        const questionsWithId = resJson.map((question) => ({ id: question.question_id, ...question }));
+        setData(questionsWithId);
+      });
+  }, []);
+
+  const search = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/question_selection?keyword=${searchTerm}` +
+      `&subjects=${selectedSubjects}` +
+      `&rounds=${selectedRounds}`
+      `&value_low=${valueRange[0]}&value_high=${valueRange[1]}` +
+      `&source=${selectedSource}`
+    )
+      .then(res => res.json())
+      .then(resJson => {
+        // DataGrid expects an array of objects with a unique id.
+        // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
+        const questionsWithId = resJson.map((question) => ({ id: question.question_id, ...question }));
+        setData(questionsWithId);
+      });
+  } */
 
   // Define the columns for LazyTable
   const columns = [
@@ -72,8 +100,9 @@ export default function QuestionSelectionPage() {
           { headerName: 'Value', field: 'value', width: '8%' },
         ]
       : []),
-    { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
+    { headerName: 'Subject', field: 'subject', width: '10%' },
     { headerName: 'Answer', field: 'answerCheck', width: '22%' },
+    { headerName: 'More Information', field: 'link', width: '10%'}
   ];
   
   
@@ -81,8 +110,8 @@ export default function QuestionSelectionPage() {
   // Build the route dynamically based on filters
   const buildRoute = () => {
     const params = new URLSearchParams({
-      title: filters.searchTerm || '',
-      meta_category: (filters.metaCategories || []).join(',') || '',
+      keyword: filters.searchTerm || '',
+      subject: (filters.subjects || []).join(',') || '',
       source: filters.source || 'both',
       round: (filters.rounds || []).join(',') || '',
       value_low: filters.valueRange ? filters.valueRange[0] : null,
@@ -90,7 +119,7 @@ export default function QuestionSelectionPage() {
       shuffle: isShuffled,
     });
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
-  };  
+  };
 
   const applySearch = () => {
     setFilters((prevFilters) => ({
@@ -105,9 +134,9 @@ export default function QuestionSelectionPage() {
     }
   };
 
-  const handleDeleteMetaCategory = (metaCategory) => {
-    setSelectedMetaCategories(
-      selectedMetaCategories.filter((m) => m !== metaCategory)
+  const handleDeleteSubject = (subject) => {
+    setSelectedSubjects(
+      selectedSubjects.filter((m) => m !== subject)
     );
   };
 
@@ -169,12 +198,12 @@ export default function QuestionSelectionPage() {
             <Grid item xs={12} sm={4} md={4}>
               <Select
                 multiple
-                value={selectedMetaCategories}
-                onChange={(e) => setSelectedMetaCategories(e.target.value)}
+                value={selectedSubjects}
+                onChange={(e) => setSelectedSubjects(e.target.value)}
                 displayEmpty
                 input={<OutlinedInput />}
                 renderValue={(selected) =>
-                  selected.length > 0 ? selected.join(', ') : 'Search by Meta Category'
+                  selected.length > 0 ? selected.join(', ') : 'Search by Subject'
                 }
                 fullWidth
                 sx={{
@@ -182,9 +211,9 @@ export default function QuestionSelectionPage() {
                   borderRadius: '5px',
                 }}
               >
-                {metaCategories.map((metaCategory) => (
-                  <MenuItem key={metaCategory} value={metaCategory}>
-                    {metaCategory}
+                {subjects.map((subject) => (
+                  <MenuItem key={subject} value={subject}>
+                    {subject}
                   </MenuItem>
                 ))}
               </Select>
@@ -307,11 +336,11 @@ export default function QuestionSelectionPage() {
             marginBottom: '10px',
           }}
         >
-          {selectedMetaCategories.map((metaCategory) => (
+          {selectedSubjects.map((subject) => (
             <Chip
-              key={metaCategory}
-              label={metaCategory}
-              onDelete={() => handleDeleteMetaCategory(metaCategory)}
+              key={subject}
+              label={subject}
+              onDelete={() => handleDeleteSubject(subject)}
               sx={{ backgroundColor: '#FFD700', color: '#081484' }}
             />
           ))}

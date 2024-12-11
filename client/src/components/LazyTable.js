@@ -12,6 +12,7 @@ import {
   Box,
   TextField,
   IconButton,
+  Link
 } from '@mui/material';
 
 export default function LazyTable({ route, columns, defaultPageSize, rowsPerPageOptions }) {
@@ -22,6 +23,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
   const [userAnswers, setUserAnswers] = useState({}); // Tracks user inputs
   const [feedback, setFeedback] = useState({}); // Tracks feedback for each question
   const [revealedAnswers, setRevealedAnswers] = useState({}); // Tracks revealed answers
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
 
   // Fetch data when the route, page, or pageSize changes
   useEffect(() => {
@@ -212,9 +214,19 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
     );
   };  
 
+  //should not be implementing this way
+  const renderLinkCell = (row) => {
+    const questionId = row.question_id;
+    
+    <Link onClick={() => setSelectedQuestionId(row.question_id)}>{Link}</Link>
+  }
+
   const defaultRenderCell = (col, row) => {
     if (col.field === 'answerCheck') {
       return renderAnswerCell(row);
+    }
+    if (col.field === 'link') {
+      return renderLinkCell(row);
     }
     return <div>{row[col.field]}</div>;
   };

@@ -156,6 +156,34 @@ const question = async function(req, res) {
       console.log(err)
       res.status(500).json({message: 'Error'})
     } else {
+      res.json(data.rows[0])
+    }
+  })
+}
+
+const questions = async function(req, res) {
+  connection.query(`
+    SELECT *
+    FROM Questions
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
+const search_questions = async function(req, res) {
+  connection.query(`
+    SELECT *
+    FROM Questions
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
       res.json(data.rows)
     }
   })
@@ -452,22 +480,50 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
-  const title = req.query.title || '';
-  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) || null : null;
-  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) || null : null;  
-  const metaCategories = req.query.meta_category
-    ? req.query.meta_category.split(',')
-    : [];
-  const rounds = req.query.round
+  const keyword = req.query.keyword || '';
+  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) : 100;
+  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) : 2000;  
+  /* const subjects = req.query.subject
+    ? req.query.subject.split(',')
+    : []; */
+  const subjects = req.query.subjects;
+  const rounds = req.query.rounds;
+  /* const rounds = req.query.round
     ? req.query.round.split(',')
-    : [];
+    : []; */
   const source = req.query.source || 'both';
   const shuffle = req.query.shuffle === 'true';
   const page = parseInt(req.query.page, 10) || 1;
   const pageSize = parseInt(req.query.page_size, 10) || 10;
   const offset = (page - 1) * pageSize;
 
-  try {
+  connection.query(`
+    WITH base_questions AS (
+        SELECT 
+          q.question_id, 
+          q.question, 
+          q.answer,
+          CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
+          q.subject AS subject,
+          j.round,
+          j.value
+        FROM 
+          questions q
+          LEFT JOIN jeopardy j ON q.question_id = j.question_id
+      )
+    
+    SELECT *
+    FROM base_questions;
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
+
+  /* try {
     const query = `
       WITH base_questions AS (
         SELECT 
@@ -475,7 +531,7 @@ const question_selection = async function (req, res) {
           q.question, 
           q.answer,
           CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
-          q.subject AS meta_category,
+          q.subject AS subject,
           j.round,
           j.value
         FROM 
@@ -487,7 +543,7 @@ const question_selection = async function (req, res) {
         FROM base_questions
         WHERE 
           ($1::text IS NULL OR question ILIKE $1)
-          AND ($2::text[] IS NULL OR meta_category ILIKE ANY($2))
+          AND ($2::text[] IS NULL OR subject ILIKE ANY($2))
           AND ($3::text[] IS NULL OR round = ANY($3))
           AND ($4::int IS NULL OR $5::int IS NULL OR value BETWEEN $4 AND $5)
           AND (
@@ -503,8 +559,8 @@ const question_selection = async function (req, res) {
     `;
 
     const params = [
-      title ? `%${title}%` : null, // $1: Title search
-      metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : null, // $2: Meta cats
+      keyword ? `%${keyword}%` : null, // $1: Keyword search
+      subjects.length > 0 ? subjects.map((cat) => `%${cat}%`) : null, // $2: Meta cats
       rounds.length > 0 ? rounds : null, // $3: Rounds
       valueLow, // $4: Minimum value
       valueHigh, // $5: Maximum value
@@ -518,7 +574,7 @@ const question_selection = async function (req, res) {
   } catch (err) {
     console.error('Error fetching questions:', err);
     res.status(500).json({ message: 'Error fetching questions' });
-  }
+  } */
 };
 
 module.exports = {
@@ -527,6 +583,7 @@ module.exports = {
   update_user_answer,
   check_answer,
   question,
+  questions,
   overall_accuracy,
   best_worst_category,
   best_worst_category_universal,
