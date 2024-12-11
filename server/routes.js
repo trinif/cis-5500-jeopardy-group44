@@ -145,6 +145,23 @@ const check_answer = async function(req, res) {
   })
 }
 
+const follow_user = async function(req, res) {
+  const following = req.params.following;
+  const person_of_interest = req.params.person_of_interest;
+
+  connection.query(`
+    INSERT INTO Following (following, person_of_interest)
+    VALUES ('${following}', '${person_of_interest}')
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.json({})
+    } else {
+      res.json({})
+    }
+  })
+}
+
 const top_users = async function(req, res) {
   connection.query(`
     SELECT user_id,
@@ -427,6 +444,31 @@ const unanswered_categories_questions = async function(req, res) {
   });
 }
 
+const category_accuracy_universal = async function(req, res) {
+  const user_id = req.params.user_id;
+  connection.query(`
+    SELECT 
+      q.subject,
+      (COUNT(*) FILTER (WHERE ua.is_correct = B'1') * 100.0 / COUNT(*)) AS accuracy
+    FROM 
+      UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
+    GROUP BY 
+      q.subject;
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      const result = data.rows.map(row => ({
+        subject: row.subject,
+        accuracy: parseFloat(row.accuracy).toFixed(2)
+      }));
+      
+      res.json(result);  // Send the result as a JSON array
+    }
+  });
+};
+
 // DONE
 const category_accuracy = async function(req, res) {
   const user_id = req.params.user_id;
@@ -576,6 +618,7 @@ module.exports = {
   login,
   update_user_answer,
   check_answer,
+  follow_user,
   top_users,
   overall_accuracy,
   overall_accuracy_universal,
@@ -586,6 +629,7 @@ module.exports = {
   final_jeopardy_questions,
   general_trivia_questions,
   unanswered_categories_questions,
+  category_accuracy_universal,
   category_accuracy,
   random,
   question_selection,
