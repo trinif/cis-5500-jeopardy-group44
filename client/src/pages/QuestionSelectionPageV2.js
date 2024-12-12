@@ -63,7 +63,12 @@ export default function QuestionSelectionPageV2() {
   }, []);
 
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/question_selection?keyword=${keyword}`
+    fetch(`http://${config.server_host}:${config.server_port}/question_selection?keyword=${keyword}` +
+      `&subjects[]=${selectedSubjects}` +
+      `&source=${selectedSource}` +
+      `&valueLow=${valueRange[0]}` +
+      `&valueHigh=${valueRange[1]}` +
+      `&rounds[]=${selectedRounds}` 
     )
       .then(res => res.json())
       .then(resJson => {
@@ -71,6 +76,13 @@ export default function QuestionSelectionPageV2() {
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
         const questionsWithId = resJson.map((question) => ({ id: question.question_id, ...question }));
         console.log(selectedSubjects);
+        console.log(questionsWithId);
+        console.log(`http://${config.server_host}:${config.server_port}/question_selection?keyword=${keyword}` +
+      `&subjects[]=${selectedSubjects}` +
+      `&source=${selectedSource}` +
+      `&valueLow=${valueRange[0]}` +
+      `&valueHigh=${valueRange[1]}` +
+      `&rounds[]=${selectedRounds}` );
         setData(questionsWithId);
       });
   }
