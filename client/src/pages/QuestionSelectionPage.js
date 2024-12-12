@@ -29,6 +29,7 @@ export default function QuestionSelectionPage() {
   const [filters, setFilters] = useState({}); // Holds dynamically applied filters
   const [isShuffled, setIsShuffled] = useState(false);
   const [pastQuestionsFilter, setPastQuestionsFilter] = useState('all'); // Add filter state for "all", "never_tried", and "wrong"
+  const [page, setPage] = useState(1); // Add page state
 
   const defaultValueRange = [100, 9800];
 
@@ -57,6 +58,10 @@ export default function QuestionSelectionPage() {
       valueRange: selectedSource === 'jeopardy' ? valueRange : null, // Only apply value range for Jeopardy
     });
   }, [searchTerm, selectedMetaCategories, selectedSource, selectedRounds, valueRange]);
+
+  useEffect(() => {
+    setPage(1); // Reset to the first page whenever filters change
+  }, [filters]);
 
   // Define the columns for LazyTable
   const columns = [
@@ -113,6 +118,7 @@ export default function QuestionSelectionPage() {
       shuffle: isShuffled,
       pastQuestionsFilter, // Pass the selected filter
       user_id: userId,
+      page
     });
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
   };
@@ -306,63 +312,62 @@ export default function QuestionSelectionPage() {
           </Grid>
 
           {/* Third Row (Jeopardy Specific Filters) */}
-          {/* Third Row (Jeopardy Specific Filters) */}
-{selectedSource === 'jeopardy' && (
-  <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
-    {/* Filter by Round */}
-    <Grid item xs={12} sm={6}>
-      <Select
-        multiple
-        value={selectedRounds}
-        onChange={(e) => setSelectedRounds(e.target.value)}
-        displayEmpty
-        input={<OutlinedInput />}
-        renderValue={(selected) =>
-          selected.length > 0 ? selected.join(', ') : 'Filter by Round'
-        }
-        fullWidth
-        sx={{
-          backgroundColor: 'white',
-          borderRadius: '5px',
-        }}
-      >
-        <MenuItem value="Jeopardy!">Jeopardy!</MenuItem>
-        <MenuItem value="Double Jeopardy!">Double Jeopardy!</MenuItem>
-        <MenuItem value="Final Jeopardy!">Final Jeopardy!</MenuItem>
-      </Select>
-    </Grid>
+        {selectedSource === 'jeopardy' && (
+          <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
+            {/* Filter by Round */}
+            <Grid item xs={12} sm={6}>
+              <Select
+                multiple
+                value={selectedRounds}
+                onChange={(e) => setSelectedRounds(e.target.value)}
+                displayEmpty
+                input={<OutlinedInput />}
+                renderValue={(selected) =>
+                  selected.length > 0 ? selected.join(', ') : 'Filter by Round'
+                }
+                fullWidth
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}
+              >
+                <MenuItem value="Jeopardy!">Jeopardy!</MenuItem>
+                <MenuItem value="Double Jeopardy!">Double Jeopardy!</MenuItem>
+                <MenuItem value="Final Jeopardy!">Final Jeopardy!</MenuItem>
+              </Select>
+            </Grid>
 
-    {/* Value Range */}
-    <Grid item xs={12} sm={6}>
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'gold',
-            fontWeight: 'bold',
-            marginRight: '10px',
-            minWidth: '80px', // Ensures alignment
-          }}
-        >
-          Value Range
-        </Typography>
-        <Slider
-          value={valueRange}
-          onChange={(e, newValue) => setValueRange(newValue)}
-          valueLabelDisplay="auto"
-          min={100}
-          max={9800}
-          step={100} // Snap slider to increments of 100
-          marks // Adds visual markers
-          sx={{
-            color: 'gold',
-            flexGrow: 1, // Makes the slider stretch
-          }}
-        />
-      </Box>
-    </Grid>
-  </Grid>
-)}
+            {/* Value Range */}
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'gold',
+                    fontWeight: 'bold',
+                    marginRight: '10px',
+                    minWidth: '80px', // Ensures alignment
+                  }}
+                >
+                  Value Range
+                </Typography>
+                <Slider
+                  value={valueRange}
+                  onChange={(e, newValue) => setValueRange(newValue)}
+                  valueLabelDisplay="auto"
+                  min={100}
+                  max={9800}
+                  step={100} // Snap slider to increments of 100
+                  marks // Adds visual markers
+                  sx={{
+                    color: 'gold',
+                    flexGrow: 1, // Makes the slider stretch
+                  }}
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        )}
         </Box>
 
         {/* Selected Filters (Chips) */}
