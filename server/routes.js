@@ -506,19 +506,68 @@ const general_trivia_questions = async function (req, res) {
   })
 }
 
-// to-do
-const unanswered_categories_questions = async function(req, res) {
+
+// connection.query(`
+//   WITH unanswered_categories AS (
+//     SELECT DISTINCT q.subject
+//     FROM Questions q
+//     WHERE q.subject NOT IN
+//       (SELECT qu.subject
+//       FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
+//       WHERE ua.user_id='${user_id}'
+//   ),
+//   SELECT q.question_id, q.question, q.answer
+//   FROM Questions q
+//   WHERE q.subject IN (SELECT q.subject FROM uanswered_categories)
+// `,
+
+// const unanswered_categories_questions = async function (req, res) {
+//   const user_id = req.params.user_id;
+//   connection.query(`
+//   WITH unanswered_categories AS (
+//     SELECT DISTINCT q.subject
+//     FROM Questions q
+//     WHERE q.subject NOT IN
+//       (SELECT qu.subject
+//       FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
+//       WHERE ua.user_id='${user_id}'
+//   ),
+//   SELECT q.question_id, q.question, q.answer
+//   FROM Questions q
+//   WHERE q.subject IN (SELECT q.subject FROM uanswered_categories)
+//   `,
+//   (err, data) => {
+//     if (err) {
+//       console.log(err)
+//       res.json({})
+//     } else {
+//       console.log(data.rows)
+//       res.json(data.rows)
+//     }
+//   })
+// }
+
+// DONE
+const unanswered_categories_questions = async function (req, res) {
+  const user_id = req.params.user_id;
   connection.query(`
-    SELECT *
-    FROM Jeopardy
-    ORDER BY RANDOM()
-    LIMIT 1
+    WITH not_answered_cats AS (
+      SELECT DISTINCT q.subject
+      FROM Questions q
+      WHERE q.subject NOT IN
+        (SELECT qu.subject
+        FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
+        WHERE ua.user_id='${user_id}'))
+    SELECT q.question_id, q.question, q.answer, q.subject
+      FROM Questions q
+      WHERE q.subject IN (SELECT na.subject FROM not_answered_cats na)
   `, (err, data) => {
     if (err) {
       console.log(err);
       res.json({});
     } else {
-      res.json(data.rows[0]);
+      console.log(data.rows);
+      res.json(data.rows);
     }
   });
 }
