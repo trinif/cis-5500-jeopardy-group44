@@ -214,10 +214,10 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
 
   const defaultRenderCell = (col, row) => {
     if (col.field === 'answerCheck') {
-      return renderAnswerCell(row);
+      return renderAnswerCell(row); 
     }
-    return <div>{row[col.field]}</div>;
-  };
+    return <div>{row[col.field]}</div>; 
+  };  
 
   return (
     <Box

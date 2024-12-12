@@ -644,6 +644,8 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
+  const userId = req.query.user_id; // User ID parameter
+  const pastQuestionsFilter = req.query.pastQuestionsFilter || 'all'; // Filter parameter
   const title = req.query.title || '';
   const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) || null : null;
   const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) || null : null;  
@@ -663,35 +665,64 @@ const question_selection = async function (req, res) {
     const query = `
       WITH base_questions AS (
         SELECT 
-          q.question_id, 
+          q.question_id AS base_question_id, -- Alias question_id for clarity
           q.question, 
           q.answer,
           CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
           q.subject AS meta_category,
           j.round,
-          j.value
+          j.value,
+          j.category
         FROM 
           questions q
           LEFT JOIN jeopardy j ON q.question_id = j.question_id
       ),
-      filtered_questions AS (
-        SELECT * 
-        FROM base_questions
+      user_attempts AS (
+        SELECT 
+          question_id AS user_question_id, -- Alias question_id for clarity
+          CASE 
+            WHEN is_correct = B'1' THEN TRUE 
+            WHEN is_correct = B'0' THEN FALSE 
+            ELSE NULL 
+          END AS is_correct
+        FROM 
+          useranswers
         WHERE 
-          ($1::text IS NULL OR question ILIKE $1)
-          AND ($2::text[] IS NULL OR meta_category ILIKE ANY($2))
-          AND ($3::text[] IS NULL OR round = ANY($3))
-          AND ($4::int IS NULL OR $5::int IS NULL OR value BETWEEN $4 AND $5)
+          user_id = $9
+      ),
+      filtered_questions AS (
+        SELECT 
+          b.base_question_id AS question_id, -- Explicitly select question_id
+          b.question,
+          b.answer,
+          b.jeopardy_or_general,
+          b.meta_category,
+          b.round,
+          b.value,
+          b.category,
+          u.is_correct -- Include is_correct for filtering
+        FROM base_questions b
+        LEFT JOIN user_attempts u ON b.base_question_id = u.user_question_id
+        WHERE 
+          ($1::text IS NULL OR b.question ILIKE $1)
+          AND ($2::text[] IS NULL OR b.meta_category ILIKE ANY($2))
+          AND ($3::text[] IS NULL OR b.round = ANY($3))
+          AND ($4::int IS NULL OR $5::int IS NULL OR b.value BETWEEN $4 AND $5)
           AND (
             $6::text = 'both' OR
-            ($6::text = 'jeopardy' AND jeopardy_or_general = 0) OR
-            ($6::text = 'trivia' AND jeopardy_or_general = 1)
+            ($6::text = 'jeopardy' AND b.jeopardy_or_general = 0) OR
+            ($6::text = 'trivia' AND b.jeopardy_or_general = 1)
+          )
+          AND (
+            $8::text = 'all' OR
+            ($8::text = 'never_tried' AND u.user_question_id IS NULL) OR
+            ($8::text = 'wrong' AND u.is_correct = FALSE)
           )
       )
       SELECT * 
       FROM filtered_questions
-      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'}
-      LIMIT $7 OFFSET $8;
+      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'} -- question_id is now unambiguous
+      LIMIT $7 OFFSET $10;
     `;
 
     const params = [
@@ -702,7 +733,9 @@ const question_selection = async function (req, res) {
       valueHigh, // $5: Maximum value
       source, // $6: Source (jeopardy, trivia, both)
       pageSize, // $7: Limit
-      offset, // $8: Offset
+      pastQuestionsFilter, // $8: Filter (all, never_tried, wrong)
+      userId, // $9: User ID
+      offset, // $10: Offset
     ];
 
     const { rows } = await connection.query(query, params);
@@ -712,6 +745,7 @@ const question_selection = async function (req, res) {
     res.status(500).json({ message: 'Error fetching questions' });
   }
 };
+
 
 // gets the questions that the top 5 users (on leaderboard) did worst on
 // const least_accurate_questions_top_users = async function(req, res) {
