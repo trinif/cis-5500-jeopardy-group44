@@ -210,7 +210,7 @@ export default function QuestionSelectionPage() {
                 ))}
               </Select>
             </Grid>
-            <Grid item xs={12} sm={.75} sx={{ display: 'flex', justifyContent: 'flex-end'}}>
+            <Grid item xs={.75} sm={.75} sx={{ display: 'flex', justifyContent: 'flex-end'}}>
               <Box
                 onClick={toggleShuffle}
                 sx={{
