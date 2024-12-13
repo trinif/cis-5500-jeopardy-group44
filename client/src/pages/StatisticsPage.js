@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Typography, Container, Divider, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Grid } from '@mui/material';
 import { BarChart } from '@mui/x-charts';
 import { useAuth } from '../components/Context';
+import { Link as RouterLink } from 'react-router-dom'; 
 
 const config = require('../config.json');
 
@@ -100,6 +101,33 @@ export default function StatisticsPage() {
         </Typography>
         <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
 
+        {userId.startsWith('guest_') && (
+          <Typography
+            variant="h6"
+            align="center"
+            sx={{
+              //backgroundColor: 'rgba(255, 255, 255, 0.2)', // Optional background for emphasis
+              color: 'gold',
+              borderRadius: '8px',
+              padding: '10px',
+              marginBottom: '20px',
+            }}
+          >
+            <span> 
+              <RouterLink
+                to="/login" 
+                style={{
+                  color: 'gold',
+                  textDecoration: 'underline',
+                }}
+              >
+                Log in or Sign up
+              </RouterLink>
+              {" "}to access <strong>"My Performance"</strong> and <strong>"Friend Leaderboard"</strong> features.
+            </span>
+          </Typography>
+        )}
+
         {/* Performance Statistics Section */}
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
@@ -113,7 +141,7 @@ export default function StatisticsPage() {
             }}
           >
             <Typography variant="h4" align="center" sx={{ color: '#FFD700', lineHeight: 1.2 }}>
-              Overall Performance
+              My Performance
             </Typography>
             <Typography
               variant="body1"
@@ -143,7 +171,7 @@ export default function StatisticsPage() {
             </Box>
             <Box
               sx={{
-                backgroundColor: 'rgba(200, 180, 255, 0.4)',
+                backgroundColor: 'rgba(180, 150, 200, 0.4)',
                 borderRadius: '8px',
                 padding: '8px',
               }}
@@ -209,7 +237,7 @@ export default function StatisticsPage() {
             </Box>
             <Box
               sx={{
-                backgroundColor: 'rgba(200, 180, 255, 0.4)',
+                backgroundColor: 'rgba(180, 150, 200, 0.4)',
                 borderRadius: '8px',
                 padding: '8px',
               }}
