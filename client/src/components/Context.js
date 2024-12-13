@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
-const generateRandomUserId = () => {
+export const generateRandomUserId = () => {
     return 'guest_' + Math.random().toString(36).substring(2, 9);
 };
 

@@ -61,7 +61,9 @@ export default function HomePage() {
             Question of the Day
           </Typography>
           <Typography variant="h6">{questionOfTheDay.question}</Typography>
-          <Typography variant="h8"> <strong>Category:</strong> {questionOfTheDay.category}</Typography>
+          <Typography variant="h8" sx={{ display: 'block' }}> <strong>Category:</strong> {questionOfTheDay.category}</Typography>
+          <Typography variant="h8" sx={{ display: 'block' }}> <strong>Value:</strong> {questionOfTheDay.value}</Typography>
+          <Typography variant="h8" sx={{ display: 'block' }}> <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}</Typography>
           {showAnswer && (
             <Typography variant="body1" mt={2}>
               <strong>Answer:</strong> {questionOfTheDay.answer}
@@ -83,7 +85,7 @@ export default function HomePage() {
             >
               {showAnswer ? 'Hide Answer' : 'See Answer'}
             </Button>
-            <Button
+            {/* <Button
               variant="contained"
               sx={{
                 backgroundColor: 'gold',
@@ -93,11 +95,11 @@ export default function HomePage() {
                 },
               }}
               onClick={() => setShowDetails(!showDetails)}
-            >
-              {showDetails ? 'Hide Details' : 'View More'}
-            </Button>
+            > */}
+              {/* {showDetails ? 'Hide Details' : 'View More'} */}
+            {/* </Button> */}
           </Box>
-          {showDetails && (
+          {/* {showDetails && (
             <Box mt={3}>
               <Typography variant="body2" mt={2} sx={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
                 <Box>
@@ -108,7 +110,7 @@ export default function HomePage() {
                 </Box>
               </Typography>
             </Box>
-          )}
+          )} */}
         </Box>
         <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
         <Box mt={4}>
