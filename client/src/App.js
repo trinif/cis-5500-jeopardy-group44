@@ -5,12 +5,10 @@ import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import QuestionSelectionPage from './pages/QuestionSelectionPage';
 import StatisticsPage from './pages/StatisticsPage';
-import AlbumInfoPage from './pages/AlbumInfoPage'
 import Login from "./pages/LoginPage";
 
 import { createTheme } from "@mui/material/styles";
 import JeopardyQuestions from "./pages/JeopardyQuestionsPage";
-import SongsPage from "./pages/StatisticsPage";
 import QuestionSelectionPageV2 from "./pages/QuestionSelectionPageV2";
 
 export const theme = createTheme({

@@ -15,7 +15,7 @@ import {
   Link,
   Button
 } from '@mui/material';
-// import LazyTable from '../components/LazyTable';
+import LazyTable from '../components/LazyTable';
 
 import { DataGrid } from '@mui/x-data-grid';
 
@@ -57,8 +57,10 @@ export default function QuestionSelectionPageV2() {
     fetch(`http://${config.server_host}:${config.server_port}/question_selection`)
       .then(res => res.json())
       .then(resJson => {
-        const questionsWithId = resJson.map((question) => ({ id: question.question_id, ...question }));
+        const questionsWithId = resJson.data.map((question) => ({ id: question.question_id, ...question }));
         setData(questionsWithId);
+      }).catch(err => {
+        console.log(err)
       });
   }, []);
 
