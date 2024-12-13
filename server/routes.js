@@ -665,7 +665,7 @@ const question_selection = async function (req, res) {
     const query = `
       WITH base_questions AS (
         SELECT 
-          q.question_id AS base_question_id, -- Alias question_id for clarity
+          q.question_id AS base_question_id,
           q.question, 
           q.answer,
           CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
@@ -679,7 +679,7 @@ const question_selection = async function (req, res) {
       ),
       user_attempts AS (
         SELECT 
-          question_id AS user_question_id, -- Alias question_id for clarity
+          question_id AS user_question_id,
           CASE 
             WHEN is_correct = B'1' THEN TRUE 
             WHEN is_correct = B'0' THEN FALSE 
@@ -692,7 +692,7 @@ const question_selection = async function (req, res) {
       ),
       filtered_questions AS (
         SELECT 
-          b.base_question_id AS question_id, -- Explicitly select question_id
+          b.base_question_id AS question_id,
           b.question,
           b.answer,
           b.jeopardy_or_general,
@@ -700,7 +700,7 @@ const question_selection = async function (req, res) {
           b.round,
           b.value,
           b.category,
-          u.is_correct -- Include is_correct for filtering
+          u.is_correct
         FROM base_questions b
         LEFT JOIN user_attempts u ON b.base_question_id = u.user_question_id
         WHERE 
@@ -719,33 +719,37 @@ const question_selection = async function (req, res) {
             ($8::text = 'wrong' AND u.is_correct = FALSE)
           )
       )
-      SELECT * 
+      SELECT 
+        *,
+        COUNT(*) OVER() AS total_count
       FROM filtered_questions
-      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'} -- question_id is now unambiguous
+      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'}
       LIMIT $7 OFFSET $10;
     `;
 
     const params = [
-      title ? `%${title}%` : null, // $1: Title search
-      metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : null, // $2: Meta cats
-      rounds.length > 0 ? rounds : null, // $3: Rounds
-      valueLow, // $4: Minimum value
-      valueHigh, // $5: Maximum value
-      source, // $6: Source (jeopardy, trivia, both)
-      pageSize, // $7: Limit
-      pastQuestionsFilter, // $8: Filter (all, never_tried, wrong)
-      userId, // $9: User ID
-      offset, // $10: Offset
+      title ? `%${title}%` : null,
+      metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : null,
+      rounds.length > 0 ? rounds : null,
+      valueLow,
+      valueHigh,
+      source,
+      pageSize,
+      pastQuestionsFilter,
+      userId,
+      offset,
     ];
 
     const { rows } = await connection.query(query, params);
-    res.status(200).json(rows);
+    res.status(200).json({
+      total: rows.length > 0 ? rows[0].total_count : 0,
+      data: rows,
+    });
   } catch (err) {
     console.error('Error fetching questions:', err);
     res.status(500).json({ message: 'Error fetching questions' });
   }
 };
-
 
 
 // gets the questions that the top 5 users (on leaderboard) did worst on

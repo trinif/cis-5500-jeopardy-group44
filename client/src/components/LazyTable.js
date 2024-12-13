@@ -17,44 +17,46 @@ import {
 
 export default function LazyTable({ route, columns, defaultPageSize, rowsPerPageOptions }) {
   const [data, setData] = useState([]);
-  const [page, setPage] = useState(1); // 1 indexed
+  const [page, setPage] = useState(1); 
   const [pageSize, setPageSize] = useState(defaultPageSize ?? 10);
-  const [activeQuestionId, setActiveQuestionId] = useState(null); // Tracks the active question
-  const [userAnswers, setUserAnswers] = useState({}); // Tracks user inputs
-  const [feedback, setFeedback] = useState({}); // Tracks feedback for each question
-  const [revealedAnswers, setRevealedAnswers] = useState({}); // Tracks revealed answers
+  const [activeQuestionId, setActiveQuestionId] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [feedback, setFeedback] = useState({});
+  const [revealedAnswers, setRevealedAnswers] = useState({}); 
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch data when the route, page, or pageSize changes
   useEffect(() => {
     fetch(`${route}&page=${page}&page_size=${pageSize}`)
       .then((res) => res.json())
-      .then((resJson) => setData(resJson))
+      .then((resJson) => {
+        setData(resJson.data);
+        setTotalCount(resJson.total); 
+      })
       .catch((err) => console.error('Error fetching data:', err));
   }, [route, page, pageSize]);
 
   const handleChangePage = (e, newPage) => {
     if (newPage > page - 1 && data.length < pageSize) {
-      // Prevent navigating to the next page if there are no more rows
       return;
     }
-    setPage(newPage + 1); // Convert zero-indexed to one-indexed
+    setPage(newPage + 1);
   };
 
   const handleChangePageSize = (e) => {
     const newPageSize = parseInt(e.target.value, 10);
     setPageSize(newPageSize);
-    setPage(1); // Reset to first page
+    setPage(1); 
   };
 
   const toggleInputVisibility = (questionId) => {
-    setActiveQuestionId((prev) => (prev === questionId ? null : questionId)); // Toggle visibility
+    setActiveQuestionId((prev) => (prev === questionId ? null : questionId)); 
     setFeedback((prev) => ({
       ...prev,
-      [questionId]: undefined, // Reset feedback when toggling
+      [questionId]: undefined,
     }));
     setRevealedAnswers((prev) => ({
       ...prev,
-      [questionId]: false, // Reset revealed answer state when toggling
+      [questionId]: false, 
     }));
   };
 
@@ -78,7 +80,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
   const toggleRevealAnswer = (questionId) => {
     setRevealedAnswers((prev) => ({
       ...prev,
-      [questionId]: !prev[questionId], // Toggle revealed state
+      [questionId]: !prev[questionId],
     }));
   };
 
@@ -106,7 +108,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
       <Box
         sx={{
           position: 'relative',
-          width: '100%', // Ensures it stays inside its table cell
+          width: '100%',
         }}
       >
         {/* Close Button */}
@@ -152,7 +154,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
         <Box
           sx={{
             display: 'flex',
-            gap: '12px', // Space between buttons
+            gap: '12px', 
             justifyContent: 'center',
             marginBottom: '8px',
           }}
@@ -178,7 +180,7 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
             size="small"
             onClick={() => toggleRevealAnswer(questionId)}
             sx={{
-              backgroundColor: revealedAnswers[questionId] ? '#FF5733' : '#FFD700', // Change color on toggle
+              backgroundColor: revealedAnswers[questionId] ? '#FF5733' : '#FFD700', 
               color: '#2E0854',
               fontWeight: 'bold',
               borderRadius: '4px',
@@ -232,15 +234,15 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
     >
       <TablePagination
         rowsPerPageOptions={rowsPerPageOptions ?? [1, 5, 10]}
-        count={-1} // -1 indicates we don't know the total number of rows
+        count={totalCount} // Update here
         rowsPerPage={pageSize}
-        page={page - 1} // Convert 1-indexed to 0-indexed for pagination
+        page={page - 1}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangePageSize}
         sx={{
           backgroundColor: 'transparent',
-          display: 'flex', // Make the component flexible
-          justifyContent: 'flex-end', // Align the pagination to the right
+          display: 'flex',
+          justifyContent: 'flex-end',
           padding: 0, 
           color: 'white',
           '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
@@ -251,10 +253,10 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           },
         }}
         nextIconButtonProps={{
-          disabled: data.length < pageSize, // Disable "next" if fewer rows are fetched
+          disabled: data.length < pageSize,
         }}
         backIconButtonProps={{
-          disabled: page === 1, // Disable "back" if on the first page
+          disabled: page === 1,
         }}
       />
       <TableContainer
