@@ -109,6 +109,11 @@ export default function Login() {
                         type="password"
                         variant="outlined"
                         onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                loginButtonHandler();
+                            }
+                        }}
                         InputProps={{
                             sx: { color: 'white' },
                         }}

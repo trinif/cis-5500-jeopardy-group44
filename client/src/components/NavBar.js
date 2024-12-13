@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from './Context'; // Import the useAuth hook
+import { generateRandomUserId, useAuth } from './Context'; // Import the useAuth hook
 
 function NavText({ href, text }) {
   return (
@@ -46,7 +46,11 @@ function NavText({ href, text }) {
 }
 
 export default function NavBar() {
-  const { userId } = useAuth(); // Get the current user ID from the AuthContext
+  const { userId, setUserId } = useAuth(); // Get the current user ID from the AuthContext
+
+  const handleLogout = () => {
+    setUserId(generateRandomUserId())
+  }
 
   return (
     <AppBar
@@ -81,17 +85,20 @@ export default function NavBar() {
           <NavText href="/questions" text="Test Yourself" />
           {userId && !userId.startsWith('guest_') ? (
             // Show the username if logged in
-            <Typography
-              variant="h6"
-              sx={{
-                fontFamily: 'Anton, sans-serif',
-                fontWeight: 700,
-                letterSpacing: '.3rem',
-                color: '#FFD700',
-              }}
-            >
-              {`${userId}`}
-            </Typography>
+            <div onClick={handleLogout}>
+              <NavText href="/" text={`${userId} | Logout`}/>
+            </div>
+            // <Typography
+            //   variant="h6"
+            //   sx={{
+            //     fontFamily: 'Anton, sans-serif',
+            //     fontWeight: 700,
+            //     letterSpacing: '.3rem',
+            //     color: '#FFD700',
+            //   }}
+            // >
+            //   {`${userId}`}
+            // </Typography>
           ) : (
             // Show Login | Signup if not logged in
             <NavText href="/login" text="Login | Signup" />
