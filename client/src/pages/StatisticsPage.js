@@ -103,53 +103,135 @@ export default function StatisticsPage() {
         {/* Performance Statistics Section */}
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Box
+          <Box
+            sx={{
+              backgroundColor: '#081484',
+              borderRadius: '10px',
+              padding: '16px',
+              border: '3px solid #FFD700',
+              height: '100%',
+            }}
+          >
+            <Typography variant="h4" align="center" sx={{ color: '#FFD700', lineHeight: 1.2 }}>
+              Overall Performance
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
               sx={{
-                backgroundColor: '#081484',
-                borderRadius: '10px',
-                paddingTop: '20px',
-                border: '3px solid #FFD700',
-                height: '100%',
+                marginTop: '8px',
+                lineHeight: 1.4,
               }}
             >
-              <Typography variant="h4" align="center" sx={{ color: '#FFD700' }}>Your Performance</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Overall Accuracy:</strong> {overallUserAccuracy}</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Best Category:</strong> {bestCategoryAccuracy}</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Worst Category:</strong> {worstCategoryAccuracy}</Typography>
-              {categoryUserAccuracy && (
-                <BarChart
-                  xAxis={[{ scaleType: 'band', data: categoryUserAccuracy.map((row) => row.subject), }]}
-                  series={[{ data: categoryUserAccuracy.map((row) => row.accuracy), color: '#FFD700' }]}
-                  width={600}
-                  height={300}
-                />
-              )}
+              <strong>Overall Accuracy:</strong> {overallUserAccuracy}
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-evenly',
+                alignItems: 'center',
+                marginTop: '8px', 
+                marginBottom: '16px',
+              }}
+            >
+              <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+                <strong>Best Category:</strong> {bestCategoryAccuracy}
+              </Typography>
+              <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+                <strong>Worst Category:</strong> {worstCategoryAccuracy}
+              </Typography>
             </Box>
+            <Box
+              sx={{
+                backgroundColor: 'rgba(200, 180, 255, 0.4)',
+                borderRadius: '8px',
+                padding: '8px',
+              }}
+            >
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: categoryUserAccuracy.map((row) => row.subject),
+                  },
+                ]}
+                series={[
+                  {
+                    data: categoryUserAccuracy.map((row) => row.accuracy),
+                    color: '#FFD700',
+                  },
+                ]}
+                width={550} 
+                height={280} 
+              />
+            </Box>
+          </Box>
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Box
+          <Box
+            sx={{
+              backgroundColor: '#081484',
+              borderRadius: '10px',
+              padding: '16px',
+              border: '3px solid #FFD700',
+              height: '100%',
+            }}
+          >
+            <Typography variant="h4" align="center" sx={{ color: '#FFD700', lineHeight: 1.2 }}>
+              Overall Performance
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
               sx={{
-                backgroundColor: '#081484',
-                borderRadius: '10px',
-                paddingTop: '20px',
-                border: '3px solid #FFD700',
-                height: '100%',
+                marginTop: '8px',
+                lineHeight: 1.4,
               }}
             >
-              <Typography variant="h4" align="center" sx={{ color: '#FFD700' }}>Overall Performance</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Overall Accuracy:</strong> {overallAccuracy}</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Best Category:</strong> {bestCategoryAccuracyUniversal}</Typography>
-              <Typography variant="body1" align="center" mt={2}><strong>Worst Category:</strong> {worstCategoryAccuracyUniversal}</Typography>
-              {categoryAccuracy && (
-                <BarChart
-                  xAxis={[{ scaleType: 'band', data: categoryAccuracy.map((row) => row.subject) }]}
-                  series={[{ data: categoryAccuracy.map((row) => row.accuracy), color: '#FFD700' }]}
-                  width={600}
-                  height={300}
-                />
-              )}
+              <strong>Overall Accuracy:</strong> {overallAccuracy}
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-evenly',
+                alignItems: 'center',
+                marginTop: '8px', 
+                marginBottom: '16px',
+              }}
+            >
+              <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+                <strong>Best Category:</strong> {bestCategoryAccuracyUniversal}
+              </Typography>
+              <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+                <strong>Worst Category:</strong> {worstCategoryAccuracyUniversal}
+              </Typography>
             </Box>
+            <Box
+              sx={{
+                backgroundColor: 'rgba(200, 180, 255, 0.4)',
+                borderRadius: '8px',
+                padding: '8px',
+              }}
+            >
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: categoryAccuracy.map((row) => row.subject),
+                  },
+                ]}
+                series={[
+                  {
+                    data: categoryAccuracy.map((row) => row.accuracy),
+                    color: '#FFD700',
+                  },
+                ]}
+                width={550} 
+                height={280} 
+              />
+            </Box>
+          </Box>
           </Grid>
         </Grid>
 
