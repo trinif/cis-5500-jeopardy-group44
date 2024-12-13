@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Slider,
-  Link
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
 import { useAuth } from '../components/Context';
@@ -34,9 +33,9 @@ export default function QuestionSelectionPage() {
 
   const defaultValueRange = [100, 9800];
 
-  // Predefined Subjects
+  // Predefined metaCategories
   useEffect(() => {
-    const predefinedSubjects = [
+    const predefinedMetaCategories = [
       'History',
       'Pop Culture',
       'Geography',
@@ -46,14 +45,14 @@ export default function QuestionSelectionPage() {
       'Vocabulary',
       'Math',
     ];
-    setMetaCategories(predefinedSubjects);
+    setMetaCategories(predefinedMetaCategories);
   }, []);
 
   // Dynamically apply filters except for search
   useEffect(() => {
     setFilters({
       searchTerm,
-      subjects: selectedMetaCategories,
+      metaCategories: selectedMetaCategories,
       source: selectedSource,
       rounds: selectedRounds,
       valueRange: selectedSource === 'jeopardy' ? valueRange : null, 
@@ -105,14 +104,13 @@ export default function QuestionSelectionPage() {
       : []),
     { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
     { headerName: 'Answer', field: 'answerCheck', width: '22%' },
-    { headerName: 'More Information', field: 'link', width: '10%'}
   ];
 
   // Build the route dynamically based on filters
   const buildRoute = () => {
     const params = new URLSearchParams({
-      keyword: filters.searchTerm || '',
-      subject: (filters.subjects || []).join(',') || '',
+      title: filters.searchTerm || '',
+      meta_category: (filters.metaCategories || []).join(',') || '',
       source: filters.source || 'both',
       round: (filters.rounds || []).join(',') || '',
       value_low: filters.valueRange ? filters.valueRange[0] : null,
@@ -137,9 +135,9 @@ export default function QuestionSelectionPage() {
     }
   };
 
-  const handleDeleteSubject = (subject) => {
+  const handleDeleteMetaCategory = (metaCategory) => {
     setSelectedMetaCategories(
-      selectedMetaCategories.filter((m) => m !== subject)
+      selectedMetaCategories.filter((m) => m !== metaCategory)
     );
   };
 
@@ -210,9 +208,9 @@ export default function QuestionSelectionPage() {
                   borderRadius: '5px',
                 }}
               >
-                {metaCategories.map((subject) => (
-                  <MenuItem key={subject} value={subject}>
-                    {subject}
+                {metaCategories.map((metaCategory) => (
+                  <MenuItem key={metaCategory} value={metaCategory}>
+                    {metaCategory}
                   </MenuItem>
                 ))}
               </Select>
@@ -389,11 +387,11 @@ export default function QuestionSelectionPage() {
             marginBottom: '10px',
           }}
         >
-          {selectedMetaCategories.map((subject) => (
+          {selectedMetaCategories.map((metaCategory) => (
             <Chip
-              key={subject}
-              label={subject}
-              onDelete={() => handleDeleteSubject(subject)}
+              key={metaCategory}
+              label={metaCategory}
+              onDelete={() => handleDeleteMetaCategory(metaCategory)}
               sx={{ backgroundColor: '#FFD700', color: '#081484' }}
             />
           ))}

@@ -137,19 +137,10 @@ const check_answer = async function(req, res) {
     if (err) {
       console.log(err)
       res.status(500).json({message: 'Error'})
-    } else{
-      const returned_answer = data.rows[0].answer
-        .replace(/\([^)]*\)/g, '')
-        .replace(/[^a-zA-Z0-9\s-]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase()
-
-      if (returned_answer == answer.toLowerCase()) {
-        res.json({status: 'Correct', message: data.rows[0].answer})
-      } else {
-        res.json({status: 'Incorrect', message: data.rows[0].answer})
-      }
+    } else if (data.rows[0].answer == answer) {
+      res.status(201).json({status: 'Correct', message: data.rows[0].answer})
+    } else {
+      res.status(201).json({status: 'Incorrect', message: data.rows[0].answer})
     }
   })
 }
@@ -251,85 +242,7 @@ const top_users_friends = async function(req, res) {
   })
 }
 
-const question = async function(req, res) {
-  const question_id = req.params.question_id;
-  connection.query(`
-    SELECT *
-    FROM Questions
-    WHERE Questions.question_id = '${question_id}'
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.status(500).json({message: 'Error'})
-    } else {
-      res.json(data.rows[0])
-    }
-  })
-}
 
-const questions = async function(req, res) {
-  const keyword = req.query.keyword || '';
-  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) : 100;
-  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) : 2000;  
-  /* const subjects = req.query.subject
-    ? req.query.subject.split(',')
-    : []; */
-  const subjects = req.query.subjects;
-  const rounds = req.query.rounds;
-  /* const rounds = req.query.round
-    ? req.query.round.split(',')
-    : []; */
-  const source = req.query.source || 'both';
-  const shuffle = req.query.shuffle === 'true';
-  const page = parseInt(req.query.page, 10) || 1;
-  const pageSize = parseInt(req.query.page_size, 10) || 10;
-  const offset = (page - 1) * pageSize;
-  
-  connection.query(`
-    SELECT *
-    FROM Questions
-    WHERE question LIKE '%${keyword}%'
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.status(500).json({message: 'Error'})
-    } else {
-      res.json(data.rows)
-    }
-  })
-}
-
-const search_questions = async function(req, res) {
-  const keyword = req.query.keyword || '';
-  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) : 100;
-  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) : 2000;  
-  /* const subjects = req.query.subject
-    ? req.query.subject.split(',')
-    : []; */
-  const subjects = req.query.subjects;
-  const rounds = req.query.rounds;
-  /* const rounds = req.query.round
-    ? req.query.round.split(',')
-    : []; */
-  const source = req.query.source || 'both';
-  const shuffle = req.query.shuffle === 'true';
-  const page = parseInt(req.query.page, 10) || 1;
-  const pageSize = parseInt(req.query.page_size, 10) || 10;
-  const offset = (page - 1) * pageSize;
-
-  connection.query(`
-    SELECT *
-    FROM Questions
-    WHERE keyword LIKE '%${keyword}%'
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.status(500).json({message: 'Error'})
-    } else {
-      res.json(data.rows)
-    }
-  })
-}
 
 // 1
 const overall_accuracy = async function(req, res) {
@@ -505,9 +418,8 @@ const unanswered_category = async function (req, res) {
   })
 }
 
-//gives all questions that are in a subject that the user has answered incorrectly before
-//change to incorrect answers
-const incorrect_questions_category = async function (req, res) {
+//gives all questions answered incorrectly
+const incorrect_questions_category = async function(req, res) {
   const user_id = req.params.user_id;
   connection.query(`
     SELECT q.question_id, q.question, q.answer, q.subject
@@ -732,82 +644,24 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
-  const predefinedSubjects = [
-    'History',
-    'Pop Culture',
-    'Geography',
-    'Sports',
-    'Literature',
-    'Science',
-    'Vocabulary',
-    'Math',
-  ];
-
-  const keyword = req.query.keyword || '';
-  const valueLow = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 100;
-  const valueHigh = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 2000;  
-  /* const subjects = req.query.subject
-    ? req.query.subject.split(',')
-    : []; */
-  const subjects = req.query.subjects ?? predefinedSubjects;
-  //console.log(req.query.subjects);
-  console.log(subjects);
-  //this works on the first query, but on the subsequent ones, the default is '' rather than null/undefined
-  //have to case for that?
-  const rounds = req.query.rounds ?? ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
-  console.log(rounds);
-  /* const rounds = req.query.round
+  const userId = req.query.user_id; // User ID parameter
+  const pastQuestionsFilter = req.query.pastQuestionsFilter || 'all'; // Filter parameter
+  const title = req.query.title || '';
+  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) || null : null;
+  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) || null : null;  
+  const metaCategories = req.query.meta_category
+    ? req.query.meta_category.split(',')
+    : [];
+  const rounds = req.query.round
     ? req.query.round.split(',')
-    : []; */
+    : [];
   const source = req.query.source || 'both';
-  console.log(source);
   const shuffle = req.query.shuffle === 'true';
   const page = parseInt(req.query.page, 10) || 1;
   const pageSize = parseInt(req.query.page_size, 10) || 10;
   const offset = (page - 1) * pageSize;
 
-  //need to fix for multiple elements
-  console.log(`subject IN ('${subjects.join('","').replace(/"/g, "'")}');`);
-  console.log(`SELECT *
-    FROM base_questions
-    WHERE question LIKE '%${keyword}%'
-    AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
-    AND ('${source}' = 'both' OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 0) OR ('${source}' = 'trivia' AND jeopardy_or_general = 1))
-    AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-    AND (rounds IS NULL OR rounds IN ('${rounds.join('","').replace(/"/g, "'")}'));`);
-
-  connection.query(`
-    WITH base_questions AS (
-        SELECT 
-          q.question_id, 
-          q.question, 
-          q.answer,
-          CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
-          q.subject AS subject,
-          j.round,
-          j.value
-        FROM 
-          questions q
-          LEFT JOIN jeopardy j ON q.question_id = j.question_id
-      )
-    
-    SELECT *
-    FROM base_questions
-    WHERE question LIKE '%${keyword}%'
-    AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
-    AND ('${source}' = 'both' OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 0) OR ('${source}' = 'trivia' AND jeopardy_or_general = 1))
-    AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-    AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'));
-  `, (err, data) => {
-    if (err) {
-      console.log(err);
-      res.json([]);
-    } else {
-      res.json(data.rows);
-    }
-  });
-
-  /* try {
+  try {
     const query = `
       WITH base_questions AS (
         SELECT 
@@ -815,7 +669,7 @@ const question_selection = async function (req, res) {
           q.question, 
           q.answer,
           CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
-          q.subject AS subject,
+          q.subject AS meta_category,
           j.round,
           j.value,
           j.category
@@ -894,7 +748,7 @@ const question_selection = async function (req, res) {
   } catch (err) {
     console.error('Error fetching questions:', err);
     res.status(500).json({ message: 'Error fetching questions' });
-  } */
+  }
 };
 
 
@@ -987,8 +841,6 @@ module.exports = {
   unfollow_user,
   top_users,
   top_users_friends,
-  question,
-  questions,
   overall_accuracy,
   overall_accuracy_universal,
   best_worst_category,
