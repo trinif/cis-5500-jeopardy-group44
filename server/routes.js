@@ -137,10 +137,19 @@ const check_answer = async function(req, res) {
     if (err) {
       console.log(err)
       res.status(500).json({message: 'Error'})
-    } else if (data.rows[0].answer == answer) {
-      res.status(201).json({status: 'Correct', message: data.rows[0].answer})
-    } else {
-      res.status(201).json({status: 'Incorrect', message: data.rows[0].answer})
+    } else{
+      const returned_answer = data.rows[0].answer
+        .replace(/\([^)]*\)/g, '')
+        .replace(/[^a-zA-Z0-9\s-]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+
+      if (returned_answer == answer.toLowerCase()) {
+        res.json({status: 'Correct', message: data.rows[0].answer})
+      } else {
+        res.json({status: 'Incorrect', message: data.rows[0].answer})
+      }
     }
   })
 }

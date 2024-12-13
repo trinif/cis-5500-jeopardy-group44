@@ -5,6 +5,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, RadarChart, Radar, Po
 import { NavLink } from 'react-router-dom';
 
 import { formatDuration } from '../helpers/formatter';
+import { useAuth } from './Context';
 const config = require('../config.json');
 
 // modal (a common example of a modal is a dialog window).
@@ -16,6 +17,11 @@ export default function QuestionCard({ questionId, handleClose }) {
 
   //maybe won't need
   const [barRadar, setBarRadar] = useState(true);
+
+  const [answer, setAnswer] = useState('')
+  const [answerMessage, setAnswerMessage] = useState('')
+
+  const { userId } = useAuth();
 
   useEffect(() => {
     //change fetch server
@@ -43,6 +49,36 @@ export default function QuestionCard({ questionId, handleClose }) {
     setBarRadar(!barRadar);
   };
 
+  const checkButtonHandler = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/check_answer/${questionId}/${answer}`, {
+      method: "POST",
+    }).then(res => {
+      return res.json()
+    }).then(resJson => {
+      if (resJson.status == 'Correct') {
+        setAnswerMessage('Correct!')
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, questionId, is_correct: 1}),
+        })
+      } else if (resJson.status == 'Incorrect') {
+        setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, questionId, is_correct: 0}),
+        })
+    }
+    }).catch(err => {
+        console.log(err)
+    })
+  }
+
   return (
     <Modal
       open={true}
@@ -55,6 +91,20 @@ export default function QuestionCard({ questionId, handleClose }) {
       >
         <h1>{questionData.question}</h1>
         <h2>{questionData.subject}</h2>
+
+        <input type='text' 
+          value={answer} 
+          onChange={e => setAnswer(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              checkButtonHandler();
+            }
+          }}>
+        </input>
+        <button onClick={checkButtonHandler}>Check</button>
+        <div>
+          {answerMessage && <p>{answerMessage}</p>}
+        </div>
         
       </Box>
     </Modal>
