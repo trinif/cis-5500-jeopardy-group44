@@ -15,7 +15,7 @@ import {
   Link,
   Button
 } from '@mui/material';
-import LazyTable from '../components/LazyTable';
+// import LazyTable from '../components/LazyTable';
 
 import { DataGrid } from '@mui/x-data-grid';
 
