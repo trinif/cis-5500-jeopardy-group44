@@ -13,6 +13,7 @@ import {
   Box,
   TextField,
   IconButton,
+  Link
 } from '@mui/material';
 
 export default function LazyTable({ route, columns, defaultPageSize, rowsPerPageOptions }) {
@@ -216,6 +217,13 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
       </Box>
     );
   };  
+
+  //should not be implementing this way
+  // const renderLinkCell = (row) => {
+  //   const questionId = row.question_id;
+    
+  //   <Link onClick={() => setSelectedQuestionId(row.question_id)}>{Link}</Link>
+  // }
 
   const defaultRenderCell = (col, row) => {
     if (col.field === 'answerCheck') {
