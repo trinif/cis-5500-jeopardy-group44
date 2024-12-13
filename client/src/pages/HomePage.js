@@ -61,6 +61,7 @@ export default function HomePage() {
             Question of the Day
           </Typography>
           <Typography variant="h6">{questionOfTheDay.question}</Typography>
+          <Typography variant="h8"> <strong>Category:</strong> {questionOfTheDay.category}</Typography>
           {showAnswer && (
             <Typography variant="body1" mt={2}>
               <strong>Answer:</strong> {questionOfTheDay.answer}
@@ -99,9 +100,6 @@ export default function HomePage() {
           {showDetails && (
             <Box mt={3}>
               <Typography variant="body2" mt={2} sx={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                <Box>
-                  <strong>Category:</strong> {questionOfTheDay.category}
-                </Box>
                 <Box>
                   <strong>Air Date:</strong> {formatAirDate(questionOfTheDay.air_date)}
                 </Box>

@@ -33,9 +33,11 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
   }, [route, page, pageSize]);
 
   const handleChangePage = (e, newPage) => {
-    if (newPage < page || data.length === pageSize) {
-      setPage(newPage + 1); // Convert zero-indexed page to one-indexed
+    if (newPage > page - 1 && data.length < pageSize) {
+      // Prevent navigating to the next page if there are no more rows
+      return;
     }
+    setPage(newPage + 1); // Convert zero-indexed to one-indexed
   };
 
   const handleChangePageSize = (e) => {
@@ -247,6 +249,12 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
           '.MuiTablePagination-actions button': {
             color: '#FFD700',
           },
+        }}
+        nextIconButtonProps={{
+          disabled: data.length < pageSize, // Disable "next" if fewer rows are fetched
+        }}
+        backIconButtonProps={{
+          disabled: page === 1, // Disable "back" if on the first page
         }}
       />
       <TableContainer

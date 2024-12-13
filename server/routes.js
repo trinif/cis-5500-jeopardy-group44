@@ -643,7 +643,6 @@ const random = async function(req, res) {
 }
 
 // Route: GET /question_selection
-// Route: GET /question_selection
 const question_selection = async function (req, res) {
   const userId = req.query.user_id; // User ID parameter
   const pastQuestionsFilter = req.query.pastQuestionsFilter || 'all'; // Filter parameter
@@ -746,6 +745,7 @@ const question_selection = async function (req, res) {
     res.status(500).json({ message: 'Error fetching questions' });
   }
 };
+
 
 
 // gets the questions that the top 5 users (on leaderboard) did worst on

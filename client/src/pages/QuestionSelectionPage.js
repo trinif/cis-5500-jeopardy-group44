@@ -14,22 +14,22 @@ import {
   Slider,
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
-import { useAuth } from '../components/Context'; // Import the useAuth hook
+import { useAuth } from '../components/Context';
 
-const config = require('../config.json'); // Import server configuration
+const config = require('../config.json');
 
 export default function QuestionSelectionPage() {
-  const { userId } = useAuth(); // Access userId from context
+  const { userId } = useAuth(); 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMetaCategories, setSelectedMetaCategories] = useState([]);
-  const [selectedSource, setSelectedSource] = useState('both'); // 'jeopardy', 'trivia', or 'both'
+  const [selectedSource, setSelectedSource] = useState('both'); 
   const [selectedRounds, setSelectedRounds] = useState([]);
   const [valueRange, setValueRange] = useState([100, 9800]);
   const [metaCategories, setMetaCategories] = useState([]);
-  const [filters, setFilters] = useState({}); // Holds dynamically applied filters
+  const [filters, setFilters] = useState({}); 
   const [isShuffled, setIsShuffled] = useState(false);
-  const [pastQuestionsFilter, setPastQuestionsFilter] = useState('all'); // Add filter state for "all", "never_tried", and "wrong"
-  const [page, setPage] = useState(1); // Add page state
+  const [pastQuestionsFilter, setPastQuestionsFilter] = useState('all');
+  const [page, setPage] = useState(1); 
 
   const defaultValueRange = [100, 9800];
 
@@ -55,15 +55,15 @@ export default function QuestionSelectionPage() {
       metaCategories: selectedMetaCategories,
       source: selectedSource,
       rounds: selectedRounds,
-      valueRange: selectedSource === 'jeopardy' ? valueRange : null, // Only apply value range for Jeopardy
+      valueRange: selectedSource === 'jeopardy' ? valueRange : null, 
     });
   }, [searchTerm, selectedMetaCategories, selectedSource, selectedRounds, valueRange]);
 
   useEffect(() => {
-    setPage(1); // Reset to the first page whenever filters change
+    setPage(1); 
   }, [filters]);
 
-  // Define the columns for LazyTable
+  
   const columns = [
     ...(selectedSource === 'both'
       ? [
@@ -94,11 +94,11 @@ export default function QuestionSelectionPage() {
             field: 'category',
             width: '10%',
             renderCell: (row) =>
-              row.jeopardy_or_general === 1 // Check if the question is Trivia
-                ? '' // Blank for Trivia
-                : row.category // Display the category for Jeopardy
+              row.jeopardy_or_general === 1 
+                ? ''
+                : row.category
                 ? row.category
-                : 'N/A', // Default to "N/A" if no category exists
+                : 'N/A',
           },
         ]
       : []),
@@ -116,9 +116,8 @@ export default function QuestionSelectionPage() {
       value_low: filters.valueRange ? filters.valueRange[0] : null,
       value_high: filters.valueRange ? filters.valueRange[1] : null,
       shuffle: isShuffled,
-      pastQuestionsFilter, // Pass the selected filter
-      user_id: userId,
-      page
+      pastQuestionsFilter, 
+      user_id: userId
     });
     return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
   };
@@ -263,6 +262,10 @@ export default function QuestionSelectionPage() {
                     color: '#FFD700',
                     textTransform: 'capitalize',
                     fontWeight: 'bold',
+                    '&.Mui-selected:hover': {
+                      backgroundColor: '#FFD700',
+                      color: '#2E0854',
+                    },
                     '&.Mui-selected': {
                       backgroundColor: '#FFD700',
                       color: '#2E0854',
@@ -270,7 +273,7 @@ export default function QuestionSelectionPage() {
                     '&:hover': {
                       backgroundColor: '#FFD700',
                       color: '#2E0854',
-                    },
+                    }
                   },
                 }}
               >
@@ -297,10 +300,14 @@ export default function QuestionSelectionPage() {
                       backgroundColor: '#FFD700',
                       color: '#2E0854',
                     },
-                    '&:hover': {
+                    '&.Mui-selected:hover': {
                       backgroundColor: '#FFD700',
                       color: '#2E0854',
                     },
+                    '&:hover': {
+                      backgroundColor: '#FFD700',
+                      color: '#2E0854',
+                    }
                   },
                 }}
               >
@@ -346,7 +353,7 @@ export default function QuestionSelectionPage() {
                     color: 'gold',
                     fontWeight: 'bold',
                     marginRight: '10px',
-                    minWidth: '80px', // Ensures alignment
+                    minWidth: '80px',
                   }}
                 >
                   Value Range
@@ -357,11 +364,11 @@ export default function QuestionSelectionPage() {
                   valueLabelDisplay="auto"
                   min={100}
                   max={9800}
-                  step={100} // Snap slider to increments of 100
-                  marks // Adds visual markers
+                  step={100} 
+                  marks 
                   sx={{
                     color: 'gold',
-                    flexGrow: 1, // Makes the slider stretch
+                    flexGrow: 1,
                   }}
                 />
               </Box>
