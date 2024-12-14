@@ -14,8 +14,7 @@ const config = require('../config.json');
 export default function QuestionCard({ questionId, handleClose }) {
   const [questionData, setQuestionData] = useState({});
 
-  //maybe won't need
-  const [barRadar, setBarRadar] = useState(true);
+  const [extraData, setExtraData] = useState(null);
 
   const [answer, setAnswer] = useState('')
   const [answerMessage, setAnswerMessage] = useState('')
@@ -27,26 +26,9 @@ export default function QuestionCard({ questionId, handleClose }) {
     fetch(`http://${config.server_host}:${config.server_port}/question/${questionId}/`)
       .then(res => res.json())
       .then(questionData => {
-        console.log(questionData);
         setQuestionData(questionData);
-        console.log(questionId);
-        console.log(questionData);
-        //maybe won't need
-        /* fetch(`http://${config.server_host}:${config.server_port}/album/${resJson.album_id}`)
-          .then(res => res.json())
-          .then(resJson => setAlbumData(resJson)); */
       })
   }, [questionId]);
-
-  /* const chartData = [
-    { name: 'Danceability', value: songData.danceability },
-    { name: 'Energy', value: songData.energy },
-    { name: 'Valence', value: songData.valence },
-  ]; */
-
-  const handleGraphChange = () => {
-    setBarRadar(!barRadar);
-  };
 
   const checkButtonHandler = () => {
     fetch(`http://${config.server_host}:${config.server_port}/check_answer/${questionId}/${answer}`, {
@@ -78,34 +60,81 @@ export default function QuestionCard({ questionId, handleClose }) {
     })
   }
 
+  useEffect(() => {
+    if (questionData.jeopardy_or_general === '0') { // jeopardy
+        fetch(`http://${config.server_host}:${config.server_port}/question_jeopardy/${questionId}`)
+            .then(res => res.json())
+            .then(resJson => {
+                setExtraData(resJson)
+            }).catch(err => {
+
+            })
+    } else { // general trivia
+        fetch(`http://${config.server_host}:${config.server_port}/question_trivia/${questionId}`)
+            .then(res => res.json())
+            .then(resJson => {
+                setExtraData(resJson)
+            }).catch(err => {
+
+            })
+    }
+  }, [questionData])
+
+  const formatAirDate = (airDate) => {
+    if (!airDate) return '';
+    return airDate.split('T')[0]; // Extract only the date part
+  };
+
   return (
     <Modal
       open={true}
       onClose={handleClose}
       style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
     >
-      <Box
-        p={3}
-        style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
-      >
-        <h1>{questionData.question}</h1>
-        <h2>{questionData.subject}</h2>
+      {questionData && 
+        <Box
+            p={3}
+            style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
+        >
+            {/* <div dangerouslySetInnerHTML={{ __html: params.value }}>{questionData.question}</div> */}
+            {questionData.question && <div>Question: <div dangerouslySetInnerHTML={{ __html: questionData.question.replace(/<a /g, '<a target="_blank" ') }}/></div>}
+            {questionData.subject && <h2>{questionData.subject}</h2>}
 
-        <input type='text' 
-          value={answer} 
-          onChange={e => setAnswer(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              checkButtonHandler();
-            }
-          }}>
-        </input>
-        <button onClick={checkButtonHandler}>Check</button>
-        <div>
-          {answerMessage && <p>{answerMessage}</p>}
-        </div>
-        
-      </Box>
+            {questionData.jeopardy_or_general === "0" ? (
+                <>
+                    <p>Category: {extraData.category}</p>
+                    <p>Air Date: {formatAirDate(extraData.air_date)}</p>
+                    <p>Show Number: {extraData.show_number}</p>
+                    <p>Round: {extraData.round}</p>
+                    <p>Value: {extraData.value}</p>
+                </>
+            ) : (
+                <>
+                    {extraData && 
+                        <>
+                            <p>{extraData.descriptions.split(';;;')[0]}</p>
+                            <p>{extraData.urls.split(';;;')[0]}</p>
+                        </>
+                    }
+                </>
+            )}
+
+            <input type='text' 
+            value={answer} 
+            onChange={e => setAnswer(e.target.value)}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                checkButtonHandler();
+                }
+            }}>
+            </input>
+            <button onClick={checkButtonHandler}>Check</button>
+            <div>
+            {answerMessage && <p>{answerMessage}</p>}
+            </div>
+            
+        </Box>
+      }
     </Modal>
   );
 }

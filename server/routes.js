@@ -137,10 +137,19 @@ const check_answer = async function(req, res) {
     if (err) {
       console.log(err)
       res.status(500).json({message: 'Error'})
-    } else if (data.rows[0].answer == answer) {
-      res.status(201).json({status: 'Correct', message: data.rows[0].answer})
     } else {
-      res.status(201).json({status: 'Incorrect', message: data.rows[0].answer})
+      const returned_answer = data.rows[0].answer
+        .replace(/\([^)]*\)/g, '')
+        .replace(/[^a-zA-Z0-9\s-]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+
+      if (returned_answer == answer.toLowerCase()) {
+        res.json({status: 'Correct', message: data.rows[0].answer})
+      } else {
+        res.json({status: 'Incorrect', message: data.rows[0].answer})
+      }
     }
   })
 }
@@ -642,6 +651,96 @@ const random = async function(req, res) {
   });
 }
 
+const question = async function(req, res) {
+  const question_id = req.params.question_id;
+  connection.query(`
+    SELECT *
+    FROM Questions
+    WHERE Questions.question_id = '${question_id}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows[0])
+    }
+  })
+}
+
+const question_jeopardy = async function(req, res) {
+  const question_id = req.params.question_id;
+  connection.query(`
+    SELECT *
+    FROM Jeopardy
+    WHERE Jeopardy.question_id = '${question_id}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows[0])
+    }
+  })
+}
+
+const question_trivia = async function(req, res) {
+  const question_id = req.params.question_id;
+  connection.query(`
+    WITH trivia_descriptions AS (
+      SELECT STRING_AGG(description, ';;;') AS descriptions
+      FROM GeneralQuestionsDescription
+      WHERE question_id = '${question_id}'
+      GROUP BY question_id
+    ), trivia_urls AS (
+      SELECT STRING_AGG(url, ';;;') AS urls
+      FROM generalquestionsurl
+      WHERE question_id = '${question_id}'
+      GROUP BY question_id
+    )
+
+    SELECT *
+    FROM trivia_descriptions, trivia_urls
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows[0])
+    }
+  })
+}
+const questions = async function(req, res) {
+  const keyword = req.query.keyword || '';
+  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) : 100;
+  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) : 2000;  
+  /* const subjects = req.query.subject
+    ? req.query.subject.split(',')
+    : []; */
+  const subjects = req.query.subjects;
+  const rounds = req.query.rounds;
+  /* const rounds = req.query.round
+    ? req.query.round.split(',')
+    : []; */
+  const source = req.query.source || 'both';
+  const shuffle = req.query.shuffle === 'true';
+  const page = parseInt(req.query.page, 10) || 1;
+  const pageSize = parseInt(req.query.page_size, 10) || 10;
+  const offset = (page - 1) * pageSize;
+  
+  connection.query(`
+    SELECT *
+    FROM Questions
+    WHERE question LIKE '%${keyword}%'
+  `, (err, data) => {
+    if (err) {
+      console.log(err)
+      res.status(500).json({message: 'Error'})
+    } else {
+      res.json(data.rows)
+    }
+  })
+}
+
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
   const predefinedSubjects = [
@@ -710,7 +809,7 @@ const question_selection = async function (req, res) {
         OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
       AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
       AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'))
-    LIMIT 10;
+    LIMIT 100;
   `, (err, data) => {
     if (err) {
       console.log(err);
@@ -826,4 +925,8 @@ module.exports = {
   random,
   question_selection,
   least_accurate_questions_top_users,
+  question,
+  question_jeopardy,
+  question_trivia,
+  questions,
 }

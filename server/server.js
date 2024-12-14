@@ -36,6 +36,12 @@ app.post('/signup', routes.signup);
 app.post('/login', routes.login);
 app.post('/update_user_answer', routes.update_user_answer);
 
+app.get('/question/:question_id', routes.question);
+app.get('/questions', routes.questions);
+app.get('/question_jeopardy/:question_id', routes.question_jeopardy)
+app.get('/question_trivia/:question_id', routes.question_trivia)
+
+
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 app.get('/check_follow_status/:following/:person_of_interest', routes.check_follow_status)
 app.post('/follow_user/:following/:person_of_interest', routes.follow_user)

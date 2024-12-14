@@ -53,6 +53,7 @@ export default function QuestionSelectionPageV2() {
     fetch(`http://${config.server_host}:${config.server_port}/question_selection`)
       .then(res => res.json())
       .then(resJson => {
+        console.log(resJson)
         setData(resJson);
       }).catch(err => {
         console.log(err)
@@ -95,29 +96,13 @@ export default function QuestionSelectionPageV2() {
           overflowWrap: 'break-word',
           lineHeight: '1.5',
         }}
+        onClick={() => setSelectedQuestionId(params.row.id)}
       >
-        <Link onClick={() => setSelectedQuestionId(params.row.question_id)}>{params.value}</Link>
+        <div dangerouslySetInnerHTML={{ __html: params.value.replace(/<a /g, '<a target="_blank" ')}}/>
       </div>
     ) },
     { field: 'subject', headerName: 'Subject', width: 100 },
-    { field: 'answer', headerName: 'Answer', width: 200, renderCell: (params) => (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          lineHeight: '1.5',
-          gap: '8px',
-          overflow: 'hidden',
-        }}
-      >
-        <input
-          type='text'
-          style={{ width: '100%', maxWidth: '100%' }}
-        />
-        <button>Check</button>
-      </div>
-    ) },
+    { field: 'answer', headerName: 'Answer', width: 200 }
   ]
 
   return (
