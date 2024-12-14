@@ -96,41 +96,21 @@ export default function QuestionCard({ questionId, handleClose }) {
             p={3}
             style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
         >
-            {/* <div dangerouslySetInnerHTML={{ __html: params.value }}>{questionData.question}</div> */}
-            {questionData.question && <div>Question: <div dangerouslySetInnerHTML={{ __html: questionData.question.replace(/<a /g, '<a target="_blank" ') }}/></div>}
-            {questionData.subject && <h2>{questionData.subject}</h2>}
-
-            {questionData.jeopardy_or_general === "0" ? (
-                <>
-                    <p>Category: {extraData.category}</p>
-                    <p>Air Date: {formatAirDate(extraData.air_date)}</p>
-                    <p>Show Number: {extraData.show_number}</p>
-                    <p>Round: {extraData.round}</p>
-                    <p>Value: {extraData.value}</p>
-                </>
-            ) : (
-                <>
-                    {extraData && 
-                        <>
-                            <p>{extraData.descriptions.split(';;;')[0]}</p>
-                            <p>{extraData.urls.split(';;;')[0]}</p>
-                        </>
-                    }
-                </>
-            )}
+            <h1>{questionData.question}</h1>
+            <h2>{questionData.subject}</h2>
 
             <input type='text' 
-            value={answer} 
-            onChange={e => setAnswer(e.target.value)}
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                checkButtonHandler();
-                }
-            }}>
+                value={answer} 
+                onChange={e => setAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                    checkButtonHandler();
+                    }
+                }}>
             </input>
             <button onClick={checkButtonHandler}>Check</button>
             <div>
-            {answerMessage && <p>{answerMessage}</p>}
+                {answerMessage && <p>{answerMessage}</p>}
             </div>
             
         </Box>

@@ -808,8 +808,7 @@ const question_selection = async function (req, res) {
         OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 'Jeopardy') 
         OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
       AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'))
-    LIMIT 100;
+      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'));
   `, (err, data) => {
     if (err) {
       console.log(err);

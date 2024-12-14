@@ -89,17 +89,7 @@ export default function QuestionSelectionPageV2() {
   const columns = [
     { field: 'jeopardy_or_general', headerName: 'Source', width: 100},
     { field: 'question', headerName: 'Question', width: 500, renderCell: (params) => (
-      <div
-        style={{
-          whiteSpace: 'normal',
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          lineHeight: '1.5',
-        }}
-        onClick={() => setSelectedQuestionId(params.row.id)}
-      >
-        <div dangerouslySetInnerHTML={{ __html: params.value.replace(/<a /g, '<a target="_blank" ')}}/>
-      </div>
+      <Link onClick={() => setSelectedQuestionId(params.row.id)}>{params.value}</Link>
     ) },
     { field: 'subject', headerName: 'Subject', width: 100 },
     { field: 'answer', headerName: 'Answer', width: 200 }
