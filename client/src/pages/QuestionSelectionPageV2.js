@@ -20,6 +20,7 @@ import LazyTable from '../components/LazyTable';
 import { DataGrid } from '@mui/x-data-grid';
 
 import QuestionCard from '../components/QuestionCard';
+import { useAuth } from '../components/Context';
 
 const config = require('../config.json'); // Import server configuration
 
@@ -35,6 +36,8 @@ export default function QuestionSelectionPageV2() {
     'Math',
   ];
 
+  const { userId } = useAuth()
+
   const [data, setData] = useState([])
   const [selectedQuestionId, setSelectedQuestionId] = useState(null)
   const [pageSize, setPageSize] = useState(10);
@@ -44,6 +47,7 @@ export default function QuestionSelectionPageV2() {
   const [selectedSource, setSelectedSource] = useState('both')
   const [valueRange, setValueRange] = useState([200, 1000])
   const [selectedRounds, setSelectedRounds] = useState([])
+  const [questionSet, setQuestionSet] = useState('all')
 
   const columns = [
     { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
@@ -74,13 +78,14 @@ export default function QuestionSelectionPageV2() {
   }, [])
 
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/question_selection?`+
+    fetch(`http://${config.server_host}:${config.server_port}/question_selection/${userId}?`+
       `keyword=${keyword}` +
       `&source=${selectedSource}` + 
       `&valueLow=${valueRange[0]}` + 
       `&valueHigh=${valueRange[1]}` + 
       `&subjects=${selectedSubjects}` + 
-      `&rounds=${selectedRounds}`
+      `&rounds=${selectedRounds}` +
+      `&questionSet=${questionSet}`
     )
       .then(res => res.json())
       .then(resJson => {
@@ -242,15 +247,53 @@ export default function QuestionSelectionPageV2() {
             </Grid>
           </Grid>
         )}
-        
-        <Button onClick={() => search() }
-          sx={{
-            backgroundColor: 'gold',
-            borderRadius: '5px',
-            display: 'flex',
-          }}>
-          Search
-        </Button>
+
+        {/* i wanted to put the search and toggle button group on the same line */}
+        <Grid> 
+          <Button onClick={() => search() }
+            sx={{
+              backgroundColor: 'gold',
+              borderRadius: '5px',
+              display: 'flex',
+            }}>
+            Search
+          </Button>
+
+          <ToggleButtonGroup
+            value={questionSet}
+            exclusive
+            onChange={(e, newSource) => {
+              if (newSource !== null) {
+                setQuestionSet(newSource)
+              }
+            }}
+            fullWidth
+            sx={{
+              '& .MuiToggleButton-root': {
+                border: '1px solid #FFD700',
+                color: '#FFD700',
+                textTransform: 'capitalize',
+                fontWeight: 'bold',
+                '&.Mui-selected:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                }
+              },
+            }}
+          >
+            <ToggleButton value="all">All Questions</ToggleButton>
+            <ToggleButton value="never">Never Tried</ToggleButton>
+            <ToggleButton value="past">Past Wrong Answers</ToggleButton>
+          </ToggleButtonGroup>          
+        </Grid>
       </Box>
       <div class="results">
         <h2>Results</h2>

@@ -65,7 +65,7 @@ app.get('/category_accuracy_universal', routes.category_accuracy_universal);
 app.get('/category_accuracy/:user_id', routes.category_accuracy);
 
 app.get('/random', routes.random);
-app.get('/question_selection', routes.question_selection);
+app.get('/question_selection/:user_id', routes.question_selection);
 
 app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_top_users);
 

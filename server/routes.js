@@ -754,14 +754,43 @@ const question_selection = async function (req, res) {
     'Math',
   ];
 
+  const user_id = req.params.user_id;
+
   const keyword = req.query.keyword || '';
   const selected_source = req.query.source || 'both';
   const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
   const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
   const subjects = req.query.subjects && req.query.subjects != '' ? req.query.subjects.split(',') : defaultSubjects;
   const rounds = req.query.rounds && req.query.rounds != '' ? req.query.rounds.split(',') : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
+  const question_set = !user_id.startsWith('guest_') ? req.query.questionSet : 'all';
 
-  let query = `
+  let query = ``
+  if (question_set === 'past') { // past wrong
+    query += `WITH questions_filtered AS (
+      SELECT question_id
+      FROM UserAnswers
+      WHERE is_correct = B'0'
+        AND user_id = '${user_id}'
+    )\n`
+  } else if (question_set === 'never') { // never tried
+    query += `
+      WITH questions_filtered AS (
+        SELECT question_id
+        FROM Questions
+        WHERE question_id NOT IN (
+          SELECT question_id
+          FROM UserAnswers
+          WHERE user_id = '${user_id}'
+        )
+      )\n
+    `
+  } else { // all questions
+    query += `WITH questions_filtered AS (
+      SELECT question_id FROM Questions
+    )\n`
+  }
+
+  query += `
     SELECT Questions.question_id AS id,
       SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
       CASE
@@ -771,7 +800,8 @@ const question_selection = async function (req, res) {
       Questions.question AS question,
       Questions.answer AS answer,
       Questions.subject AS subject
-    FROM Questions
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
       LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
     WHERE Questions.question LIKE '%${keyword}%'
       AND ('${selected_source}' = 'both' 
@@ -786,7 +816,6 @@ const question_selection = async function (req, res) {
         OR round IN ('${rounds.join(`','`)}')
       )
     ORDER BY id_substring
-    LIMIT 10
   `  
 
   console.log(query)
