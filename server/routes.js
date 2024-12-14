@@ -760,12 +760,12 @@ const question_selection = async function (req, res) {
   /* const subjects = req.query.subject
     ? req.query.subject.split(',')
     : []; */
-  const subjects = req.query.subjects ?? predefinedSubjects;
+  const subjects = (req.query.subjects === null || req.query.subjects === '') ? req.query.subjects : predefinedSubjects;
   //console.log(req.query.subjects);
   // console.log(subjects);
   //this works on the first query, but on the subsequent ones, the default is '' rather than null/undefined
   //have to case for that?
-  const rounds = req.query.rounds ?? ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
+  const rounds = (req.query.rounds === null || req.query.rounds === '') ? req.query.rounds : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
   const source = req.query.source || 'both';
   const shuffle = req.query.shuffle === 'true';
   const page = parseInt(req.query.page, 10) || 1;
@@ -814,7 +814,16 @@ const question_selection = async function (req, res) {
       console.log(err);
       res.json([]);
     } else {
-      console.log(data.rows)
+      //console.log(data.rows);
+      console.log(`SELECT *
+    FROM base_questions
+    WHERE question LIKE '%${keyword}%'
+      AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
+      AND ('${source}' = 'both' 
+        OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 'Jeopardy') 
+        OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
+      AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
+      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'));`)
       res.json(data.rows);
     }
   });

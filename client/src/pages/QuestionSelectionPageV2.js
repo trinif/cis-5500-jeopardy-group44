@@ -87,25 +87,55 @@ export default function QuestionSelectionPageV2() {
 
   // Define the columns for DataGrid
   const columns = [
-    { field: 'jeopardy_or_general', headerName: 'Source', width: 100},
-    { field: 'question', headerName: 'Question', width: 500, renderCell: (params) => (
-      <Link onClick={() => setSelectedQuestionId(params.row.id)}>{params.value}</Link>
+    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
+    { field: 'question', headerName: 'Question', cellClassName: 'white-text', flex: 4,
+      renderCell: (params) => (
+      <Link onClick={() => setSelectedQuestionId(params.row.id)} style={{ color: 'white' }}
+        sx={{
+          whiteSpace: 'normal',   // Allow text to wrap
+          wordWrap: 'break-word', // Break words if necessary
+          overflowWrap: 'break-word', // Ensure words break if they overflow
+      }}>{params.value}</Link>
     ) },
-    { field: 'subject', headerName: 'Subject', width: 100 },
-    { field: 'answer', headerName: 'Answer', width: 200 }
+    { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
+    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2}
   ]
 
   return (
-    <Container>
+    <Box
+      sx={{
+        background: 'linear-gradient(135deg, #081484 30%, #4B0082 100%)',
+        minHeight: '100vh',
+        color: 'white',
+        paddingTop: '20px',
+        paddingBottom: '50px',
+        padding: 5,
+        gap: 5
+      }}
+    >
+    <Container container rowSpacing={5}>
       {selectedQuestionId && <QuestionCard questionId={selectedQuestionId} handleClose={() => setSelectedQuestionId(null)} />}
       <h2>Search Questions</h2>
-      <Grid container spacing={6}>
+      <Box container rowSpacing={5}
+          sx={{
+            backgroundColor: '#081484',
+            padding: '20px',
+            borderRadius: '10px',
+            border: '3px solid #FFD700',
+          }}
+        >
+          <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
         {/* keyword */}
         <Grid item xs={8}>
-          <TextField label='Keyword' value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: "100%" }}/>
+          <TextField label='Keyword' value={keyword} onChange={(e) => setKeyword(e.target.value)}
+            fullWidth
+          sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '5px',
+                }}/>
         </Grid>
         {/* subjects */}
-        <Grid item xs={12} sm={4} md={4}>
+        <Grid item xs={4}>
            <Select multiple value={selectedSubjects} onChange={(e) => setSelectedSubjects(e.target.value)}
                 displayEmpty
                 input={<OutlinedInput />}
@@ -125,7 +155,8 @@ export default function QuestionSelectionPageV2() {
                 ))}
               </Select>
         </Grid>
-        <Grid item xs={12} sm={4} md={4}>
+        </Grid>
+        <Grid item xs={12} sm={4} md={4} marginBottom={2}>
               <ToggleButtonGroup
                 value={selectedSource}
                 exclusive
@@ -134,11 +165,24 @@ export default function QuestionSelectionPageV2() {
                 }}
                 fullWidth
                 sx={{
-                  backgroundColor: 'white',
-                  borderRadius: '5px',
-                  display: 'flex',
-                  justifyContent: 'space-around',
-                  border: '1px solid #FFD700',
+                  '& .MuiToggleButton-root': {
+                    border: '1px solid #FFD700',
+                    color: '#FFD700',
+                    textTransform: 'capitalize',
+                    fontWeight: 'bold',
+                    '&.Mui-selected:hover': {
+                      backgroundColor: '#FFD700',
+                      color: '#2E0854',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: '#FFD700',
+                      color: '#2E0854',
+                    },
+                    '&:hover': {
+                      backgroundColor: '#FFD700',
+                      color: '#2E0854',
+                    }
+                  },
                 }}
               >
                 <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
@@ -146,11 +190,10 @@ export default function QuestionSelectionPageV2() {
                 <ToggleButton value="trivia">Trivia</ToggleButton>
               </ToggleButtonGroup>
             </Grid>
-      </Grid>
       {/* Jeopardy-specific value and round */}
       {selectedSource === 'jeopardy' && (
             <Grid
-              container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
+              container spacing={4} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
             >
               {/* rounds */}
               <Grid item xs={12} sm={6} md={4}>
@@ -197,9 +240,15 @@ export default function QuestionSelectionPageV2() {
               </Grid>
             </Grid>
           )}
-      <Button onClick={() => search() } style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      <Button onClick={() => search() }
+        sx={{
+          backgroundColor: 'gold',
+          borderRadius: '5px',
+          display: 'flex',
+        }}>
         Search
       </Button>
+      </Box>
       <h2>Results</h2>
       <DataGrid
         rows={data}
@@ -208,7 +257,68 @@ export default function QuestionSelectionPageV2() {
         rowsPerPageOptions={[5, 10, 25]}
         onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
         autoHeight
+        sx={{
+          '& .MuiDataGrid-columnHeaders': {
+            color: 'white',
+            backgroundColor: '#081484',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 'bold',       
+          },
+          '& .MuiDataGrid-cell': {
+            color: 'white',
+            whiteSpace: 'normal',
+            wordWrap: 'break-word',
+            lineHeight: '1.2',
+          },
+          '& .MuiDataGrid-columnSeparator': {
+            visibility: 'visible', 
+          },
+          '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeaders': {
+            borderRight: '1px solid rgba(224, 224, 224, 1)',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            borderRight: '1px solid rgba(224, 224, 224, 1)',
+          },
+          '& .MuiDataGrid-cell:focus, & .MuiData-Grid-columnHeaders:focus': {
+            outline: 'none',
+            borderRight: '1px solid rgba(224, 224, 224, 1)',
+          },
+          '& .MuiDataGrid-cell:focus-within, & .MuiData-Grid-columnHeaders:focus-within': {
+            outline: 'none',
+            borderRight: '1px solid rgba(224, 224, 224, 1)',
+          },
+          '& .MuiDataGrid-footerContainer': {
+            color: 'white', 
+            backgroundColor: '#081484', 
+          },
+          '& .MuiTablePagination-caption': {
+            color: 'gold', 
+          },
+          '& .MuiTablePagination-selectLabel': {
+            color: 'gold',
+          },
+          '& .MuiTablePagination-selectIcon': {
+            backgroundColor: 'white',
+          },
+          '& .MuiTablePagination-select': {
+            backgroundColor: 'white',
+          },
+          '& .MuiTablePagination-displayedRows': {
+            color: 'gold',
+          },
+          '& .MuiTablePagination-actions': {
+            backgroundColor: 'white',
+          },
+          '& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon': {
+            color: 'gold',
+          },
+          '& .MuiDataGrid-columnHeader .MuiDataGrid-menuIcon': {
+            color: 'gold',
+          },
+        }}
       />
     </Container>
+    </Box>
   );
 }
