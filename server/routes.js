@@ -573,7 +573,6 @@ const unanswered_categories_questions = async function (req, res) {
 }
 
 const category_accuracy_universal = async function(req, res) {
-  const user_id = req.params.user_id;
   connection.query(`
     SELECT 
       q.subject,
@@ -830,6 +829,56 @@ const least_accurate_questions_top_users = async function(req, res) {
     });
   };
 
+  const following_worst_questions = async function(req, res) {
+    const user_id = req.params.user_id;
+  
+    connection.query(`
+      WITH followed_users AS (
+        SELECT person_of_interest AS followed_user_id
+        FROM Following
+        WHERE following = '${user_id}'
+      ),
+      UserPerformance AS (
+        SELECT
+          ua.user_id,
+          ua.question_id,
+          ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)),2) AS accuracy
+        FROM UserAnswers ua
+        JOIN followed_users fu ON ua.user_id = fu.followed_user_id
+        GROUP BY ua.user_id, ua.question_id
+      ),
+      QuestionAccuracy AS (
+        SELECT
+          up.question_id,
+          AVG(up.accuracy) AS avg_accuracy
+        FROM UserPerformance up
+        GROUP BY up.question_id
+      )
+      SELECT
+        q.question_id,
+        q.question,
+        q.subject,
+        COUNT(ua.is_correct) AS total_answers,
+        COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
+        ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)), 2) AS accuracy
+      FROM
+        UserAnswers ua
+      JOIN Questions q ON ua.question_id = q.question_id
+      JOIN QuestionAccuracy qa ON q.question_id = qa.question_id
+      WHERE ua.user_id IN (SELECT followed_user_id FROM followed_users)
+      GROUP BY q.question_id, q.question, q.subject
+      ORDER BY accuracy ASC
+      LIMIT 10;
+    `, (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    });
+  };
+
 
 module.exports = {
   signup,
@@ -855,4 +904,5 @@ module.exports = {
   random,
   question_selection,
   least_accurate_questions_top_users,
+  following_worst_questions,
 }
