@@ -25,8 +25,11 @@ export default function QuestionCard({ questionId, handleClose }) {
     //change fetch server
     fetch(`http://${config.server_host}:${config.server_port}/question/${questionId}/`)
       .then(res => res.json())
-      .then(questionData => {
-        setQuestionData(questionData);
+      .then(resJson => {
+        setQuestionData(resJson);
+        console.log(resJson.question_id[0])
+      }).catch(err => {
+        console.log(err)
       })
   }, [questionId]);
 
@@ -66,6 +69,7 @@ export default function QuestionCard({ questionId, handleClose }) {
             .then(res => res.json())
             .then(resJson => {
                 setExtraData(resJson)
+                console.log(resJson)
             }).catch(err => {
 
             })
@@ -73,6 +77,8 @@ export default function QuestionCard({ questionId, handleClose }) {
         fetch(`http://${config.server_host}:${config.server_port}/question_trivia/${questionId}`)
             .then(res => res.json())
             .then(resJson => {
+                resJson.descriptions = resJson.descriptions.split(';;;')
+                resJson.urls = resJson.urls.split(';;;')
                 setExtraData(resJson)
             }).catch(err => {
 
@@ -98,6 +104,27 @@ export default function QuestionCard({ questionId, handleClose }) {
         >
             <h1>{questionData.question}</h1>
             <h2>{questionData.subject}</h2>
+
+            {extraData && (
+                questionData.jeopardy_or_general == '0' ? (
+                    <>
+                        <p>Category: {extraData.category}</p>
+                        <p>Round: {extraData.round}</p>
+                        <p>Value: {extraData.value}</p>
+                        <p>Air Date: {formatAirDate(extraData.air_date)}</p>
+                    </>
+                ) : questionData.jeopardy_or_general == '1' ? (
+                    <>
+                        {/* {extraData.descriptions.map((row, idx) => {
+                            return <p>Description {idx}: {row}</p>
+                        })} */}
+
+                        {extraData.urls.map((row, idx) => {
+                            return <div><a href={row} target="_blank" rel="noopener noreferrer">Url {idx}</a></div>
+                        })}
+                    </>
+                ) : null
+            )}
 
             <input type='text' 
                 value={answer} 

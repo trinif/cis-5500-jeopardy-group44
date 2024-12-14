@@ -743,7 +743,7 @@ const questions = async function(req, res) {
 
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
-  const predefinedSubjects = [
+  const defaultSubjects = [
     'History',
     'Pop Culture',
     'Geography',
@@ -755,79 +755,50 @@ const question_selection = async function (req, res) {
   ];
 
   const keyword = req.query.keyword || '';
-  const valueLow = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 100;
-  const valueHigh = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 2000;  
-  /* const subjects = req.query.subject
-    ? req.query.subject.split(',')
-    : []; */
-  const subjects = (req.query.subjects === null || req.query.subjects === '') ? req.query.subjects : predefinedSubjects;
-  //console.log(req.query.subjects);
-  // console.log(subjects);
-  //this works on the first query, but on the subsequent ones, the default is '' rather than null/undefined
-  //have to case for that?
-  const rounds = (req.query.rounds === null || req.query.rounds === '') ? req.query.rounds : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
-  const source = req.query.source || 'both';
-  const shuffle = req.query.shuffle === 'true';
-  const page = parseInt(req.query.page, 10) || 1;
-  const pageSize = parseInt(req.query.page_size, 10) || 10;
-  const offset = (page - 1) * pageSize;
+  const selected_source = req.query.source || 'both';
+  const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
+  const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
+  const subjects = req.query.subjects && req.query.subjects != '' ? req.query.subjects.split(',') : defaultSubjects;
+  const rounds = req.query.rounds && req.query.rounds != '' ? req.query.rounds.split(',') : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
 
-  //need to fix for multiple elements
-  // console.log(`subject IN ('${subjects.join('","').replace(/"/g, "'")}');`);
-  // console.log(`SELECT *
-  //   FROM base_questions
-  //   WHERE question LIKE '%${keyword}%'
-  //   AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
-  //   AND ('${source}' = 'both' OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 0) OR ('${source}' = 'trivia' AND jeopardy_or_general = 1))
-  //   AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-  //   AND (rounds IS NULL OR rounds IN ('${rounds.join('","').replace(/"/g, "'")}'));`);
+  let query = `
+    SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      CASE
+        WHEN Questions.jeopardy_or_general = B'0' THEN 'Jeopardy'
+        ELSE 'Trivia'
+        END AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM Questions
+      LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
+    WHERE Questions.question LIKE '%${keyword}%'
+      AND ('${selected_source}' = 'both' 
+        OR ('${selected_source}' = 'jeopardy' AND Questions.jeopardy_or_general = B'0') 
+        OR ('${selected_source}' = 'trivia' AND Questions.jeopardy_or_general = B'1')
+      )
+      AND (value IS NULL 
+        OR (value >= ${value_low} AND value <= ${value_high})
+      )    
+      AND subject IN ('${subjects.join(`','`)}')
+      AND (round IS NULL 
+        OR round IN ('${rounds.join(`','`)}')
+      )
+    ORDER BY id_substring
+    LIMIT 10
+  `  
 
-  connection.query(`
-    WITH base_questions AS (
-      SELECT q.question_id AS id, 
-        SUBSTRING(q.question_id, 2, 10) AS id_substring,
-        q.question AS question, 
-        q.answer AS answer,
-        CASE
-          WHEN q.jeopardy_or_general = B'0' THEN 'Jeopardy'
-          ELSE 'Trivia'
-          END AS jeopardy_or_general,
-        q.subject AS subject,
-        j.round AS round,
-        j.value AS value
-      FROM questions q
-        LEFT JOIN jeopardy j ON q.question_id = j.question_id
-      ORDER BY id_substring
-    )
-    
-    SELECT *
-    FROM base_questions
-    WHERE question LIKE '%${keyword}%'
-      AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
-      AND ('${source}' = 'both' 
-        OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 'Jeopardy') 
-        OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
-      AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'));
-  `, (err, data) => {
+  console.log(query)
+  
+  connection.query(query, (err, data) => {
     if (err) {
-      console.log(err);
-      res.json([]);
+      console.log(err)
+      res.json([])
     } else {
-      //console.log(data.rows);
-      console.log(`SELECT *
-    FROM base_questions
-    WHERE question LIKE '%${keyword}%'
-      AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
-      AND ('${source}' = 'both' 
-        OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 'Jeopardy') 
-        OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
-      AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
-      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'));`)
-      res.json(data.rows);
+      res.json(data.rows)
     }
-  });
-
+  })
 };
 
 // gets the questions that the top 5 users (on leaderboard) did worst on
