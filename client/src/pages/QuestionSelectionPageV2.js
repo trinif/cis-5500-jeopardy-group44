@@ -24,13 +24,24 @@ import QuestionCard from '../components/QuestionCard';
 const config = require('../config.json'); // Import server configuration
 
 export default function QuestionSelectionPageV2() {
+  const predefinedSubjects = [
+    'History',
+    'Pop Culture',
+    'Geography',
+    'Sports',
+    'Literature',
+    'Science',
+    'Vocabulary',
+    'Math',
+  ];
+
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedSource, setSelectedSource] = useState('both'); // 'jeopardy', 'trivia', or 'both'
   const [selectedRounds, setSelectedRounds] = useState([]);
   const [valueRange, setValueRange] = useState([100, 2000]);
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState(predefinedSubjects);
   const [filters, setFilters] = useState({}); // Holds dynamically applied filters
   const [isShuffled, setIsShuffled] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
@@ -38,27 +49,11 @@ export default function QuestionSelectionPageV2() {
 
   const defaultValueRange = [100, 9800];
 
-  // Predefined Subjects
-  useEffect(() => {
-    const predefinedSubjects = [
-      'History',
-      'Pop Culture',
-      'Geography',
-      'Sports',
-      'Literature',
-      'Science',
-      'Vocabulary',
-      'Math',
-    ];
-    setSubjects(predefinedSubjects);
-  }, []);
-
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/question_selection`)
       .then(res => res.json())
       .then(resJson => {
-        const questionsWithId = resJson.data.map((question) => ({ id: question.question_id, ...question }));
-        setData(questionsWithId);
+        setData(resJson);
       }).catch(err => {
         console.log(err)
       });
@@ -89,17 +84,40 @@ export default function QuestionSelectionPageV2() {
       });
   }
 
-  // Define the columns for LazyTable
+  // Define the columns for DataGrid
   const columns = [
-    { field: 'jeopardy_or_general', headerName: 'Source', width: 100,
-        renderCell: (row) =>
-          row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
-    },
+    { field: 'jeopardy_or_general', headerName: 'Source', width: 100},
     { field: 'question', headerName: 'Question', width: 500, renderCell: (params) => (
+      <div
+        style={{
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          lineHeight: '1.5',
+        }}
+      >
         <Link onClick={() => setSelectedQuestionId(params.row.question_id)}>{params.value}</Link>
+      </div>
     ) },
     { field: 'subject', headerName: 'Subject', width: 100 },
-    { field: 'answer', headerName: 'Answer', width: 200 }
+    { field: 'answer', headerName: 'Answer', width: 200, renderCell: (params) => (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          lineHeight: '1.5',
+          gap: '8px',
+          overflow: 'hidden',
+        }}
+      >
+        <input
+          type='text'
+          style={{ width: '100%', maxWidth: '100%' }}
+        />
+        <button>Check</button>
+      </div>
+    ) },
   ]
 
   return (

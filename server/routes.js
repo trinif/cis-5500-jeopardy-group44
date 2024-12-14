@@ -644,113 +644,84 @@ const random = async function(req, res) {
 
 // Route: GET /question_selection
 const question_selection = async function (req, res) {
-  const userId = req.query.user_id; // User ID parameter
-  const pastQuestionsFilter = req.query.pastQuestionsFilter || 'all'; // Filter parameter
-  const title = req.query.title || '';
-  const valueLow = req.query.value_low ? parseInt(req.query.value_low, 10) || null : null;
-  const valueHigh = req.query.value_high ? parseInt(req.query.value_high, 10) || null : null;  
-  const metaCategories = req.query.meta_category
-    ? req.query.meta_category.split(',')
-    : [];
-  const rounds = req.query.round
-    ? req.query.round.split(',')
-    : [];
+  const predefinedSubjects = [
+    'History',
+    'Pop Culture',
+    'Geography',
+    'Sports',
+    'Literature',
+    'Science',
+    'Vocabulary',
+    'Math',
+  ];
+
+  const keyword = req.query.keyword || '';
+  const valueLow = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 100;
+  const valueHigh = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 2000;  
+  /* const subjects = req.query.subject
+    ? req.query.subject.split(',')
+    : []; */
+  const subjects = req.query.subjects ?? predefinedSubjects;
+  //console.log(req.query.subjects);
+  // console.log(subjects);
+  //this works on the first query, but on the subsequent ones, the default is '' rather than null/undefined
+  //have to case for that?
+  const rounds = req.query.rounds ?? ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
   const source = req.query.source || 'both';
   const shuffle = req.query.shuffle === 'true';
   const page = parseInt(req.query.page, 10) || 1;
   const pageSize = parseInt(req.query.page_size, 10) || 10;
   const offset = (page - 1) * pageSize;
 
-  try {
-    const query = `
-      WITH base_questions AS (
-        SELECT 
-          q.question_id AS base_question_id,
-          q.question, 
-          q.answer,
-          CAST(q.jeopardy_or_general AS INTEGER) AS jeopardy_or_general,
-          q.subject AS meta_category,
-          j.round,
-          j.value,
-          j.category
-        FROM 
-          questions q
-          LEFT JOIN jeopardy j ON q.question_id = j.question_id
-      ),
-      user_attempts AS (
-        SELECT 
-          question_id AS user_question_id,
-          CASE 
-            WHEN is_correct = B'1' THEN TRUE 
-            WHEN is_correct = B'0' THEN FALSE 
-            ELSE NULL 
-          END AS is_correct
-        FROM 
-          useranswers
-        WHERE 
-          user_id = $9
-      ),
-      filtered_questions AS (
-        SELECT 
-          b.base_question_id AS question_id,
-          b.question,
-          b.answer,
-          b.jeopardy_or_general,
-          b.meta_category,
-          b.round,
-          b.value,
-          b.category,
-          u.is_correct
-        FROM base_questions b
-        LEFT JOIN user_attempts u ON b.base_question_id = u.user_question_id
-        WHERE 
-          ($1::text IS NULL OR b.question ILIKE $1)
-          AND ($2::text[] IS NULL OR b.meta_category ILIKE ANY($2))
-          AND ($3::text[] IS NULL OR b.round = ANY($3))
-          AND ($4::int IS NULL OR $5::int IS NULL OR b.value BETWEEN $4 AND $5)
-          AND (
-            $6::text = 'both' OR
-            ($6::text = 'jeopardy' AND b.jeopardy_or_general = 0) OR
-            ($6::text = 'trivia' AND b.jeopardy_or_general = 1)
-          )
-          AND (
-            $8::text = 'all' OR
-            ($8::text = 'never_tried' AND u.user_question_id IS NULL) OR
-            ($8::text = 'wrong' AND u.is_correct = FALSE)
-          )
-      )
-      SELECT 
-        *,
-        COUNT(*) OVER() AS total_count
-      FROM filtered_questions
-      ${shuffle ? 'ORDER BY RANDOM()' : 'ORDER BY question_id'}
-      LIMIT $7 OFFSET $10;
-    `;
+  //need to fix for multiple elements
+  // console.log(`subject IN ('${subjects.join('","').replace(/"/g, "'")}');`);
+  // console.log(`SELECT *
+  //   FROM base_questions
+  //   WHERE question LIKE '%${keyword}%'
+  //   AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
+  //   AND ('${source}' = 'both' OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 0) OR ('${source}' = 'trivia' AND jeopardy_or_general = 1))
+  //   AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
+  //   AND (rounds IS NULL OR rounds IN ('${rounds.join('","').replace(/"/g, "'")}'));`);
 
-    const params = [
-      title ? `%${title}%` : null,
-      metaCategories.length > 0 ? metaCategories.map((cat) => `%${cat}%`) : null,
-      rounds.length > 0 ? rounds : null,
-      valueLow,
-      valueHigh,
-      source,
-      pageSize,
-      pastQuestionsFilter,
-      userId,
-      offset,
-    ];
+  connection.query(`
+    WITH base_questions AS (
+      SELECT q.question_id AS id, 
+        SUBSTRING(q.question_id, 2, 10) AS id_substring,
+        q.question AS question, 
+        q.answer AS answer,
+        CASE
+          WHEN q.jeopardy_or_general = B'0' THEN 'Jeopardy'
+          ELSE 'Trivia'
+          END AS jeopardy_or_general,
+        q.subject AS subject,
+        j.round AS round,
+        j.value AS value
+      FROM questions q
+        LEFT JOIN jeopardy j ON q.question_id = j.question_id
+      ORDER BY id_substring
+    )
+    
+    SELECT *
+    FROM base_questions
+    WHERE question LIKE '%${keyword}%'
+      AND subject IN ('${subjects.join('","').replace(/"/g, "'")}')
+      AND ('${source}' = 'both' 
+        OR ('${source}' = 'jeopardy' AND jeopardy_or_general = 'Jeopardy') 
+        OR ('${source}' = 'trivia' AND jeopardy_or_general = 'Trivia'))
+      AND (value IS NULL OR (value >= ${valueLow} AND value <= ${valueHigh}))
+      AND (round IS NULL OR round IN ('${rounds.join('","').replace(/"/g, "'")}'))
+    LIMIT 10;
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      console.log(data.rows)
+      res.json(data.rows);
+    }
+  });
 
-    const { rows } = await connection.query(query, params);
-    res.status(200).json({
-      total: rows.length > 0 ? rows[0].total_count : 0,
-      data: rows,
-    });
-  } catch (err) {
-    console.error('Error fetching questions:', err);
-    res.status(500).json({ message: 'Error fetching questions' });
-  }
 };
-
 
 // gets the questions that the top 5 users (on leaderboard) did worst on
 // const least_accurate_questions_top_users = async function(req, res) {
