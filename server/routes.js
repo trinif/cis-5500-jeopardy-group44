@@ -158,8 +158,6 @@ const check_follow_status = async function(req, res) {
   const following = req.params.following;
   const person_of_interest = req.params.person_of_interest;
 
-  console.log("check follow status")
-
   connection.query(`
     SELECT *
     FROM Following
@@ -323,7 +321,6 @@ FROM best_category, worst_category
       console.log(err)
       res.json({})
     } else {
-      console.log(data)
       res.json(data.rows[0]);
     }
   })
@@ -594,6 +591,7 @@ const question_trivia = async function(req, res) {
       console.log(err)
       res.status(500).json({message: 'Error'})
     } else {
+      console.log(data.rows[0])
       res.json(data.rows[0])
     }
   })

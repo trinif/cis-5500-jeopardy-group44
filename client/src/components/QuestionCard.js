@@ -159,14 +159,16 @@ const checkButtonHandler = () => {
               {answerMessage && (
                 <>
                   <p>{answerMessage}</p>
-                  <p>
-                    {extraData.urls.map((row, idx) => {
-                      if (idx < 3) {
-                        return <div>{idx+1}. <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
-                      }
-                    })}
-                  </p>
-                  <button onClick={e => seeExtraInformationHandler()}>See similar information</button>
+                  {extraData && extraData.urls ? (
+                    <p>
+                      {extraData.urls.map((row, idx) => {
+                        if (idx < 3) {
+                          return <div>{idx+1}. <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
+                        }
+                      })}
+                    </p>
+                  ) : (null)}
+                  {/*<button onClick={e => seeExtraInformationHandler()}>See similar information</button>*/}
                 </>
               )}
             </div> 
