@@ -119,7 +119,11 @@ export default function QuestionSelectionPage() {
       pastQuestionsFilter, 
       user_id: userId
     });
+<<<<<<< HEAD
     return `httpss://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
+=======
+    return `https://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
+>>>>>>> ac30f30a094c1d0f36609dc94ddf456452fdc49e
   };
 
   const applySearch = () => {

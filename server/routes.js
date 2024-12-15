@@ -447,34 +447,6 @@ const incorrect_questions_category = async function(req, res) {
   });
 };
 
-// //this seems unnecessary but could do something with incorrect answers?
-// const incorrect_questions_category = async function (req, res) {
-//   const user_id = req.params.user_id;
-
-//   connection.query(`
-//     WITH incorrect_questions AS (
-//       SELECT q.question_id, q.question, q.answer, q.subject
-//       FROM UserAnswers ua 
-//         JOIN Questions q ON ua.question_id = q.question_id
-//       WHERE ua.is_correct = B'0'
-//         AND ua.user_id = '${user_id}'
-//     )
-
-//     SELECT question, answer, subject
-//     FROM Questions q
-//     WHERE subject IN (SELECT q.subject FROM incorrect_questions)
-
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err)
-//       res.json({})
-//     } else {
-//       console.log(data.rows)
-//       res.json(data.rows)
-//     }
-//   })
-// }
-
 const final_jeopardy_questions = async function (req, res) {
   const user_id = req.params.user_id;
   connection.query(`
@@ -515,46 +487,6 @@ const general_trivia_questions = async function (req, res) {
   })
 }
 
-
-// connection.query(`
-//   WITH unanswered_categories AS (
-//     SELECT DISTINCT q.subject
-//     FROM Questions q
-//     WHERE q.subject NOT IN
-//       (SELECT qu.subject
-//       FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
-//       WHERE ua.user_id='${user_id}'
-//   ),
-//   SELECT q.question_id, q.question, q.answer
-//   FROM Questions q
-//   WHERE q.subject IN (SELECT q.subject FROM uanswered_categories)
-// `,
-
-// const unanswered_categories_questions = async function (req, res) {
-//   const user_id = req.params.user_id;
-//   connection.query(`
-//   WITH unanswered_categories AS (
-//     SELECT DISTINCT q.subject
-//     FROM Questions q
-//     WHERE q.subject NOT IN
-//       (SELECT qu.subject
-//       FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
-//       WHERE ua.user_id='${user_id}'
-//   ),
-//   SELECT q.question_id, q.question, q.answer
-//   FROM Questions q
-//   WHERE q.subject IN (SELECT q.subject FROM uanswered_categories)
-//   `,
-//   (err, data) => {
-//     if (err) {
-//       console.log(err)
-//       res.json({})
-//     } else {
-//       console.log(data.rows)
-//       res.json(data.rows)
-//     }
-//   })
-// }
 
 // DONE
 const unanswered_categories_questions = async function (req, res) {
@@ -829,46 +761,6 @@ const question_selection = async function (req, res) {
   })
 };
 
-// gets the questions that the top 5 users (on leaderboard) did worst on
-// const least_accurate_questions_top_users = async function(req, res) {
-//   connection.query(`
-//     WITH top_users AS (
-//      SELECT user_id,
-//       ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
-//     FROM UserAnswers
-//     WHERE user_id NOT LIKE 'guest_%'
-//     GROUP BY user_id
-//     ORDER BY accuracy DESC
-//     LIMIT 5
-//     )
-//     SELECT 
-//       ua.user_id,
-//       q.question_id,
-//       q.question,
-//       q.subject,
-//       COUNT(ua.is_correct) AS total_answers,
-//       COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
-//       (COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)) AS accuracy
-//     FROM 
-//       UserAnswers ua
-//     JOIN 
-//       Questions q ON ua.question_id = q.question_id
-//     WHERE 
-//       ua.user_id IN (SELECT user_id FROM top_users)
-//     GROUP BY 
-//       ua.user_id, q.question_id, q.question, q.subject
-//     ORDER BY 
-//       accuracy ASC
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err);
-//       res.json([]);
-//     } else {
-//       res.json(data.rows);
-//     }
-//   });
-// };
-
 const least_accurate_questions_top_users = async function(req, res) {
     connection.query(`
       WITH top_users AS (
@@ -957,6 +849,53 @@ const least_accurate_questions_top_users = async function(req, res) {
     });
   };
 
+  const hardest_question_from_network = async function(req, res) {
+    const user_id = req.params.user_id;
+    connection.query(`
+      WITH FollowedUsersPerformance AS (
+        SELECT
+            ua.user_id,
+            ua.question_id,
+            ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)), 2) AS accuracy
+        FROM
+            UserAnswers ua
+        JOIN
+            Following f ON ua.user_id = f.person_of_interest
+        WHERE
+            f.following = '${user_id}'
+        GROUP BY
+            ua.user_id, ua.question_id)
+      SELECT
+        q.question_id,
+        q.question,
+        q.subject,
+        COUNT(ua.is_correct) AS total_answers,
+        COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
+        ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)), 2) AS accuracy
+      FROM
+        Questions q
+      JOIN
+        UserAnswers ua ON q.question_id = ua.question_id
+      JOIN
+        FollowedUsersPerformance fup ON q.question_id = fup.question_id
+      WHERE
+        fup.accuracy <= ALL (
+            SELECT fup2.accuracy
+            FROM FollowedUsersPerformance fup2
+            WHERE fup2.question_id != fup.question_id
+        )
+      GROUP BY
+        q.question_id, q.question, q.subject
+      LIMIT 1;
+    `, (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    });
+  };
 
 module.exports = {
   signup,
@@ -987,4 +926,5 @@ module.exports = {
   question_trivia,
   questions,
   following_worst_questions,
+  hardest_question_from_network,
 }

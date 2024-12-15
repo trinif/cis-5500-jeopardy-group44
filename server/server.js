@@ -20,7 +20,7 @@ app.use(express.json())
 //     saveUninitialized: false,
 //     cookie: {
 //       secure: false,
-//       httpOnly: true,
+//       httpsOnly: true,
 //       maxAge: 60*60*1000
 //     }
 //   }),
@@ -69,6 +69,7 @@ app.get('/question_selection/:user_id', routes.question_selection);
 
 app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_top_users);
 app.get('/following_worst_questions/:user_id', routes.following_worst_questions);
+app.get('/hardest_question_from_network/:user_id', routes.hardest_question_from_network);
 
 app.listen(8080, () => {
   console.log(`Server running at https://${config.server_host}/`)
