@@ -74,6 +74,8 @@ export default function QuestionSelectionPageV2() {
       renderCell: (params) => (
         <>
           {showAnswer[params.row.id] ? (
+            <p>{params.value}</p>
+          ) : (
             <button
               onClick={e => {
                 setShowAnswer((prev) => ({
@@ -84,8 +86,6 @@ export default function QuestionSelectionPageV2() {
             >
               Click to see answer.
             </button>
-          ) : (
-            <p>{params.value}</p>
           )}
         </>
       ),
