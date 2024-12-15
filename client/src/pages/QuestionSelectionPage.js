@@ -41,17 +41,74 @@ export default function QuestionSelectionPageV2() {
   const [data, setData] = useState([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-  const [showAnswer, setShowAnswer] = useState({});
 
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [selectedSource, setSelectedSource] = useState('both')
-  const [valueRange, setValueRange] = useState([200, 1000])
+  const [valueRange, setValueRange] = useState([100, 2000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
+  const [rowStates, setRowStates] = useState({});
+
+  const toggleAnswerSection = (rowId) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        showAnswerSection: !prev[rowId]?.showAnswerSection,
+      },
+    }));
+  };
+
+  // Function to handle input change for a row
+  const handleInputChange = (rowId, value) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        userAnswer: value,
+      },
+    }));
+  };
+
+  // Function to check the answer
+  const checkAnswer = (rowId, correctAnswer) => {
+    const userAnswer = rowStates[rowId]?.userAnswer || '';
+    const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        feedback: isCorrect ? 'Correct!' : `Incorrect!`,
+      },
+    }))
+
+    const isCorrectBin = isCorrect ? 1 : 0;
+    fetch(`http://${config.server_host}/update_user_answer`, {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId, questionId: rowId, is_correct: isCorrectBin })
+    });
+  };
+
+  // Toggle "Reveal/Hide Answer"
+  const toggleRevealAnswer = (rowId, correctAnswer) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        isAnswerRevealed: !prev[rowId]?.isAnswerRevealed,
+        feedback: !prev[rowId]?.isAnswerRevealed ? `Correct Answer: ${correctAnswer}` : '',
+      },
+    }));
+  };
+
 
   const columns = [
-    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
+    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: .7},
     { field: 'question', 
       headerName: 'Question', 
       cellClassName: 'white-text', 
@@ -71,26 +128,108 @@ export default function QuestionSelectionPageV2() {
       ) 
     },
     { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
-    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2,
-      renderCell: (params) => (
-        <>
-          {showAnswer[params.row.id] ? (
-            <p>{params.value}</p>
-          ) : (
-            <button
-              onClick={e => {
-                setShowAnswer((prev) => ({
-                  ...prev,
-                  [params.row.id]: !prev[params.row.id],
-                }))
-              }}
-            >
-              Click to see answer.
-            </button>
-          )}
-        </>
-      ),
-    }
+    { field: 'value', headerName: 'Value', cellClassName: 'white-text', flex: .5},
+    {
+      field: 'answer',
+      headerName: 'Answer',
+      flex: 2,
+      renderCell: (params) => {
+        const rowId = params.row.id;
+        const rowState = rowStates[rowId] || {};
+
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%%' }}>
+            {/* Try Answering Button */}
+            {!rowState.showAnswerSection ? (
+              <Typography
+                variant="body1"
+                onClick={() => toggleAnswerSection(rowId)}
+                sx={{
+                  color: 'gold',
+                  textDecoration: 'bold',
+                  cursor: 'pointer',
+                  '&:hover': { color: 'white' },
+                }}
+              >
+                Try Answering
+              </Typography>
+
+            ) : (
+              <>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    width: '100%',
+                  }}
+                >
+                  {/* Input Field */}
+                  <TextField
+                    size="small"
+                    value={rowState.userAnswer || ''}
+                    onChange={(e) => handleInputChange(rowId, e.target.value)}
+                    placeholder="Your answer"
+                    sx={{
+                      backgroundColor: 'white',
+                      borderRadius: '5px',
+                      flexGrow: 1, 
+                      maxWidth: '90%',
+                    }}
+                  />
+
+                  {/* Close (x) button */}
+                  <Typography
+                    variant="body1"
+                    onClick={() => toggleAnswerSection(rowId)}
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'gold',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      marginLeft: '8px', 
+                    }}
+                  >
+                    x
+                  </Typography>
+                </Box>
+
+                {/* Buttons */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => checkAnswer(rowId, params.row.answer)}
+                    sx={{ backgroundColor: 'gold', color: 'black' }}
+                  >
+                    Check
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => toggleRevealAnswer(rowId, params.row.answer)}
+                    sx={{ borderColor: 'gold', color: 'gold' }}
+                  >
+                    {rowState.isAnswerRevealed ? 'Hide Answer' : 'Reveal Answer'}
+                  </Button>
+                </Box>
+
+                {/* Feedback */}
+                {rowState.feedback && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: rowState.feedback.includes('Correct') ? 'green' : 'red',
+                    }}
+                  >
+                    {rowState.feedback}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Box>
+        );
+      },
+    }    
   ]
 
   useEffect(() => {
@@ -142,9 +281,9 @@ export default function QuestionSelectionPageV2() {
           border: '3px solid #FFD700',
         }}
       >
-        <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
+        <Grid container spacing={2}>
           {/* keyword */}
-          <Grid item xs={8}>
+          <Grid item xs={6}>
             <TextField 
               label='Keyword' 
               value={keyword} 
@@ -163,7 +302,7 @@ export default function QuestionSelectionPageV2() {
           </Grid>
 
           {/* subjects */}
-          <Grid item xs={4}>
+          <Grid item xs={5}>
             <Select multiple value={selectedSubjects} onChange={(e) => setSelectedSubjects(e.target.value)}
               displayEmpty
               input={<OutlinedInput />}
@@ -183,49 +322,117 @@ export default function QuestionSelectionPageV2() {
               ))}
             </Select>
           </Grid>
-        </Grid>
-        <Grid item xs={12} sm={4} md={4} marginBottom={2}>
-          <ToggleButtonGroup
-            value={selectedSource}
-            exclusive
-            onChange={(e, newSource) => {
-              if (newSource !== null) setSelectedSource(newSource);
-            }}
-            fullWidth
-            sx={{
-              '& .MuiToggleButton-root': {
-                border: '1px solid #FFD700',
-                color: '#FFD700',
-                textTransform: 'capitalize',
-                fontWeight: 'bold',
-                '&.Mui-selected:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
+
+          <Grid item xs={1} justifyContent="center" display="flex" >  
+            <Button variant="contained" onClick={() => search() }
+              sx={{
+                backgroundColor: 'gold',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: "center",
+                color: 'black',
                 '&:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
+                  backgroundColor: 'gold',
+                },
+                '&:active': {
+                  backgroundColor: 'gold',
+                },
+                '&:focus': {
+                  backgroundColor: 'gold'
+                },
+              }}>
+              Search
+            </Button> 
+          </Grid>
+        </Grid>
+        <Grid 
+          container 
+          spacing={2} 
+          alignItems="center" 
+          justifyContent="space-between" 
+          sx={{ marginTop: '5px' }}
+        >
+          <Grid item xs={6}>
+            <ToggleButtonGroup
+              value={selectedSource}
+              exclusive
+              onChange={(e, newSource) => {
+                if (newSource !== null) setSelectedSource(newSource);
+              }}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  border: '1px solid #FFD700',
+                  color: '#FFD700',
+                  textTransform: 'capitalize',
+                  fontWeight: 'bold',
+                  '&.Mui-selected:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  }
+                },
+              }}
+            >
+              <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
+              <ToggleButton value="both">Both</ToggleButton>
+              <ToggleButton value="trivia">Trivia</ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
+
+          {/* Toggle Button Group */}
+          <Grid item xs={6}>
+            <ToggleButtonGroup
+              value={questionSet}
+              exclusive
+              onChange={(e, newSource) => {
+                if (newSource !== null) {
+                  setQuestionSet(newSource);
                 }
-              },
-            }}
-          >
-            <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
-            <ToggleButton value="both">Both</ToggleButton>
-            <ToggleButton value="trivia">Trivia</ToggleButton>
-          </ToggleButtonGroup>
+              }}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  border: '1px solid #FFD700',
+                  color: '#FFD700',
+                  textTransform: 'capitalize',
+                  fontWeight: 'bold',
+                  '&.Mui-selected:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="all">All Questions</ToggleButton>
+              <ToggleButton value="never">Never Tried</ToggleButton>
+              <ToggleButton value="past">Past Wrong Answers</ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
         </Grid>
 
         {/* Jeopardy-specific value and round */}
         {selectedSource !== 'trivia' && (
           <Grid
-            container spacing={4} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
+            container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
           >
             {/* rounds */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={6} >
               <Select
                 multiple
                 label='Round'
@@ -239,7 +446,6 @@ export default function QuestionSelectionPageV2() {
                 fullWidth
                 sx={{
                   backgroundColor: 'white',
-                  borderRadius: '5px',
                 }}
               >
                 <MenuItem value="Jeopardy!">Jeopardy!</MenuItem>
@@ -249,10 +455,10 @@ export default function QuestionSelectionPageV2() {
             </Grid>
 
             {/* Value Range Filter */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={5.9} marginLeft={'2px'}>
               <Typography
                 variant="caption"
-                sx={{ color: 'gold', fontWeight: 'bold', marginBottom: '5px' }}
+                sx={{ color: 'gold', fontWeight: 'bold'}}
               >
                 Value Range
               </Typography>
@@ -270,66 +476,6 @@ export default function QuestionSelectionPageV2() {
             </Grid>
           </Grid>
         )}
-
-        {/* i wanted to put the search and toggle button group on the same line */}
-        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" display="flex">  
-          <Button variant="contained" onClick={() => search() }
-            sx={{
-              backgroundColor: 'gold',
-              borderRadius: '5px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: "center",
-              color: 'black',
-              '&:hover': {
-                backgroundColor: 'gold',
-              },
-              '&:active': {
-                backgroundColor: 'gold',
-              },
-              '&:focus': {
-                backgroundColor: 'gold'
-              },
-            }}>
-            Search
-          </Button>
-
-          <ToggleButtonGroup
-            value={questionSet}
-            exclusive
-            onChange={(e, newSource) => {
-              if (newSource !== null) {
-                setQuestionSet(newSource)
-              }
-            }}
-            fullWidth
-            sx={{
-              '& .MuiToggleButton-root': {
-                border: '1px solid #FFD700',
-                color: '#FFD700',
-                textTransform: 'capitalize',
-                fontWeight: 'bold',
-                margin: '4px',
-                '&.Mui-selected:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                }
-              },
-            }}
-          >
-            <ToggleButton value="all">All Questions</ToggleButton>
-            <ToggleButton value="never">Never Tried</ToggleButton>
-            <ToggleButton value="past">Past Wrong Answers</ToggleButton>
-          </ToggleButtonGroup>          
-        </Grid>
       </Box>
       <div class="results">
         <h2>Question Table</h2>
@@ -340,7 +486,11 @@ export default function QuestionSelectionPageV2() {
           rowsPerPageOptions={[5, 10, 25]}
           onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
           autoHeight
+          getRowHeight={() => 'auto'}
           sx={{
+            '& .MuiDataGrid-row': {
+              maxHeight: 'none'
+            },
             '& .MuiDataGrid-columnHeaders': {
               color: 'white',
               backgroundColor: '#081484',
@@ -354,6 +504,9 @@ export default function QuestionSelectionPageV2() {
               whiteSpace: 'normal',
               wordWrap: 'break-word',
               lineHeight: '1.2',
+              display: 'flex',
+              padding: '8px',
+              alignItems: 'center'
             },
             '& .MuiDataGrid-columnSeparator': {
               visibility: 'visible', 

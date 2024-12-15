@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Container, Typography, TextField, Divider, Stack } from '@mui/material';
 import { useAuth } from "../components/Context";
+import { useRef } from 'react';
+
 const config = require('../config.json');
 
 export default function JeopardyQuestions() {
@@ -20,6 +22,8 @@ export default function JeopardyQuestions() {
 
     const { userId } = useAuth();
 
+    const hasFetched = useRef(false);
+
     const checkButtonHandler = () => {
         fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
             method: "POST",
@@ -31,7 +35,7 @@ export default function JeopardyQuestions() {
                     total + 1,
                     correct + 1,
                     incorrect
-                ])
+                ]);
                 fetch(`http://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
@@ -44,8 +48,8 @@ export default function JeopardyQuestions() {
                 setQuestionsAnswered(([total, correct, incorrect]) => [
                     total + 1,
                     correct,
-                    incorrect+1
-                ])
+                    incorrect + 1
+                ]);
                 fetch(`http://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
@@ -62,18 +66,21 @@ export default function JeopardyQuestions() {
     };
 
     useEffect(() => {
+        if (hasFetched.current) return; // Prevent double fetch
+        hasFetched.current = true;
+    
+        console.log("Fetching question...");
         fetch(`http://${config.server_host}/random`)
-            .then(res => {
-                return res.json()
-            })
-            .then(resJson => {
+            .then((res) => res.json())
+            .then((resJson) => {
                 setQuestionId(resJson.question_id);
                 setQuestion(resJson.question);
                 setCategory(resJson.category);
                 setValue(resJson.value);
                 setAnswer('');
                 setAnswerMessage('');
-            });
+            })
+            .catch(err => console.error("Error fetching question:", err));
     }, [newPage]);
 
     return (
@@ -87,7 +94,7 @@ export default function JeopardyQuestions() {
         >
             <Container>
                 <Typography variant="h2" align="center" gutterBottom>
-                    Test Yourself
+                Test Yourself
                 </Typography>
                 <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
 
@@ -101,11 +108,11 @@ export default function JeopardyQuestions() {
                     }}
                 >
                     <Typography variant="h4" gutterBottom>
-                        Question:
+                        Question
                     </Typography>
 
                     <Typography variant="h6">{question}</Typography>
-                    <Typography variant="h8" sx={{ display: 'block' }}>
+                    <Typography variant="h8" sx={{ display: 'block', marginTop: '20px', }}>
                         <strong>Category:</strong> {category}
                     </Typography>
                     <Typography variant="h8" sx={{ display: 'block' }}>
