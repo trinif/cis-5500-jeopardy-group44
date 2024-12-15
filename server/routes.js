@@ -756,7 +756,7 @@ const question_selection = async function (req, res) {
 
   const user_id = req.params.user_id;
 
-  const keyword = req.query.keyword || '';
+  const keyword = req.query.keyword.toLowerCase() || '';
   const selected_source = req.query.source || 'both';
   const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
   const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
@@ -803,7 +803,7 @@ const question_selection = async function (req, res) {
     FROM questions_filtered
       JOIN Questions ON questions_filtered.question_id = Questions.question_id
       LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
-    WHERE Questions.question LIKE '%${keyword}%'
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
       AND ('${selected_source}' = 'both' 
         OR ('${selected_source}' = 'jeopardy' AND Questions.jeopardy_or_general = B'0') 
         OR ('${selected_source}' = 'trivia' AND Questions.jeopardy_or_general = B'1')

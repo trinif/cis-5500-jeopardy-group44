@@ -80,7 +80,7 @@ export default function NavBar() {
         >
           {/* Navigation Links */}
           <NavText href="/" text="Home" />
-          <NavText href="/question_selection_v2" text="Question Selection" />
+          <NavText href="/question_selection" text="Question Selection" />
           <NavText href="/statistics" text="Statistics" />
           <NavText href="/questions" text="Test Yourself" />
           {userId && !userId.startsWith('guest_') ? (

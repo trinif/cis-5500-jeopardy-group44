@@ -12,146 +12,177 @@ import {
   Grid,
   Chip,
   Slider,
+  Link,
+  Button
 } from '@mui/material';
 import LazyTable from '../components/LazyTable';
+
+import { DataGrid } from '@mui/x-data-grid';
+
+import QuestionCard from '../components/QuestionCard';
 import { useAuth } from '../components/Context';
 
-const config = require('../config.json');
+const config = require('../config.json'); // Import server configuration
 
-export default function QuestionSelectionPage() {
-  const { userId } = useAuth(); 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMetaCategories, setSelectedMetaCategories] = useState([]);
-  const [selectedSource, setSelectedSource] = useState('both'); 
-  const [selectedRounds, setSelectedRounds] = useState([]);
-  const [valueRange, setValueRange] = useState([100, 9800]);
-  const [metaCategories, setMetaCategories] = useState([]);
-  const [filters, setFilters] = useState({}); 
-  const [isShuffled, setIsShuffled] = useState(false);
-  const [pastQuestionsFilter, setPastQuestionsFilter] = useState('all');
-  const [page, setPage] = useState(1); 
-
-  const defaultValueRange = [100, 9800];
-
-  // Predefined metaCategories
-  useEffect(() => {
-    const predefinedMetaCategories = [
-      'History',
-      'Pop Culture',
-      'Geography',
-      'Sports',
-      'Literature',
-      'Science',
-      'Vocabulary',
-      'Math',
-    ];
-    setMetaCategories(predefinedMetaCategories);
-  }, []);
-
-  // Dynamically apply filters except for search
-  useEffect(() => {
-    setFilters({
-      searchTerm,
-      metaCategories: selectedMetaCategories,
-      source: selectedSource,
-      rounds: selectedRounds,
-      valueRange: selectedSource === 'jeopardy' ? valueRange : null, 
-    });
-  }, [searchTerm, selectedMetaCategories, selectedSource, selectedRounds, valueRange]);
-
-  useEffect(() => {
-    setPage(1); 
-  }, [filters]);
-
-  
-  const columns = [
-    ...(selectedSource === 'both'
-      ? [
-          {
-            headerName: 'Source',
-            field: 'jeopardy_or_general',
-            width: '8%',
-            renderCell: (row) =>
-              row.jeopardy_or_general === 0 ? 'Jeopardy' : 'Trivia',
-          },
-        ]
-      : []),
-    {
-      headerName: 'Question',
-      field: 'question',
-      width: selectedSource === 'jeopardy' ? '42%' : selectedSource === 'both' ? '50%' : '68%',
-    },
-    ...(selectedSource === 'jeopardy'
-      ? [
-          { headerName: 'Round', field: 'round', width: '8%' },
-          { headerName: 'Value', field: 'value', width: '8%' },
-        ]
-      : []),
-    ...(selectedSource !== 'trivia'
-      ? [
-          {
-            headerName: 'Category',
-            field: 'category',
-            width: '10%',
-            renderCell: (row) =>
-              row.jeopardy_or_general === 1 
-                ? ''
-                : row.category
-                ? row.category
-                : 'N/A',
-          },
-        ]
-      : []),
-    { headerName: 'Meta Category', field: 'meta_category', width: '10%' },
-    { headerName: 'Answer', field: 'answerCheck', width: '22%' },
+export default function QuestionSelectionPageV2() {
+  const subjects = [
+    'History',
+    'Pop Culture',
+    'Geography',
+    'Sports',
+    'Literature',
+    'Science',
+    'Vocabulary',
+    'Math',
   ];
 
-  // Build the route dynamically based on filters
-  const buildRoute = () => {
-    const params = new URLSearchParams({
-      title: filters.searchTerm || '',
-      meta_category: (filters.metaCategories || []).join(',') || '',
-      source: filters.source || 'both',
-      round: (filters.rounds || []).join(',') || '',
-      value_low: filters.valueRange ? filters.valueRange[0] : null,
-      value_high: filters.valueRange ? filters.valueRange[1] : null,
-      shuffle: isShuffled,
-      pastQuestionsFilter, 
-      user_id: userId
-    });
-    return `http://${config.server_host}:${config.server_port}/question_selection?${params.toString()}`;
-  };
-
-  const applySearch = () => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      searchTerm,
+  const handleInputChange = (id, value) => {
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [id]: value,
     }));
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      applySearch();
+  const { userId } = useAuth()
+
+  const [data, setData] = useState([])
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null)
+  const [pageSize, setPageSize] = useState(10);
+
+  const [inputValues, setInputValues] = useState({});
+  const [answer, setAnswer] = useState('')
+  const [answerMessage, setAnswerMessage] = useState('')
+
+  const [keyword, setKeyword] = useState('')
+  const [selectedSubjects, setSelectedSubjects] = useState([])
+  const [selectedSource, setSelectedSource] = useState('both')
+  const [valueRange, setValueRange] = useState([200, 1000])
+  const [selectedRounds, setSelectedRounds] = useState([])
+  const [questionSet, setQuestionSet] = useState('all')
+
+  const checkButtonHandler = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/check_answer/${selectedQuestionId}/${answer}`, {
+      method: "POST",
+    }).then(res => {
+      return res.json()
+    }).then(resJson => {
+      if (resJson.status == 'Correct') {
+        setAnswerMessage('Correct!')
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, selectedQuestionId, is_correct: 1}),
+        })
+      } else if (resJson.status == 'Incorrect') {
+        setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, selectedQuestionId, is_correct: 0}),
+        })
     }
-  };
+    }).catch(err => {
+        console.log(err)
+    })
+  }
 
-  const handleDeleteMetaCategory = (metaCategory) => {
-    setSelectedMetaCategories(
-      selectedMetaCategories.filter((m) => m !== metaCategory)
-    );
-  };
+  const columns = [
+    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
+    { field: 'question', 
+      headerName: 'Question', 
+      cellClassName: 'white-text', 
+      flex: 4,
+      renderCell: (params) => (
+        <Link 
+          onClick={() => setSelectedQuestionId(params.row.id)} 
+          style={{ color: 'white' }}
+          sx={{
+            whiteSpace: 'normal',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+          }}
+        >
+          {params.value}
+        </Link>
+      ) 
+    },
+    { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
+    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2,
+      renderCell: (params) => (
+        <Box variant="contained"
+          sx={{
+            height: '100%',
+          }}
+        >
+          <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Enter your answer"
+          value={inputValues[params.row.id] || ''}
+          onChange={(e) => handleInputChange(params.row.id, e.target.value)}
+          sx={{
+            input: { color: 'white' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': { borderColor: '#FFD700' },
+              '&:hover fieldset': { borderColor: '#FFD700' },
+              '&.Mui-focused fieldset': { borderColor: '#FFD700' },
+            },
+            width: '100%',
+            height: '50%',
+            marginBottom: '12px',
+            justifyContent: 'center',
+          }}
+          />
+          <Button variant="contained" onClick={() => search() }
+            sx={{
+              backgroundColor: 'gold',
+              borderRadius: '5px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: "center",
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'gold',
+              },
+              '&:active': {
+                backgroundColor: 'gold',
+              },
+              '&:focus': {
+                backgroundColor: 'gold'
+              },
+            }}>
+            Search
+          </Button>
+        </Box>
+      ),
+    } // delete this later
+  ]
 
-  const handleDeleteRound = (round) => {
-    setSelectedRounds(selectedRounds.filter((r) => r !== round));
-  };
+  useEffect(() => {
+    search()
+  }, [])
 
-  const handleDeleteValueRange = () => {
-    setValueRange(defaultValueRange);
-  };
-
-  const toggleShuffle = () => {
-    setIsShuffled((prev) => !prev);
-  };
+  const search = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/question_selection/${userId}?`+
+      `keyword=${keyword}` +
+      `&source=${selectedSource}` + 
+      `&valueLow=${valueRange[0]}` + 
+      `&valueHigh=${valueRange[1]}` + 
+      `&subjects=${selectedSubjects}` + 
+      `&rounds=${selectedRounds}` +
+      `&questionSet=${questionSet}`
+    )
+      .then(res => res.json())
+      .then(resJson => {
+        setData(resJson)
+      }).catch(err => {
+        console.log(err)
+      })
+  }
 
   return (
     <Box
@@ -161,176 +192,115 @@ export default function QuestionSelectionPage() {
         color: 'white',
         paddingTop: '20px',
         paddingBottom: '50px',
+        padding: 5,
+        gap: 5
       }}
     >
-      <Container>
-        <Typography variant="h2" align="center" gutterBottom>
-          Select Your Question
-        </Typography>
-
-        <Box
-          sx={{
-            backgroundColor: '#081484',
-            padding: '20px',
-            borderRadius: '10px',
-            border: '3px solid #FFD700',
-          }}
-        >
-          {/* First Row */}
-          <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                variant="outlined"
-                placeholder="Search by keyword"
-                fullWidth
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleKeyPress}
-                sx={{
-                  backgroundColor: 'white',
-                  borderRadius: '5px',
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={5.25}>
-              <Select
-                multiple
-                value={selectedMetaCategories}
-                onChange={(e) => setSelectedMetaCategories(e.target.value)}
-                displayEmpty
-                input={<OutlinedInput />}
-                renderValue={(selected) =>
-                  selected.length > 0 ? selected.join(', ') : 'Filter by Meta Category'
+    <Container container rowSpacing={5}>
+      {/* display QuestionCard when a question is selected (based on questionId) */}
+      {selectedQuestionId && <QuestionCard questionId={selectedQuestionId} handleClose={() => setSelectedQuestionId(null)} />}
+      <h2>Search Questions</h2>
+      <Box container rowSpacing={5}
+        sx={{
+          backgroundColor: '#081484',
+          padding: '20px',
+          borderRadius: '10px',
+          border: '3px solid #FFD700',
+        }}
+      >
+        <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
+          {/* keyword */}
+          <Grid item xs={8}>
+            <TextField 
+              label='Keyword' 
+              value={keyword} 
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    search();
                 }
-                fullWidth
-                sx={{
-                  backgroundColor: 'white',
-                  borderRadius: '5px',
-                }}
-              >
-                {metaCategories.map((metaCategory) => (
-                  <MenuItem key={metaCategory} value={metaCategory}>
-                    {metaCategory}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Grid>
-            <Grid item xs={.75} sm={.75} sx={{ display: 'flex', justifyContent: 'flex-end'}}>
-              <Box
-                onClick={toggleShuffle}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '48px',
-                  height: '48px',
-                  backgroundColor: isShuffled ? '#FFD700' : 'transparent',
-                  borderRadius: '50%',
-                  border: '2px solid #FFD700',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: '#FFD700',
-                  },
-                }}
-              >
-                <img
-                  src="/shuffle.png"
-                  alt="Shuffle"
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                  }}
-                />
-              </Box>
-            </Grid>
+              }}
+              fullWidth
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: '5px',
+              }}
+            />
           </Grid>
 
-          {/* Second Row */}
-          <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
-            <Grid item xs={6}>
-              <ToggleButtonGroup
-                value={pastQuestionsFilter}
-                exclusive
-                onChange={(e, newFilter) => {
-                  if (newFilter !== null) setPastQuestionsFilter(newFilter);
-                }}
-                fullWidth
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    border: '1px solid #FFD700',
-                    color: '#FFD700',
-                    textTransform: 'capitalize',
-                    fontWeight: 'bold',
-                    '&.Mui-selected:hover': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    },
-                    '&:hover': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    }
-                  },
-                }}
-              >
-                <ToggleButton value="all">All Questions</ToggleButton>
-                <ToggleButton value="never_tried">Never Tried</ToggleButton>
-                <ToggleButton value="wrong">Past Wrong Answers</ToggleButton>
-              </ToggleButtonGroup>
-            </Grid>
-            <Grid item xs={6}>
-              <ToggleButtonGroup
-                value={selectedSource}
-                exclusive
-                onChange={(e, newSource) => {
-                  if (newSource !== null) setSelectedSource(newSource);
-                }}
-                fullWidth
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    border: '1px solid #FFD700',
-                    color: '#FFD700',
-                    textTransform: 'capitalize',
-                    fontWeight: 'bold',
-                    '&.Mui-selected': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    },
-                    '&.Mui-selected:hover': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    },
-                    '&:hover': {
-                      backgroundColor: '#FFD700',
-                      color: '#2E0854',
-                    }
-                  },
-                }}
-              >
-                <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
-                <ToggleButton value="both">Both</ToggleButton>
-                <ToggleButton value="trivia">Trivia</ToggleButton>
-              </ToggleButtonGroup>
-            </Grid>
+          {/* subjects */}
+          <Grid item xs={4}>
+            <Select multiple value={selectedSubjects} onChange={(e) => setSelectedSubjects(e.target.value)}
+              displayEmpty
+              input={<OutlinedInput />}
+              fullWidth
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: '5px',
+              }}
+              renderValue={(selected) =>
+                selected.length > 0 ? selected.join(', ') : 'Subject'
+              }
+            >
+              {subjects.map((subject) => (
+                <MenuItem key={subject} value={subject}>
+                  {subject}
+                </MenuItem>
+              ))}
+            </Select>
           </Grid>
+        </Grid>
+        <Grid item xs={12} sm={4} md={4} marginBottom={2}>
+          <ToggleButtonGroup
+            value={selectedSource}
+            exclusive
+            onChange={(e, newSource) => {
+              if (newSource !== null) setSelectedSource(newSource);
+            }}
+            fullWidth
+            sx={{
+              '& .MuiToggleButton-root': {
+                border: '1px solid #FFD700',
+                color: '#FFD700',
+                textTransform: 'capitalize',
+                fontWeight: 'bold',
+                '&.Mui-selected:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                }
+              },
+            }}
+          >
+            <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
+            <ToggleButton value="both">Both</ToggleButton>
+            <ToggleButton value="trivia">Trivia</ToggleButton>
+          </ToggleButtonGroup>
+        </Grid>
 
-          {/* Third Row (Jeopardy Specific Filters) */}
-        {selectedSource === 'jeopardy' && (
-          <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
-            {/* Filter by Round */}
-            <Grid item xs={12} sm={6}>
+        {/* Jeopardy-specific value and round */}
+        {selectedSource !== 'trivia' && (
+          <Grid
+            container spacing={4} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
+          >
+            {/* rounds */}
+            <Grid item xs={12} sm={6} md={4}>
               <Select
                 multiple
+                label='Round'
                 value={selectedRounds}
                 onChange={(e) => setSelectedRounds(e.target.value)}
                 displayEmpty
                 input={<OutlinedInput />}
                 renderValue={(selected) =>
-                  selected.length > 0 ? selected.join(', ') : 'Filter by Round'
+                  selected.length > 0 ? selected.join(', ') : 'Round'
                 }
                 fullWidth
                 sx={{
@@ -344,84 +314,162 @@ export default function QuestionSelectionPage() {
               </Select>
             </Grid>
 
-            {/* Value Range */}
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: 'gold',
-                    fontWeight: 'bold',
-                    marginRight: '10px',
-                    minWidth: '80px',
-                  }}
-                >
-                  Value Range
-                </Typography>
-                <Slider
-                  value={valueRange}
-                  onChange={(e, newValue) => setValueRange(newValue)}
-                  valueLabelDisplay="auto"
-                  min={100}
-                  max={9800}
-                  step={100} 
-                  marks 
-                  sx={{
-                    color: 'gold',
-                    flexGrow: 1,
-                  }}
-                />
-              </Box>
+            {/* Value Range Filter */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Typography
+                variant="caption"
+                sx={{ color: 'gold', fontWeight: 'bold', marginBottom: '5px' }}
+              >
+                Value Range
+              </Typography>
+              <Slider
+                value={valueRange}
+                onChange={(e, newValue) => setValueRange(newValue)}
+                valueLabelDisplay="auto"
+                step={50}
+                min={100}
+                max={2000}
+                sx={{
+                  color: 'gold',
+                }}
+              />
             </Grid>
           </Grid>
         )}
-        </Box>
 
-        {/* Selected Filters (Chips) */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '10px',
-            marginTop: '10px',
-            marginBottom: '10px',
-          }}
-        >
-          {selectedMetaCategories.map((metaCategory) => (
-            <Chip
-              key={metaCategory}
-              label={metaCategory}
-              onDelete={() => handleDeleteMetaCategory(metaCategory)}
-              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
-            />
-          ))}
-          {selectedRounds.map((round) => (
-            <Chip
-              key={round}
-              label={`Round: ${round}`}
-              onDelete={() => handleDeleteRound(round)}
-              sx={{ backgroundColor: '#FFD700', color: '#081484' }}
-            />
-          ))}
-          {selectedSource === 'jeopardy' &&
-            (valueRange[0] !== defaultValueRange[0] ||
-              valueRange[1] !== defaultValueRange[1]) && (
-              <Chip
-                label={`Value: $${valueRange[0]} - $${valueRange[1]}`}
-                onDelete={handleDeleteValueRange}
-                sx={{ backgroundColor: '#FFD700', color: '#081484' }}
-              />
-            )}
-        </Box>
+        {/* i wanted to put the search and toggle button group on the same line */}
+        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" display="flex">  
+          <Button variant="contained" onClick={() => search() }
+            sx={{
+              backgroundColor: 'gold',
+              borderRadius: '5px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: "center",
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'gold',
+              },
+              '&:active': {
+                backgroundColor: 'gold',
+              },
+              '&:focus': {
+                backgroundColor: 'gold'
+              },
+            }}>
+            Search
+          </Button>
 
-        {/* Questions Table */}
-        <LazyTable
-          route={buildRoute()}
+          <ToggleButtonGroup
+            value={questionSet}
+            exclusive
+            onChange={(e, newSource) => {
+              if (newSource !== null) {
+                setQuestionSet(newSource)
+              }
+            }}
+            fullWidth
+            sx={{
+              '& .MuiToggleButton-root': {
+                border: '1px solid #FFD700',
+                color: '#FFD700',
+                textTransform: 'capitalize',
+                fontWeight: 'bold',
+                margin: '4px',
+                '&.Mui-selected:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                },
+                '&:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#2E0854',
+                }
+              },
+            }}
+          >
+            <ToggleButton value="all">All Questions</ToggleButton>
+            <ToggleButton value="never">Never Tried</ToggleButton>
+            <ToggleButton value="past">Past Wrong Answers</ToggleButton>
+          </ToggleButtonGroup>          
+        </Grid>
+      </Box>
+      <div class="results">
+        <h2>Question Table</h2>
+        <DataGrid
+          rows={data}
           columns={columns}
-          defaultPageSize={10}
-          rowsPerPageOptions={[1, 5, 10]}
+          pageSize={pageSize}
+          rowsPerPageOptions={[5, 10, 25]}
+          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+          autoHeight
+          sx={{
+            '& .MuiDataGrid-columnHeaders': {
+              color: 'white',
+              backgroundColor: '#081484',
+            },
+            '& .MuiDataGrid-columnHeaderTitle': {
+              fontWeight: 'bold',      
+              fontSize: '18px' 
+            },
+            '& .MuiDataGrid-cell': {
+              color: 'white',
+              whiteSpace: 'normal',
+              wordWrap: 'break-word',
+              lineHeight: '1.2',
+            },
+            '& .MuiDataGrid-columnSeparator': {
+              visibility: 'visible', 
+            },
+            '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeaders': {
+              borderRight: '1px solid rgba(224, 224, 224, 1)',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              borderRight: '1px solid rgba(224, 224, 224, 1)',
+            },
+            '& .MuiDataGrid-cell:focus, & .MuiData-Grid-columnHeaders:focus': {
+              outline: 'none',
+              borderRight: '1px solid rgba(224, 224, 224, 1)',
+            },
+            '& .MuiDataGrid-cell:focus-within, & .MuiData-Grid-columnHeaders:focus-within': {
+              outline: 'none',
+              borderRight: '1px solid rgba(224, 224, 224, 1)',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              color: 'white', 
+              backgroundColor: '#081484', 
+            },
+            '& .MuiTablePagination-caption': {
+              color: 'gold', 
+            },
+            '& .MuiTablePagination-selectLabel': {
+              color: 'gold',
+            },
+            '& .MuiTablePagination-selectIcon': {
+              backgroundColor: 'white',
+            },
+            '& .MuiTablePagination-select': {
+              backgroundColor: 'white',
+            },
+            '& .MuiTablePagination-displayedRows': {
+              color: 'gold',
+            },
+            '& .MuiTablePagination-actions': {
+              backgroundColor: 'white',
+            },
+            '& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon': {
+              color: 'gold',
+            },
+            '& .MuiDataGrid-columnHeader .MuiDataGrid-menuIcon': {
+              color: 'gold',
+            },
+          }}
         />
-      </Container>
+      </div>
+    </Container>
     </Box>
   );
 }
