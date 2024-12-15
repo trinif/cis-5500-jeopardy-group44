@@ -72,7 +72,6 @@ export default function StatisticsPage() {
     fetch(`http://${config.server_host}/best_worst_category_universal`)
       .then((res) => res.json())
       .then((resJson) => {
-        console.log(resJson)
         setBestCategoryAccuracyUniversal(resJson.best_category);
         setWorstCategoryAccuracyUniversal(resJson.worst_category);
       })
@@ -82,6 +81,27 @@ export default function StatisticsPage() {
       .then((res) => res.json())
       .then((resJson) => setTopUsers(resJson))
       .catch((err) => console.log(err));
+      
+    if (!userId.startsWith('guest_')) {
+      Promise.all(
+        topUsers.map(async (row) => {
+          let top_user_id = row.user_id
+          try {
+            let res = await fetch(`http://${config.server_host}/check_follow_status/${userId}/${top_user_id}`)
+            let resJson = await res.json()
+            return { ...row, follow: resJson.length > 0 }; 
+          } catch (err) {
+            console.log(err)
+            return
+          } 
+        })
+      ).then(updatedUsers => {
+        setTopUsers(updatedUsers)
+      }).catch(err => {
+        console.log(err)
+      })
+    }   
+
 
     fetch(`http://${config.server_host}/top_users_friends/${userId}`)
       .then((res) => res.json())
