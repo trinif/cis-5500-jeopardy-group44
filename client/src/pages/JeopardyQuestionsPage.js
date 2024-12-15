@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Container, Typography, TextField, Divider, Stack } from '@mui/material';
 import { useAuth } from "../components/Context";
+import { useRef } from 'react';
 
 const config = require('../config.json');
 
@@ -59,7 +60,7 @@ export default function JeopardyQuestions() {
     };
 
     const newQuestionButtonHandler = () => {
-        setFetchTrigger(fetchTrigger + 1); 
+        setFetchTrigger(fetchTrigger + 1); // Increment the trigger
     };
 
     useEffect(() => {
@@ -75,7 +76,7 @@ export default function JeopardyQuestions() {
                 setAnswerMessage('');
             })
             .catch(err => console.error("Error fetching question:", err));
-    }, [fetchTrigger]); 
+    }, [fetchTrigger]); // Dependency on fetchTrigger
 
     return (
         <Box
