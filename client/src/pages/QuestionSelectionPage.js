@@ -142,9 +142,9 @@ export default function QuestionSelectionPageV2() {
           border: '3px solid #FFD700',
         }}
       >
-        <Grid container spacing={2} sx={{ marginBottom: '10px' }}>
+        <Grid container spacing={2}>
           {/* keyword */}
-          <Grid item xs={8}>
+          <Grid item xs={6}>
             <TextField 
               label='Keyword' 
               value={keyword} 
@@ -163,7 +163,7 @@ export default function QuestionSelectionPageV2() {
           </Grid>
 
           {/* subjects */}
-          <Grid item xs={4}>
+          <Grid item xs={5}>
             <Select multiple value={selectedSubjects} onChange={(e) => setSelectedSubjects(e.target.value)}
               displayEmpty
               input={<OutlinedInput />}
@@ -183,49 +183,117 @@ export default function QuestionSelectionPageV2() {
               ))}
             </Select>
           </Grid>
-        </Grid>
-        <Grid item xs={12} sm={4} md={4} marginBottom={2}>
-          <ToggleButtonGroup
-            value={selectedSource}
-            exclusive
-            onChange={(e, newSource) => {
-              if (newSource !== null) setSelectedSource(newSource);
-            }}
-            fullWidth
-            sx={{
-              '& .MuiToggleButton-root': {
-                border: '1px solid #FFD700',
-                color: '#FFD700',
-                textTransform: 'capitalize',
-                fontWeight: 'bold',
-                '&.Mui-selected:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
+
+          <Grid item xs={1} justifyContent="center" display="flex" >  
+            <Button variant="contained" onClick={() => search() }
+              sx={{
+                backgroundColor: 'gold',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: "center",
+                color: 'black',
                 '&:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
+                  backgroundColor: 'gold',
+                },
+                '&:active': {
+                  backgroundColor: 'gold',
+                },
+                '&:focus': {
+                  backgroundColor: 'gold'
+                },
+              }}>
+              Search
+            </Button> 
+          </Grid>
+        </Grid>
+        <Grid 
+          container 
+          spacing={2} 
+          alignItems="center" 
+          justifyContent="space-between" 
+          sx={{ marginTop: '5px' }}
+        >
+          <Grid item xs={6}>
+            <ToggleButtonGroup
+              value={selectedSource}
+              exclusive
+              onChange={(e, newSource) => {
+                if (newSource !== null) setSelectedSource(newSource);
+              }}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  border: '1px solid #FFD700',
+                  color: '#FFD700',
+                  textTransform: 'capitalize',
+                  fontWeight: 'bold',
+                  '&.Mui-selected:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  }
+                },
+              }}
+            >
+              <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
+              <ToggleButton value="both">Both</ToggleButton>
+              <ToggleButton value="trivia">Trivia</ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
+
+          {/* Toggle Button Group */}
+          <Grid item xs={6}>
+            <ToggleButtonGroup
+              value={questionSet}
+              exclusive
+              onChange={(e, newSource) => {
+                if (newSource !== null) {
+                  setQuestionSet(newSource);
                 }
-              },
-            }}
-          >
-            <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
-            <ToggleButton value="both">Both</ToggleButton>
-            <ToggleButton value="trivia">Trivia</ToggleButton>
-          </ToggleButtonGroup>
+              }}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  border: '1px solid #FFD700',
+                  color: '#FFD700',
+                  textTransform: 'capitalize',
+                  fontWeight: 'bold',
+                  '&.Mui-selected:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                  '&:hover': {
+                    backgroundColor: '#FFD700',
+                    color: '#2E0854',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="all">All Questions</ToggleButton>
+              <ToggleButton value="never">Never Tried</ToggleButton>
+              <ToggleButton value="past">Past Wrong Answers</ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
         </Grid>
 
         {/* Jeopardy-specific value and round */}
         {selectedSource !== 'trivia' && (
           <Grid
-            container spacing={4} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
+            container spacing={2} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
           >
             {/* rounds */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={6} >
               <Select
                 multiple
                 label='Round'
@@ -239,7 +307,6 @@ export default function QuestionSelectionPageV2() {
                 fullWidth
                 sx={{
                   backgroundColor: 'white',
-                  borderRadius: '5px',
                 }}
               >
                 <MenuItem value="Jeopardy!">Jeopardy!</MenuItem>
@@ -249,10 +316,10 @@ export default function QuestionSelectionPageV2() {
             </Grid>
 
             {/* Value Range Filter */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={5.9} marginLeft={'2px'}>
               <Typography
                 variant="caption"
-                sx={{ color: 'gold', fontWeight: 'bold', marginBottom: '5px' }}
+                sx={{ color: 'gold', fontWeight: 'bold'}}
               >
                 Value Range
               </Typography>
@@ -270,66 +337,6 @@ export default function QuestionSelectionPageV2() {
             </Grid>
           </Grid>
         )}
-
-        {/* i wanted to put the search and toggle button group on the same line */}
-        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" display="flex">  
-          <Button variant="contained" onClick={() => search() }
-            sx={{
-              backgroundColor: 'gold',
-              borderRadius: '5px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: "center",
-              color: 'black',
-              '&:hover': {
-                backgroundColor: 'gold',
-              },
-              '&:active': {
-                backgroundColor: 'gold',
-              },
-              '&:focus': {
-                backgroundColor: 'gold'
-              },
-            }}>
-            Search
-          </Button>
-
-          <ToggleButtonGroup
-            value={questionSet}
-            exclusive
-            onChange={(e, newSource) => {
-              if (newSource !== null) {
-                setQuestionSet(newSource)
-              }
-            }}
-            fullWidth
-            sx={{
-              '& .MuiToggleButton-root': {
-                border: '1px solid #FFD700',
-                color: '#FFD700',
-                textTransform: 'capitalize',
-                fontWeight: 'bold',
-                margin: '4px',
-                '&.Mui-selected:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                },
-                '&:hover': {
-                  backgroundColor: '#FFD700',
-                  color: '#2E0854',
-                }
-              },
-            }}
-          >
-            <ToggleButton value="all">All Questions</ToggleButton>
-            <ToggleButton value="never">Never Tried</ToggleButton>
-            <ToggleButton value="past">Past Wrong Answers</ToggleButton>
-          </ToggleButtonGroup>          
-        </Grid>
       </Box>
       <div class="results">
         <h2>Question Table</h2>
