@@ -591,6 +591,7 @@ const question_trivia = async function(req, res) {
       console.log(err)
       res.status(500).json({message: 'Error'})
     } else {
+      console.log(data.rows[0])
       res.json(data.rows[0])
     }
   })

@@ -128,7 +128,6 @@ export default function QuestionSelectionPageV2() {
       ) 
     },
     { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
-    { field: 'value', headerName: 'Value', cellClassName: 'white-text', flex: .5},
     {
       field: 'answer',
       headerName: 'Answer',
