@@ -63,6 +63,7 @@ app.get('/question_selection', routes.question_selection);
 
 app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_top_users);
 app.get('/following_worst_questions/:user_id', routes.following_worst_questions);
+app.get('/hardest_question_from_network/:user_id', routes.hardest_question_from_network);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
