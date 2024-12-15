@@ -14,18 +14,6 @@ app.use(cors({
 
 app.use(express.json())
 
-// app.use(session({
-//     secret: 'loginSecretKey',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//       secure: false,
-//       httpsOnly: true,
-//       maxAge: 60*60*1000
-//     }
-//   }),
-// );
-
 app.use(cookieParser());
 
 
@@ -58,11 +46,8 @@ app.get('/overall_accuracy_universal', routes.overall_accuracy_universal);
 
 app.get('/best_worst_category/:user_id', routes.best_worst_category);
 app.get('/best_worst_category_universal', routes.best_worst_category_universal);
-app.get('/unanswered_category/:user_id', routes.unanswered_category);
 app.get('/incorrect_questions_category/:user_id', routes.incorrect_questions_category);
-app.get('/final_jeopardy_questions/:user_id', routes.final_jeopardy_questions);
 app.get('/general_trivia_questions', routes.general_trivia_questions);
-app.get('/unanswered_categories_questions/:user_id', routes.unanswered_categories_questions);
 app.get('/category_accuracy_universal', routes.category_accuracy_universal);
 app.get('/category_accuracy/:user_id', routes.category_accuracy);
 
@@ -71,7 +56,6 @@ app.get('/question_selection/:user_id', routes.question_selection);
 
 app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_top_users);
 app.get('/following_worst_questions/:user_id', routes.following_worst_questions);
-app.get('/hardest_question_from_network/:user_id', routes.hardest_question_from_network);
 
 app.listen(8080, () => {
   console.log(`Server running at http://${config.server_host}/`)

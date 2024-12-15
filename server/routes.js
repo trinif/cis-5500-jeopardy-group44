@@ -18,6 +18,10 @@ const connection = new Pool({
 });
 connection.connect((err) => err && console.log(err));
 
+/* Signs up user if a new username is given
+If username already exists, reports that account already exists
+Otherwise, inserts id and password into Users table
+*/
 const signup = async function(req, res) {
   const {username, password} = req.body
   connection.query(`
@@ -46,6 +50,11 @@ const signup = async function(req, res) {
   })
 }
 
+/*
+Checks that user ID and password match with database
+Reports if username doesn't exist or password is incorrect
+Otherwise, logs user in
+*/
 const login = async function(req, res) {
   const {username, password} = req.body;
   connection.query(`
@@ -58,7 +67,7 @@ const login = async function(req, res) {
           res.status(500)
       } else {
           if (data.rows.length == 0) {
-              res.status(201).json({status: `Username doesn't exists.`, username, username})
+              res.status(201).json({status: `Username doesn't exist.`, username, username})
           } else if (data.rows[0].password == password) {
               res.status(201).json({status: 'Success', username: username})
           } else {
@@ -68,6 +77,10 @@ const login = async function(req, res) {
   })
 }
 
+/*
+Adds userID, questionID, and if user was correct to UserAnswers table
+Validation for user - if user does not exist, then adds as a guest
+*/
 const update_user_answer = async function(req, res) {
   const {userId, questionId, is_correct} = req.body;
 
@@ -126,6 +139,9 @@ const update_user_answer = async function(req, res) {
   })
 }
 
+/*
+Checks if given answer was correct and trims answer to check
+*/
 const check_answer = async function(req, res) {
   const question_id = req.params.question_id;
   const answer = req.params.answer;
@@ -361,27 +377,6 @@ FROM best_category, worst_category
   })
 }
 
-// categories that haven't been answered
-const unanswered_category = async function (req, res) {
-  const user_id = req.params.user_id;
-  connection.query(`
-    SELECT DISTINCT q.subject
-    FROM Questions q
-    WHERE q.subject NOT IN
-      (SELECT qu.subject
-      FROM UserAnswers ua JOIN Questions qu ON ua.question_id = qu.question_id
-      WHERE ua.user_id='${user_id}')
-  `, (err, data) => {
-    if (err) {
-      console.log(err)
-      res.json({})
-    } else {
-      console.log(data.rows)
-      res.json(data.rows)
-    }
-  })
-}
-
 //gives all questions answered incorrectly
 const incorrect_questions_category = async function(req, res) {
   const user_id = req.params.user_id;
@@ -401,27 +396,6 @@ const incorrect_questions_category = async function(req, res) {
     }
   });
 };
-
-const final_jeopardy_questions = async function (req, res) {
-  const user_id = req.params.user_id;
-  connection.query(`
-    SELECT j.question_id,
-      j.question, 
-      j.answer
-    FROM Jeopardy j 
-      JOIN UserAnswers ua ON j.question_id = ua.question_id
-    WHERE ua.user_id = '${user_id}' 
-      AND j.round = 'Final Jeopardy!'
-  `, (err, data) => {
-    if (err) {
-      console.log(err);
-      res.json({});
-    } else{
-      console.log(data.rows);
-      res.json(data.rows);
-    }
-  })
-}
 
 // just questions that are not in the jeopardy dataset
 const general_trivia_questions = async function (req, res) {
@@ -693,71 +667,6 @@ const question_selection = async function (req, res) {
       );
   `
 
-  /* query += `
-    SELECT Questions.question_id AS id,
-      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
-      CASE
-        WHEN Questions.jeopardy_or_general = B'0' THEN 'Jeopardy'
-        ELSE 'Trivia'
-        END AS jeopardy_or_general,
-      Questions.question AS question,
-      Questions.answer AS answer,
-      Questions.subject AS subject
-    FROM questions_filtered
-      JOIN Questions ON questions_filtered.question_id = Questions.question_id
-      LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
-    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
-      AND ('${selected_source}' = 'both' 
-        OR ('${selected_source}' = 'jeopardy' AND Questions.jeopardy_or_general = B'0') 
-        OR ('${selected_source}' = 'trivia' AND Questions.jeopardy_or_general = B'1')
-      )
-      AND (value IS NULL 
-        OR (value >= ${value_low} AND value <= ${value_high})
-      )    
-      AND subject IN ('${subjects.join(`','`)}')
-      AND (round IS NULL 
-        OR round IN ('${rounds.join(`','`)}')
-      )
-    ORDER BY id_substring`
-
-  /* let jeopardy = `
-  SELECT Questions.question_id AS id,
-      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
-      'Jeopardy' AS jeopardy_or_general,
-      Questions.question AS question,
-      Questions.answer AS answer,
-      Questions.subject AS subject
-    FROM questions_filtered
-      JOIN Questions ON questions_filtered.question_id = Questions.question_id
-      JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
-    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
-      AND jeopardy_or_general = B'0'
-      AND (value >= ${value_low} AND value <= ${value_high})
-      AND subject IN ('${subjects.join(`','`)}')
-      AND round IN ('${rounds.join(`','`)}')
-  `
-  let trivia = `
-  SELECT Questions.question_id AS id,
-      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
-      'Trivia' AS jeopardy_or_general,
-      Questions.question AS question,
-      Questions.answer AS answer,
-      Questions.subject AS subject
-    FROM questions_filtered
-      JOIN Questions ON questions_filtered.question_id = Questions.question_id
-    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
-      AND jeopardy_or_general = B'1'
-      AND subject IN ('${subjects.join(`','`)}')
-  `
-
-  if (selected_source === 'jeopardy') {
-    query += jeopardy + `ORDER BY id_substring`
-  } else if (selected_source === 'trivia') {
-    query += trivia + `ORDER BY id_substring`
-  } else {
-    query += `(` + jeopardy + `) UNION (` + trivia + `)` 
-  } */
-
   console.log(query)
   
   connection.query(query, (err, data) => {
@@ -769,45 +678,6 @@ const question_selection = async function (req, res) {
     }
   })
 };
-
-// const least_accurate_questions_top_users = async function(req, res) {
-//   connection.query(`
-//     WITH top_users AS (
-//      SELECT user_id,
-//       ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
-//     FROM UserAnswers
-//     WHERE user_id NOT LIKE 'guest_%'
-//     GROUP BY user_id
-//     ORDER BY accuracy DESC
-//     LIMIT 5
-//     )
-//     SELECT 
-//       q.question_id,
-//       q.question,
-//       q.subject,
-//       COUNT(ua.is_correct) AS total_answers,
-//       COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
-//       ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)),2) AS accuracy
-//     FROM 
-//       UserAnswers ua
-//     JOIN 
-//       Questions q ON ua.question_id = q.question_id
-//     WHERE 
-//       ua.user_id IN (SELECT user_id FROM top_users)
-//     GROUP BY 
-//       q.question_id, q.question, q.subject
-//     ORDER BY 
-//       accuracy ASC, q.subject
-//     LIMIT 3;
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err);
-//       res.json([]);
-//     } else {
-//       res.json(data.rows);
-//     }
-//   });
-// };
 
 const least_accurate_questions_top_users = async function(req, res) {
     connection.query(`
@@ -839,7 +709,7 @@ const least_accurate_questions_top_users = async function(req, res) {
     });
   };
 
-  const following_worst_questions = async function(req, res) {
+const following_worst_questions = async function(req, res) {
     const user_id = req.params.user_id;
     connection.query(`
       WITH followed_users AS (
@@ -878,54 +748,6 @@ const least_accurate_questions_top_users = async function(req, res) {
       GROUP BY q.question_id, q.question, q.subject
       ORDER BY accuracy ASC
       LIMIT 3;
-    `, (err, data) => {
-      if (err) {
-        console.log(err);
-        res.json([]);
-      } else {
-        res.json(data.rows);
-      }
-    });
-  };
-
-  const hardest_question_from_network = async function(req, res) {
-    const user_id = req.params.user_id;
-    connection.query(`
-      WITH FollowedUsersPerformance AS (
-        SELECT
-            ua.user_id,
-            ua.question_id,
-            ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)), 2) AS accuracy
-        FROM
-            UserAnswers ua
-        JOIN
-            Following f ON ua.user_id = f.person_of_interest
-        WHERE
-            f.following = '${user_id}'
-        GROUP BY
-            ua.user_id, ua.question_id)
-      SELECT
-        q.question_id,
-        q.question,
-        q.subject,
-        COUNT(ua.is_correct) AS total_answers,
-        COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
-        ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)), 2) AS accuracy
-      FROM
-        Questions q
-      JOIN
-        UserAnswers ua ON q.question_id = ua.question_id
-      JOIN
-        FollowedUsersPerformance fup ON q.question_id = fup.question_id
-      WHERE
-        fup.accuracy <= ALL (
-            SELECT fup2.accuracy
-            FROM FollowedUsersPerformance fup2
-            WHERE fup2.question_id != fup.question_id
-        )
-      GROUP BY
-        q.question_id, q.question, q.subject
-      LIMIT 1;
     `, (err, data) => {
       if (err) {
         console.log(err);
@@ -983,11 +805,8 @@ module.exports = {
   overall_accuracy_universal,
   best_worst_category,
   best_worst_category_universal,
-  unanswered_category,
   incorrect_questions_category,
-  final_jeopardy_questions,
   general_trivia_questions,
-  unanswered_categories_questions,
   category_accuracy_universal,
   category_accuracy,
   random,
@@ -998,6 +817,5 @@ module.exports = {
   question_trivia,
   questions,
   following_worst_questions,
-  hardest_question_from_network,
   extra_information
 }

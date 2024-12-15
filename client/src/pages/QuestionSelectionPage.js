@@ -24,7 +24,7 @@ import { useAuth } from '../components/Context';
 
 const config = require('../config.json'); // Import server configuration
 
-export default function QuestionSelectionPageV2() {
+export default function QuestionSelectionPage() {
   const subjects = [
     'History',
     'Pop Culture',
