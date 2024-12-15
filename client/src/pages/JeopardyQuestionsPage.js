@@ -21,7 +21,7 @@ export default function JeopardyQuestions() {
     const { userId } = useAuth();
 
     const checkButtonHandler = () => {
-        fetch(`https://${config.server_host}/check_answer/${questionId}/${answer}`, {
+        fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
             method: "POST",
         }).then(res => res.json())
           .then(resJson => {
@@ -32,7 +32,7 @@ export default function JeopardyQuestions() {
                     correct + 1,
                     incorrect
                 ]);
-                fetch(`https://${config.server_host}/update_user_answer`, {
+                fetch(`http://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export default function JeopardyQuestions() {
                     correct,
                     incorrect + 1
                 ]);
-                fetch(`https://${config.server_host}/update_user_answer`, {
+                fetch(`http://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export default function JeopardyQuestions() {
     };
 
     useEffect(() => {
-        fetch(`https://${config.server_host}/random`)
+        fetch(`http://${config.server_host}/random`)
             .then(res => res.json())
             .then(resJson => {
                 setQuestionId(resJson.question_id);

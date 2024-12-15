@@ -13,7 +13,7 @@ export default function HomePage() {
   const { userId } = useAuth();
 
   const fetchNewQuestion = () => {
-    fetch(`https://${config.server_host}/random`)
+    fetch(`http://${config.server_host}/random`)
       .then((res) => res.json())
       .then((resJson) => {
         // Save question and today's date to localStorage
@@ -41,14 +41,14 @@ export default function HomePage() {
   }, []);
 
   const checkAnswerHandler = () => {
-    fetch(`https://${config.server_host}/check_answer/${questionOfTheDay.question_id}/${answer}`, {
+    fetch(`http://${config.server_host}/check_answer/${questionOfTheDay.question_id}/${answer}`, {
       method: "POST",
     })
       .then(res => res.json())
       .then(resJson => {
         if (resJson.status === 'Correct') {
           setAnswerMessage('Correct!');
-          fetch(`https://${config.server_host}/update_user_answer`, {
+          fetch(`http://${config.server_host}/update_user_answer`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
