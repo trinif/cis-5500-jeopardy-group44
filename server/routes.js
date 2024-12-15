@@ -297,32 +297,26 @@ const best_worst_category = async function (req, res) {
   const user_id = req.params.user_id;
 
   connection.query(`
-    WITH category_correct_counts AS (
-      SELECT 
-        q.subject,
-        COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
-      FROM 
-        UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
-      WHERE 
-        ua.user_id = '${user_id}'
-      GROUP BY 
-        q.subject
-    ),
-    max_min_correct_counts AS (
-      SELECT 
-        MAX(correct_count) AS max_correct_count,
-        MIN(correct_count) AS min_correct_count
-      FROM 
-        category_correct_counts
-    )
-    SELECT 
-      c.subject,
-      c.correct_count,
-      CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
-      CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
-    FROM 
-      category_correct_counts c, max_min_correct_counts m;
-
+WITH category_accuracy AS (
+    SELECT subject,
+           COUNT(*) FILTER (WHERE UserAnswers.is_correct = B'1') * 100.0 / COUNT(*) AS accuracy
+    FROM Questions
+        JOIN UserAnswers ON Questions.question_id = UserAnswers.question_id
+    WHERE UserAnswers.user_id = '${user_id}'
+    GROUP BY subject
+), best_category AS (
+    SELECT subject
+    FROM category_accuracy
+    WHERE accuracy >= ALL (SELECT accuracy FROM category_accuracy)
+    LIMIT 1
+), worst_category AS (
+    SELECT subject
+    FROM category_accuracy
+    WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
+    LIMIT 1
+)
+SELECT *
+FROM best_category, worst_category
   `, (err, data) => {
     if (err) {
       console.log(err)
@@ -354,29 +348,27 @@ const best_worst_category = async function (req, res) {
 //DONE
 const best_worst_category_universal = async function (req, res) {
   connection.query(`
-    WITH category_correct_counts AS (
-      SELECT 
-        q.subject,
-        COUNT(CASE WHEN is_correct = B'1' THEN 1 ELSE 0 END) AS correct_count
-      FROM 
-        UserAnswers ua JOIN Questions q ON ua.question_id = q.question_id
-      GROUP BY 
-        q.subject
-    ),
-    max_min_correct_counts AS (
-      SELECT 
-        MAX(correct_count) AS max_correct_count,
-        MIN(correct_count) AS min_correct_count
-      FROM 
-        category_correct_counts
-    )
-    SELECT 
-      c.subject,
-      c.correct_count,
-      CASE WHEN c.correct_count = m.max_correct_count THEN 'Most Successful' END AS max_category,
-      CASE WHEN c.correct_count = m.min_correct_count THEN 'Least Successful' END AS min_category
-    FROM 
-      category_correct_counts c, max_min_correct_counts m;
+EXPLAIN ANALYZE
+WITH category_accuracy AS (
+    SELECT subject,
+           COUNT(*) FILTER (WHERE UserAnswers.is_correct = B'1') * 100.0 / COUNT(*) AS accuracy
+    FROM Questions
+        JOIN UserAnswers ON Questions.question_id = UserAnswers.question_id
+    GROUP BY subject
+), best_category AS (
+    SELECT subject
+    FROM category_accuracy
+    WHERE accuracy >= ALL (SELECT accuracy FROM category_accuracy)
+    LIMIT 1
+), worst_category AS (
+    SELECT subject
+    FROM category_accuracy
+    WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
+    LIMIT 1
+)
+SELECT *
+FROM best_category, worst_category
+
 
   `, (err, data) => {
     if (err) {
@@ -747,6 +739,7 @@ const question_selection = async function (req, res) {
         OR round IN ('${rounds.join(`','`)}')
       )
     ORDER BY id_substring
+    LIMIT 10
   `  
 
   console.log(query)

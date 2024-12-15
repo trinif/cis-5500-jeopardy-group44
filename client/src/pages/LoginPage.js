@@ -12,7 +12,7 @@ export default function Login() {
 
     // Handles registration
     const registerButtonHandler = () => {
-        fetch(`https://${config.server_host}/signup`, {
+        fetch(`http://${config.server_host}/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export default function Login() {
 
     // Handles login
     const loginButtonHandler = () => {
-        fetch(`https://${config.server_host}/login`, {
+        fetch(`http://${config.server_host}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

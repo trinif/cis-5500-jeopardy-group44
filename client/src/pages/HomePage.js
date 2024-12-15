@@ -10,9 +10,7 @@ export default function HomePage() {
   const [answer, setAnswer] = useState('');
   const [answerMessage, setAnswerMessage] = useState('');
 
-  const { userId } = useAuth();
-
-  const fetchNewQuestion = () => {
+  useEffect(() => {
     fetch(`https://${config.server_host}/random`)
       .then((res) => res.json())
       .then((resJson) => {

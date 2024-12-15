@@ -36,22 +36,12 @@ export default function QuestionSelectionPageV2() {
     'Math',
   ];
 
-  const handleInputChange = (id, value) => {
-    setInputValues((prevValues) => ({
-      ...prevValues,
-      [id]: value,
-    }));
-  };
-
   const { userId } = useAuth()
 
-  const [data, setData] = useState([])
-  const [selectedQuestionId, setSelectedQuestionId] = useState(null)
+  const [data, setData] = useState([]);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-
-  const [inputValues, setInputValues] = useState({});
-  const [answer, setAnswer] = useState('')
-  const [answerMessage, setAnswerMessage] = useState('')
+  const [showAnswer, setShowAnswer] = useState({});
 
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
@@ -59,36 +49,6 @@ export default function QuestionSelectionPageV2() {
   const [valueRange, setValueRange] = useState([200, 1000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
-
-  const checkButtonHandler = () => {
-    fetch(`https://${config.server_host}/check_answer/${selectedQuestionId}/${answer}`, {
-      method: "POST",
-    }).then(res => {
-      return res.json()
-    }).then(resJson => {
-      if (resJson.status == 'Correct') {
-        setAnswerMessage('Correct!')
-        fetch(`https://${config.server_host}/update_user_answer`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({userId, selectedQuestionId, is_correct: 1}),
-        })
-      } else if (resJson.status == 'Incorrect') {
-        setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
-        fetch(`https://${config.server_host}/update_user_answer`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({userId, selectedQuestionId, is_correct: 0}),
-        })
-    }
-    }).catch(err => {
-        console.log(err)
-    })
-  }
 
   const columns = [
     { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
@@ -113,53 +73,24 @@ export default function QuestionSelectionPageV2() {
     { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
     { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2,
       renderCell: (params) => (
-        <Box variant="contained"
-          sx={{
-            height: '100%',
-          }}
-        >
-          <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Enter your answer"
-          value={inputValues[params.row.id] || ''}
-          onChange={(e) => handleInputChange(params.row.id, e.target.value)}
-          sx={{
-            input: { color: 'white' },
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': { borderColor: '#FFD700' },
-              '&:hover fieldset': { borderColor: '#FFD700' },
-              '&.Mui-focused fieldset': { borderColor: '#FFD700' },
-            },
-            width: '100%',
-            height: '50%',
-            marginBottom: '12px',
-            justifyContent: 'center',
-          }}
-          />
-          <Button variant="contained" onClick={() => search() }
-            sx={{
-              backgroundColor: 'gold',
-              borderRadius: '5px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: "center",
-              color: 'black',
-              '&:hover': {
-                backgroundColor: 'gold',
-              },
-              '&:active': {
-                backgroundColor: 'gold',
-              },
-              '&:focus': {
-                backgroundColor: 'gold'
-              },
-            }}>
-            Search
-          </Button>
-        </Box>
+        <>
+          {showAnswer[params.row.id] ? (
+            <p>{params.value}</p>
+          ) : (
+            <button
+              onClick={e => {
+                setShowAnswer((prev) => ({
+                  ...prev,
+                  [params.row.id]: !prev[params.row.id],
+                }))
+              }}
+            >
+              Click to see answer.
+            </button>
+          )}
+        </>
       ),
-    } // delete this later
+    }
   ]
 
   useEffect(() => {
@@ -167,7 +98,7 @@ export default function QuestionSelectionPageV2() {
   }, [])
 
   const search = () => {
-    fetch(`https://${config.server_host}/question_selection/${userId}?`+
+    fetch(`http://${config.server_host}/question_selection/${userId}?`+
       `keyword=${keyword}` +
       `&source=${selectedSource}` + 
       `&valueLow=${valueRange[0]}` + 
