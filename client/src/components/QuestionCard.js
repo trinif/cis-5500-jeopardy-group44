@@ -23,7 +23,7 @@ export default function QuestionCard({ questionId, handleClose }) {
 
   useEffect(() => {
     //change fetch server
-    fetch(`http://${config.server_host}:${config.server_port}/question/${questionId}/`)
+    fetch(`http://${config.server_host}/question/${questionId}/`)
       .then(res => res.json())
       .then(resJson => {
         setQuestionData(resJson);
@@ -34,14 +34,14 @@ export default function QuestionCard({ questionId, handleClose }) {
   }, [questionId]);
 
 const checkButtonHandler = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/check_answer/${questionId}/${answer}`, {
+    fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
       method: "POST",
     }).then(res => {
       return res.json()
     }).then(resJson => {
       if (resJson.status == 'Correct') {
         setAnswerMessage('Correct!')
-        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+        fetch(`http://${config.server_host}/update_user_answer`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -50,7 +50,7 @@ const checkButtonHandler = () => {
         })
       } else if (resJson.status == 'Incorrect') {
         setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
-        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+        fetch(`http://${config.server_host}/update_user_answer`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -65,7 +65,7 @@ const checkButtonHandler = () => {
 
   useEffect(() => {
     if (questionData.jeopardy_or_general === '0') { // jeopardy
-        fetch(`http://${config.server_host}:${config.server_port}/question_jeopardy/${questionId}`)
+        fetch(`http://${config.server_host}/question_jeopardy/${questionId}`)
             .then(res => res.json())
             .then(resJson => {
                 setExtraData(resJson)
@@ -74,7 +74,7 @@ const checkButtonHandler = () => {
 
             })
     } else { // general trivia
-        fetch(`http://${config.server_host}:${config.server_port}/question_trivia/${questionId}`)
+        fetch(`http://${config.server_host}/question_trivia/${questionId}`)
             .then(res => res.json())
             .then(resJson => {
                 resJson.descriptions = resJson.descriptions.split(';;;')

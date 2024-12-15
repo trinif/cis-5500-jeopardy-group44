@@ -338,7 +338,7 @@ export default function QuestionSelectionPageV2() {
         )}
 
         {/* i wanted to put the search and toggle button group on the same line */}
-        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" display="flex">  
+        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" alignItems="center">  
           <Button variant="contained" onClick={() => search() }
             sx={{
               backgroundColor: 'gold',
