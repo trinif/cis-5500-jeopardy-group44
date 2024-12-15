@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Container, Typography, TextField, Divider, Stack } from '@mui/material';
 import { useAuth } from "../components/Context";
+import { useRef } from 'react';
+
 const config = require('../config.json');
 
 export default function JeopardyQuestions() {
@@ -19,6 +21,8 @@ export default function JeopardyQuestions() {
     const [answerMessage, setAnswerMessage] = useState('');
 
     const { userId } = useAuth();
+
+    const hasFetched = useRef(false);
 
     const checkButtonHandler = () => {
         fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
@@ -62,16 +66,21 @@ export default function JeopardyQuestions() {
     };
 
     useEffect(() => {
+        if (hasFetched.current) return; // Prevent double fetch
+        hasFetched.current = true;
+    
+        console.log("Fetching question...");
         fetch(`http://${config.server_host}/random`)
-            .then(res => res.json())
-            .then(resJson => {
+            .then((res) => res.json())
+            .then((resJson) => {
                 setQuestionId(resJson.question_id);
                 setQuestion(resJson.question);
                 setCategory(resJson.category);
                 setValue(resJson.value);
                 setAnswer('');
                 setAnswerMessage('');
-            });
+            })
+            .catch(err => console.error("Error fetching question:", err));
     }, [newPage]);
 
     return (
