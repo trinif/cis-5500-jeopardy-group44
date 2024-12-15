@@ -170,12 +170,13 @@ const checkButtonHandler = () => {
               p={3}
               style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
             >
+              <h1>These questions have the same answers.</h1>
               {extraInformation.map((row, idx) => {
                 if (idx < 5) {
                   return (
                     <>
-                      <h1>These questions have the same answers.</h1>
-                      <p>Question: {row.question}</p>
+
+                      <p>{row.question}</p>
                     </>
                   )
                 }
