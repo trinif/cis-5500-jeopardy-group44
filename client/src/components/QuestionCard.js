@@ -33,7 +33,7 @@ export default function QuestionCard({ questionId, handleClose }) {
       })
   }, [questionId]);
 
-  const checkButtonHandler = () => {
+const checkButtonHandler = () => {
     fetch(`http://${config.server_host}:${config.server_port}/check_answer/${questionId}/${answer}`, {
       method: "POST",
     }).then(res => {
@@ -115,12 +115,12 @@ export default function QuestionCard({ questionId, handleClose }) {
                     </>
                 ) : questionData.jeopardy_or_general == '1' ? (
                     <>
-                        {/* {extraData.descriptions.map((row, idx) => {
+                        {/* extraData.descriptions.map((row, idx) => {
                             return <p>Description {idx}: {row}</p>
-                        })} */}
+                        }) */}
 
                         {extraData.urls.map((row, idx) => {
-                            return <div><a href={row} target="_blank" rel="noopener noreferrer">Url {idx}</a></div>
+                            return <div>{idx}: <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
                         })}
                     </>
                 ) : null

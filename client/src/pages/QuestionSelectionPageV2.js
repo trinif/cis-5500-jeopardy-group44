@@ -36,11 +36,22 @@ export default function QuestionSelectionPageV2() {
     'Math',
   ];
 
+  const handleInputChange = (id, value) => {
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [id]: value,
+    }));
+  };
+
   const { userId } = useAuth()
 
   const [data, setData] = useState([])
   const [selectedQuestionId, setSelectedQuestionId] = useState(null)
   const [pageSize, setPageSize] = useState(10);
+
+  const [inputValues, setInputValues] = useState({});
+  const [answer, setAnswer] = useState('')
+  const [answerMessage, setAnswerMessage] = useState('')
 
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
@@ -48,6 +59,36 @@ export default function QuestionSelectionPageV2() {
   const [valueRange, setValueRange] = useState([200, 1000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
+
+  const checkButtonHandler = () => {
+    fetch(`http://${config.server_host}:${config.server_port}/check_answer/${selectedQuestionId}/${answer}`, {
+      method: "POST",
+    }).then(res => {
+      return res.json()
+    }).then(resJson => {
+      if (resJson.status == 'Correct') {
+        setAnswerMessage('Correct!')
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, selectedQuestionId, is_correct: 1}),
+        })
+      } else if (resJson.status == 'Incorrect') {
+        setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
+        fetch(`http://${config.server_host}:${config.server_port}/update_user_answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({userId, selectedQuestionId, is_correct: 0}),
+        })
+    }
+    }).catch(err => {
+        console.log(err)
+    })
+  }
 
   const columns = [
     { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
@@ -70,7 +111,55 @@ export default function QuestionSelectionPageV2() {
       ) 
     },
     { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
-    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2} // delete this later
+    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2,
+      renderCell: (params) => (
+        <Box variant="contained"
+          sx={{
+            height: '100%',
+          }}
+        >
+          <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Enter your answer"
+          value={inputValues[params.row.id] || ''}
+          onChange={(e) => handleInputChange(params.row.id, e.target.value)}
+          sx={{
+            input: { color: 'white' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': { borderColor: '#FFD700' },
+              '&:hover fieldset': { borderColor: '#FFD700' },
+              '&.Mui-focused fieldset': { borderColor: '#FFD700' },
+            },
+            width: '100%',
+            height: '50%',
+            marginBottom: '12px',
+            justifyContent: 'center',
+          }}
+          />
+          <Button variant="contained" onClick={() => search() }
+            sx={{
+              backgroundColor: 'gold',
+              borderRadius: '5px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: "center",
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'gold',
+              },
+              '&:active': {
+                backgroundColor: 'gold',
+              },
+              '&:focus': {
+                backgroundColor: 'gold'
+              },
+            }}>
+            Search
+          </Button>
+        </Box>
+      ),
+    } // delete this later
   ]
 
   useEffect(() => {
@@ -249,12 +338,24 @@ export default function QuestionSelectionPageV2() {
         )}
 
         {/* i wanted to put the search and toggle button group on the same line */}
-        <Grid> 
-          <Button onClick={() => search() }
+        <Grid container containerSpacing="2px" marginTop="5px" justifyContent="center" alignItems="center">  
+          <Button variant="contained" onClick={() => search() }
             sx={{
               backgroundColor: 'gold',
               borderRadius: '5px',
               display: 'flex',
+              justifyContent: 'center',
+              alignItems: "center",
+              color: 'black',
+              '&:hover': {
+                backgroundColor: 'gold',
+              },
+              '&:active': {
+                backgroundColor: 'gold',
+              },
+              '&:focus': {
+                backgroundColor: 'gold'
+              },
             }}>
             Search
           </Button>
@@ -274,6 +375,7 @@ export default function QuestionSelectionPageV2() {
                 color: '#FFD700',
                 textTransform: 'capitalize',
                 fontWeight: 'bold',
+                margin: '4px',
                 '&.Mui-selected:hover': {
                   backgroundColor: '#FFD700',
                   color: '#2E0854',
@@ -296,7 +398,7 @@ export default function QuestionSelectionPageV2() {
         </Grid>
       </Box>
       <div class="results">
-        <h2>Results</h2>
+        <h2>Question Table</h2>
         <DataGrid
           rows={data}
           columns={columns}
@@ -310,7 +412,8 @@ export default function QuestionSelectionPageV2() {
               backgroundColor: '#081484',
             },
             '& .MuiDataGrid-columnHeaderTitle': {
-              fontWeight: 'bold',       
+              fontWeight: 'bold',      
+              fontSize: '18px' 
             },
             '& .MuiDataGrid-cell': {
               color: 'white',
