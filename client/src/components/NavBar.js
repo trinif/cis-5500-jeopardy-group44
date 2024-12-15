@@ -80,9 +80,9 @@ export default function NavBar() {
         >
           {/* Navigation Links */}
           <NavText href="/" text="Home" />
+          <NavText href="/questions" text="Test Yourself" />
           <NavText href="/question_selection" text="Question Selection" />
           <NavText href="/statistics" text="Statistics" />
-          <NavText href="/questions" text="Test Yourself" />
           {userId && !userId.startsWith('guest_') ? (
             // Show the username if logged in
             <div onClick={handleLogout}>

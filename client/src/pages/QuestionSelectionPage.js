@@ -13,7 +13,8 @@ import {
   Chip,
   Slider,
   Link,
-  Button
+  Button,
+  Divider
 } from '@mui/material';
 
 import { DataGrid } from '@mui/x-data-grid';
@@ -129,7 +130,10 @@ export default function QuestionSelectionPageV2() {
     <Container container rowSpacing={5}>
       {/* display QuestionCard when a question is selected (based on questionId) */}
       {selectedQuestionId && <QuestionCard questionId={selectedQuestionId} handleClose={() => setSelectedQuestionId(null)} />}
-      <h2>Search Questions</h2>
+      <Typography variant="h2" align="center" gutterBottom>
+          Search Questions
+        </Typography>
+        <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
       <Box container rowSpacing={5}
         sx={{
           backgroundColor: '#081484',
