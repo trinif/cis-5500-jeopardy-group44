@@ -92,6 +92,18 @@ const checkButtonHandler = () => {
     return airDate.split('T')[0]; // Extract only the date part
   };
 
+  const seeExtraInformationHandler = () => {
+    console.log("here")
+    fetch(`http://${config.server_host}/extra_information/${questionId}`)
+      .then(res => res.json())
+      .then(resJson => {
+          setExtraInformation(resJson)
+          console.log(resJson)
+      }).catch(err => {
+
+      })
+  }
+
   return (
     <Modal
       open={true}
@@ -147,7 +159,7 @@ const checkButtonHandler = () => {
               {answerMessage && (
                 <>
                   <p>{answerMessage}</p>
-                  <button onClick={e => setExtraInformation('hello')}>See similar information</button>
+                  <button onClick={e => seeExtraInformationHandler()}>See similar information</button>
                 </>
               )}
             </div> 
@@ -158,7 +170,16 @@ const checkButtonHandler = () => {
               p={3}
               style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
             >
-              <h1>Hello</h1>
+              {extraInformation.map((row, idx) => {
+                if (idx < 5) {
+                  return (
+                    <>
+                      <h1>These questions have the same answers.</h1>
+                      <p>Question: {row.question}</p>
+                    </>
+                  )
+                }
+              })}
 
             </Grid>
           )}
