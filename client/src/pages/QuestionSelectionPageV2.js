@@ -56,7 +56,7 @@ export default function QuestionSelectionPageV2() {
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [selectedSource, setSelectedSource] = useState('both')
-  const [valueRange, setValueRange] = useState([200, 1000])
+  const [valueRange, setValueRange] = useState([5, 18000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
 
@@ -282,14 +282,14 @@ export default function QuestionSelectionPageV2() {
               },
             }}
           >
-            <ToggleButton value="jeopardy">Jeopardy</ToggleButton>
+            <ToggleButton value="Jeopardy">Jeopardy</ToggleButton>
             <ToggleButton value="both">Both</ToggleButton>
-            <ToggleButton value="trivia">Trivia</ToggleButton>
+            <ToggleButton value="Trivia">Trivia</ToggleButton>
           </ToggleButtonGroup>
         </Grid>
 
         {/* Jeopardy-specific value and round */}
-        {selectedSource !== 'trivia' && (
+        {selectedSource !== 'Trivia' && (
           <Grid
             container spacing={4} alignItems="center" justifyContent="space-between" sx={{ marginTop: '5px' }}
           >

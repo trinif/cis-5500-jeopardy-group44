@@ -681,13 +681,14 @@ const question_selection = async function (req, res) {
 
   const keyword = (req.query.keyword || '').toLowerCase();
   const selected_source = req.query.source || 'both';
-  const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
-  const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
+  const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 5;
+  const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 18000;
   const subjects = req.query.subjects && req.query.subjects != '' ? req.query.subjects.split(',') : defaultSubjects;
   const rounds = req.query.rounds && req.query.rounds != '' ? req.query.rounds.split(',') : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
   const question_set = !user_id.startsWith('guest_') ? req.query.questionSet : 'all';
 
   let query = ``
+  
   if (question_set === 'past') { // past wrong
     query += `WITH questions_filtered AS (
       SELECT question_id
@@ -714,6 +715,23 @@ const question_selection = async function (req, res) {
   }
 
   query += `
+  SELECT *
+  FROM defaultQuestions
+  WHERE id IN (SELECT * FROM questions_filtered)
+      AND LOWER(question) LIKE '%${keyword}%'
+      AND (('${selected_source}' = 'both') 
+        OR ('${selected_source}' = LOWER(jeopardy_or_general)) 
+      )
+      AND (value IS NULL 
+        OR (value >= ${value_low} AND value <= ${value_high})
+      )    
+      AND subject IN ('${subjects.join(`','`)}')
+      AND (round IS NULL 
+        OR round IN ('${rounds.join(`','`)}')
+      )
+  `
+
+  /* query += `
     SELECT Questions.question_id AS id,
       SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
       CASE
@@ -738,9 +756,45 @@ const question_selection = async function (req, res) {
       AND (round IS NULL 
         OR round IN ('${rounds.join(`','`)}')
       )
-    ORDER BY id_substring
-    LIMIT 10
-  `  
+    ORDER BY id_substring`
+
+  /* let jeopardy = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Jeopardy' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+      JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'0'
+      AND (value >= ${value_low} AND value <= ${value_high})
+      AND subject IN ('${subjects.join(`','`)}')
+      AND round IN ('${rounds.join(`','`)}')
+  `
+  let trivia = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Trivia' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'1'
+      AND subject IN ('${subjects.join(`','`)}')
+  `
+
+  if (selected_source === 'jeopardy') {
+    query += jeopardy + `ORDER BY id_substring`
+  } else if (selected_source === 'trivia') {
+    query += trivia + `ORDER BY id_substring`
+  } else {
+    query += `(` + jeopardy + `) UNION (` + trivia + `)` 
+  } */
 
   console.log(query)
   
