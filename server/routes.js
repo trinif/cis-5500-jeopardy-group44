@@ -739,7 +739,6 @@ const question_selection = async function (req, res) {
         OR round IN ('${rounds.join(`','`)}')
       )
     ORDER BY id_substring
-    LIMIT 10
   `  
 
   console.log(query)

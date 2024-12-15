@@ -138,9 +138,9 @@ const checkButtonHandler = () => {
                     return <p>Description {idx}: {row}</p>
                   }) */}
 
-                  {extraData.urls.map((row, idx) => {
+                  {/* {extraData.urls.map((row, idx) => {
                     return <div>{idx}: <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
-                  })}
+                  })} */}
                 </>
                 ) : null
             )}
@@ -159,6 +159,13 @@ const checkButtonHandler = () => {
               {answerMessage && (
                 <>
                   <p>{answerMessage}</p>
+                  <p>
+                    {extraData.urls.map((row, idx) => {
+                      if (idx < 3) {
+                        return <div>{idx+1}. <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
+                      }
+                    })}
+                  </p>
                   <button onClick={e => seeExtraInformationHandler()}>See similar information</button>
                 </>
               )}
@@ -172,10 +179,10 @@ const checkButtonHandler = () => {
             >
               <h1>These questions have the same answers.</h1>
               {extraInformation.map((row, idx) => {
+
                 if (idx < 5) {
                   return (
                     <>
-
                       <p>{row.question}</p>
                     </>
                   )
