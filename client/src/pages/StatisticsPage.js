@@ -136,7 +136,7 @@ export default function StatisticsPage() {
               >
                 Log in or Sign up
               </RouterLink>
-              {" "}to access <strong>"My Performance"</strong> and <strong>"Friend Leaderboard"</strong> features.
+              {" "}to access user-dependent features.
             </span>
           </Typography>
         )}
