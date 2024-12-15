@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Container, Typography, TextField, Divider, Stack } from '@mui/material';
 import { useAuth } from "../components/Context";
-import { useRef } from 'react';
 
 const config = require('../config.json');
 
@@ -10,7 +9,7 @@ export default function JeopardyQuestions() {
     // [total, correct, incorrect]
     const [questionsAnswered, setQuestionsAnswered] = useState([0, 0, 0]);
 
-    const [newPage, setNewPage] = useState(false);
+    const [fetchTrigger, setFetchTrigger] = useState(0);
 
     const [questionId, setQuestionId] = useState('');
     const [question, setQuestion] = useState('');
@@ -21,8 +20,6 @@ export default function JeopardyQuestions() {
     const [answerMessage, setAnswerMessage] = useState('');
 
     const { userId } = useAuth();
-
-    const hasFetched = useRef(false);
 
     const checkButtonHandler = () => {
         fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
@@ -62,13 +59,10 @@ export default function JeopardyQuestions() {
     };
 
     const newQuestionButtonHandler = () => {
-        setNewPage(!newPage);
+        setFetchTrigger(fetchTrigger + 1); 
     };
 
     useEffect(() => {
-        if (hasFetched.current) return; // Prevent double fetch
-        hasFetched.current = true;
-    
         console.log("Fetching question...");
         fetch(`http://${config.server_host}/random`)
             .then((res) => res.json())
@@ -81,7 +75,7 @@ export default function JeopardyQuestions() {
                 setAnswerMessage('');
             })
             .catch(err => console.error("Error fetching question:", err));
-    }, [newPage]);
+    }, [fetchTrigger]); 
 
     return (
         <Box
