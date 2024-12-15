@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 
-/* authentication */
+/* authentication for user login/signup */
 
 const AuthContext = createContext();
 

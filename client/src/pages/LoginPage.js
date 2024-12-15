@@ -4,6 +4,9 @@ import { useAuth } from '../components/Context';
 
 const config = require('../config.json');
 
+/*
+* Login/Signup page: user can register or login to an existing account
+*/
 export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -12,7 +15,7 @@ export default function Login() {
 
     // Handles registration
     const registerButtonHandler = () => {
-        fetch(`http://${config.server_host}/signup`, {
+        fetch(`http://${config.server_host}/signup`, { //signs up user if they click "Register"
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -26,7 +29,7 @@ export default function Login() {
                     setUserId(resJson.username);
                     setStatus(`Registration successful! You are now logged in as ${resJson.username}`);
                 } else {
-                    setStatus(resJson.status);
+                    setStatus(resJson.status); // Displays register error if registration didn't succeed
                 }
             })
             .catch((err) => {

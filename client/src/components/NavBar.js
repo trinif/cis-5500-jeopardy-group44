@@ -2,6 +2,8 @@ import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { generateRandomUserId, useAuth } from './Context'; // Import the useAuth hook
 
+// Sets design for text on navigation bar
+// NavBar sets navigation bar for whole website
 function NavText({ href, text }) {
   return (
     <Typography
@@ -88,17 +90,6 @@ export default function NavBar() {
             <div onClick={handleLogout}>
               <NavText href="/" text={`${userId} | Logout`}/>
             </div>
-            // <Typography
-            //   variant="h6"
-            //   sx={{
-            //     fontFamily: 'Anton, sans-serif',
-            //     fontWeight: 700,
-            //     letterSpacing: '.3rem',
-            //     color: '#FFD700',
-            //   }}
-            // >
-            //   {`${userId}`}
-            // </Typography>
           ) : (
             // Show Login | Signup if not logged in
             <NavText href="/login" text="Login | Signup" />

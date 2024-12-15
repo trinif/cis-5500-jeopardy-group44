@@ -6,6 +6,12 @@ import { Link as RouterLink } from 'react-router-dom';
 
 const config = require('../config.json');
 
+/*
+* Statistics Page: displays statistics on user performance by category, overall performance by category
+* Also includes information on user's followed friends
+* Includes questions with worst accuracy from friends and top users
+* Cannot see user's performance, friend leaderboard, or worst questions from friends if not logged in
+*/
 export default function StatisticsPage() {
   const { userId } = useAuth();
 
@@ -26,6 +32,7 @@ export default function StatisticsPage() {
   const [followingWorstQuestions, setFollowingWorstQuestions] = useState([]);
   const [leastAccurateQuestions, setLeastAccurateQuestions] = useState([]);
 
+  // calls route to follow selected user
   const followHandler = (user_id) => {
     fetch(`http://${config.server_host}/follow_user/${userId}/${user_id}`, { method: 'POST' })
       .then((res) => res.json())
@@ -33,6 +40,7 @@ export default function StatisticsPage() {
       .catch((err) => console.log(err));
   };
 
+  // calls route to unfollow selected user
   const unfollowHandler = (user_id) => {
     fetch(`http://${config.server_host}/unfollow_user/${userId}/${user_id}`, { method: 'POST' })
       .then((res) => res.json())
@@ -40,6 +48,7 @@ export default function StatisticsPage() {
       .catch((err) => console.log(err));
   };
 
+  // Populates all tables
   useEffect(() => {
     fetch(`http://${config.server_host}/overall_accuracy/${userId}`)
       .then((res) => res.json())
@@ -140,7 +149,6 @@ export default function StatisticsPage() {
             variant="h6"
             align="center"
             sx={{
-              //backgroundColor: 'rgba(255, 255, 255, 0.2)', // Optional background for emphasis
               color: 'gold',
               borderRadius: '8px',
               padding: '10px',
@@ -162,7 +170,7 @@ export default function StatisticsPage() {
           </Typography>
         )}
 
-        {/* Performance Statistics Section */}
+        {/* User-Performance Statistics Section */}
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
           <Box
@@ -379,6 +387,7 @@ export default function StatisticsPage() {
         </Grid>
         
         <Grid container spacing={2} sx={{ marginTop: 3 }}>
+          
         {/* Tough Questions Section */}
         <Grid item xs={12} md={6}>
           <Box

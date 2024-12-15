@@ -10,7 +10,6 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Grid,
-  Chip,
   Slider,
   Link,
   Button,
@@ -24,7 +23,13 @@ import { useAuth } from '../components/Context';
 
 const config = require('../config.json'); // Import server configuration
 
+/*
+* Question Selection page: allows user to set specific filters and search for questions
+* Returns a table of questions that match user's criteria
+*/
 export default function QuestionSelectionPage() {
+
+  // Defines default subjects
   const subjects = [
     'History',
     'Pop Culture',
@@ -45,11 +50,12 @@ export default function QuestionSelectionPage() {
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [selectedSource, setSelectedSource] = useState('both')
-  const [valueRange, setValueRange] = useState([100, 2000])
+  const [valueRange, setValueRange] = useState([5, 18000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
   const [rowStates, setRowStates] = useState({});
 
+  // Builds answer box for each row
   const toggleAnswerSection = (rowId) => {
     setRowStates((prev) => ({
       ...prev,
@@ -60,7 +66,7 @@ export default function QuestionSelectionPage() {
     }));
   };
 
-  // Function to handle input change for a row
+  // Function to handle input change for a row's answer box
   const handleInputChange = (rowId, value) => {
     setRowStates((prev) => ({
       ...prev,
@@ -113,7 +119,7 @@ export default function QuestionSelectionPage() {
       headerName: 'Question', 
       cellClassName: 'white-text', 
       flex: 4,
-      renderCell: (params) => (
+      renderCell: (params) => ( // renders question cell with link to QuestionCard
         <Link 
           onClick={() => setSelectedQuestionId(params.row.id)} 
           style={{ color: 'white' }}
@@ -164,7 +170,7 @@ export default function QuestionSelectionPage() {
                     width: '100%',
                   }}
                 >
-                  {/* Input Field */}
+                  {/* Input field */}
                   <TextField
                     size="small"
                     value={rowState.userAnswer || ''}
@@ -232,9 +238,10 @@ export default function QuestionSelectionPage() {
   ]
 
   useEffect(() => {
-    search()
+    search() // Calls search when user initially opens the page with default parameters
   }, [])
 
+  // Search function, called when user presses "Search"
   const search = () => {
     fetch(`http://${config.server_host}/question_selection/${userId}?`+
       `keyword=${keyword}` +
@@ -344,6 +351,7 @@ export default function QuestionSelectionPage() {
             </Button> 
           </Grid>
         </Grid>
+
         <Grid 
           container 
           spacing={2} 
@@ -365,15 +373,15 @@ export default function QuestionSelectionPage() {
                   color: '#FFD700',
                   textTransform: 'capitalize',
                   fontWeight: 'bold',
-                  '&.Mui-selected:hover': {
+                '&.Mui-selected:hover': {
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   },
-                  '&.Mui-selected': {
+                '&.Mui-selected': {
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   },
-                  '&:hover': {
+                '&:hover': { // Adjusting button color so it does not disappear when hovered/selected
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   }
@@ -386,7 +394,7 @@ export default function QuestionSelectionPage() {
             </ToggleButtonGroup>
           </Grid>
 
-          {/* Toggle Button Group */}
+          {/* Toggle Button Group for user filters */}
           <Grid item xs={6}>
             <ToggleButtonGroup
               value={questionSet}
@@ -403,15 +411,15 @@ export default function QuestionSelectionPage() {
                   color: '#FFD700',
                   textTransform: 'capitalize',
                   fontWeight: 'bold',
-                  '&.Mui-selected:hover': {
+                '&.Mui-selected:hover': {
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   },
-                  '&.Mui-selected': {
+                '&.Mui-selected': {
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   },
-                  '&:hover': {
+                '&:hover': {
                     backgroundColor: '#FFD700',
                     color: '#2E0854',
                   },
@@ -465,9 +473,9 @@ export default function QuestionSelectionPage() {
                 value={valueRange}
                 onChange={(e, newValue) => setValueRange(newValue)}
                 valueLabelDisplay="auto"
-                step={50}
+                step={100}
                 min={100}
-                max={2000}
+                max={18000}
                 sx={{
                   color: 'gold',
                 }}
@@ -490,7 +498,7 @@ export default function QuestionSelectionPage() {
             '& .MuiDataGrid-row': {
               maxHeight: 'none'
             },
-            '& .MuiDataGrid-columnHeaders': {
+            '& .MuiDataGrid-columnHeaders': { // Sets column header text
               color: 'white',
               backgroundColor: '#081484',
             },
@@ -498,7 +506,7 @@ export default function QuestionSelectionPage() {
               fontWeight: 'bold',      
               fontSize: '18px' 
             },
-            '& .MuiDataGrid-cell': {
+            '& .MuiDataGrid-cell': { // Sets cell in DataGrid, white text color and word wrapping
               color: 'white',
               whiteSpace: 'normal',
               wordWrap: 'break-word',
@@ -510,7 +518,7 @@ export default function QuestionSelectionPage() {
             '& .MuiDataGrid-columnSeparator': {
               visibility: 'visible', 
             },
-            '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeaders': {
+            '& .MuiDataGrid-cell, & .MuiDataGrid-columnHeaders': { // Sets borders for table
               borderRight: '1px solid rgba(224, 224, 224, 1)',
             },
             '& .MuiDataGrid-columnHeader': {
@@ -546,7 +554,7 @@ export default function QuestionSelectionPage() {
             '& .MuiTablePagination-actions': {
               backgroundColor: 'white',
             },
-            '& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon': {
+            '& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon': { // Sets sort and menu icons to be visible
               color: 'gold',
             },
             '& .MuiDataGrid-columnHeader .MuiDataGrid-menuIcon': {
