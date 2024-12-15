@@ -755,7 +755,7 @@ const question_selection = async function (req, res) {
 
   const user_id = req.params.user_id;
 
-  const keyword = req.query.keyword.toLowerCase() || '';
+  const keyword = (req.query.keyword || '').toLowerCase();
   const selected_source = req.query.source || 'both';
   const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
   const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
