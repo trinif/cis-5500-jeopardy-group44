@@ -4,6 +4,9 @@ import { useAuth } from "../components/Context";
 
 const config = require('../config.json');
 
+/*
+* Contains Question of the Day and information on the website.
+*/
 export default function HomePage() {
   const [questionOfTheDay, setQuestionOfTheDay] = useState({});
   const [question_id, setQuestionId] = useState('');
@@ -12,6 +15,7 @@ export default function HomePage() {
 
   const { userId } = useAuth();
 
+  // Fetches random question for Question of the Day (updates based on day)
   const fetchNewQuestion = () => {
     fetch(`http://${config.server_host}/random`)
       .then((res) => res.json())
@@ -40,6 +44,7 @@ export default function HomePage() {
     }
   }, []);
 
+  // Checks user-inputted answer and confirms if it is correct
   const checkAnswerHandler = () => {
     fetch(`http://${config.server_host}/check_answer/${questionOfTheDay.question_id}/${answer}`, {
       method: "POST",
@@ -103,6 +108,7 @@ export default function HomePage() {
             <strong>Value:</strong> {questionOfTheDay.value}
           </Typography>
 
+          {/* Allows user to input answer */}
           <TextField
             label="Your Answer"
             variant="outlined"

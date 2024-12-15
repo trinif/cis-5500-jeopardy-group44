@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Container, Typography, TextField, Divider, Stack } from '@mui/material';
 import { useAuth } from "../components/Context";
-import { useRef } from 'react';
 
 const config = require('../config.json');
 
+/*
+* "Test Yourself" page - contains random Jeopardy questions
+* User can answer one at a time and receive feedback on whether they were correct or not
+*/
 export default function JeopardyQuestions() {
 
     // [total, correct, incorrect]
@@ -22,6 +25,7 @@ export default function JeopardyQuestions() {
 
     const { userId } = useAuth();
 
+    // Checks user-inputted answer
     const checkButtonHandler = () => {
         fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
             method: "POST",
@@ -59,10 +63,12 @@ export default function JeopardyQuestions() {
         }).catch(err => console.log(err));
     };
 
+    // Populates a new question from fetchTrigger
     const newQuestionButtonHandler = () => {
         setFetchTrigger(fetchTrigger + 1); // Increment the trigger
     };
 
+    // Populates random Jeopardy question from route
     useEffect(() => {
         console.log("Fetching question...");
         fetch(`http://${config.server_host}/random`)

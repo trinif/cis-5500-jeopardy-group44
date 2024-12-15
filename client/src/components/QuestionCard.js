@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Box, Button, ButtonGroup, Modal, Grid } from '@mui/material';
-//maybe won't need all these charts but it looks cool?
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { NavLink } from 'react-router-dom';
 
 import { useAuth } from './Context';
 const config = require('../config.json');
 
-// modal (a common example of a modal is a dialog window).
-// Typically, modals will conditionally appear (specified by the Modal's open property)
-// but in our implementation whether the Modal is open is handled by the parent component
-// (see HomePage.js for example), since it depends on the state (selectedSongId) of the parent
+/*
+* QuestionCard is populated when user clicks on a question in the table
+* Shows extra information about the question and allows the user to answer
+*/
 export default function QuestionCard({ questionId, handleClose }) {
   const [questionData, setQuestionData] = useState({});
 
@@ -24,7 +22,6 @@ export default function QuestionCard({ questionId, handleClose }) {
   const { userId } = useAuth();
 
   useEffect(() => {
-    //change fetch server
     fetch(`http://${config.server_host}/question/${questionId}/`)
       .then(res => res.json())
       .then(resJson => {
@@ -34,6 +31,7 @@ export default function QuestionCard({ questionId, handleClose }) {
       })
   }, [questionId]);
 
+// Checks user-inputted answer and says if it is correct or not based on fetching routes
 const checkButtonHandler = () => {
     fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
       method: "POST",
@@ -92,18 +90,6 @@ const checkButtonHandler = () => {
     return airDate.split('T')[0]; // Extract only the date part
   };
 
-  const seeExtraInformationHandler = () => {
-    console.log("here")
-    fetch(`http://${config.server_host}/extra_information/${questionId}`)
-      .then(res => res.json())
-      .then(resJson => {
-          setExtraInformation(resJson)
-          console.log(resJson)
-      }).catch(err => {
-
-      })
-  }
-
   return (
     <Modal
       open={true}
@@ -121,9 +107,11 @@ const checkButtonHandler = () => {
             p={3}
             style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
           >
+            {/* Shows question and subject fields no matter what, adds further information if it is Jeopardy or GeneralQuestions */}
             <h1>{questionData.question}</h1>
-            <h2>{questionData.subject}</h2>
+            <h2>{questionData.subject}</h2> 
 
+            {/* Jeopardy-specific information (category, round, value, air date) */}
             {extraData && (
               questionData.jeopardy_or_general == '0' ? (
                 <>
@@ -132,19 +120,10 @@ const checkButtonHandler = () => {
                   <p>Value: {extraData.value}</p>
                   <p>Air Date: {formatAirDate(extraData.air_date)}</p>
                 </>
-              ) : questionData.jeopardy_or_general == '1' ? (
-                <>
-                  {/* extraData.descriptions.map((row, idx) => {
-                    return <p>Description {idx}: {row}</p>
-                  }) */}
-
-                  {/* {extraData.urls.map((row, idx) => {
-                    return <div>{idx}: <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
-                  })} */}
-                </>
-                ) : null
+              ) : null
             )}
 
+            {/* If user hits "Enter" on keyboard or clicks Check, will automatically check */}
             <input type='text' 
               value={answer} 
               onChange={e => setAnswer(e.target.value)}
@@ -161,38 +140,17 @@ const checkButtonHandler = () => {
                   <p>{answerMessage}</p>
                   {extraData && extraData.urls ? (
                     <p>
-                      {extraData.urls.map((row, idx) => {
+                      {extraData.urls.map((row, idx) => { //populates URLs after answer, if they exist
                         if (idx < 3) {
                           return <div>{idx+1}. <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
                         }
                       })}
                     </p>
                   ) : (null)}
-                  {/*<button onClick={e => seeExtraInformationHandler()}>See similar information</button>*/}
                 </>
               )}
             </div> 
           </Grid>
-
-          {extraInformation && (
-            <Grid
-              p={3}
-              style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
-            >
-              <h1>These questions have the same answers.</h1>
-              {extraInformation.map((row, idx) => {
-
-                if (idx < 5) {
-                  return (
-                    <>
-                      <p>{row.question}</p>
-                    </>
-                  )
-                }
-              })}
-
-            </Grid>
-          )}
         </Grid>
       )}
     </Modal>
