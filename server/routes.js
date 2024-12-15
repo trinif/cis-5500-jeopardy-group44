@@ -714,7 +714,7 @@ const question_selection = async function (req, res) {
   query += `
   SELECT *
   FROM defaultQuestions
-  WHERE id IN (SELECT * FROM questions_filtered)
+  WHERE EXISTS (SELECT * FROM questions_filtered WHERE defaultQuestions.id = questions_filtered.question_id)
       AND LOWER(question) LIKE '%${keyword}%'
       AND (('${selected_source}' = 'both') 
         OR ('${selected_source}' = LOWER(jeopardy_or_general)) 
@@ -725,8 +725,7 @@ const question_selection = async function (req, res) {
       AND subject IN ('${subjects.join(`','`)}')
       AND (round IS NULL 
         OR round IN ('${rounds.join(`','`)}')
-      )
-  ORDER BY id
+      );
   `
 
   /* query += `
