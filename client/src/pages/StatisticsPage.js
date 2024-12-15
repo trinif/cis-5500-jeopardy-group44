@@ -23,6 +23,9 @@ export default function StatisticsPage() {
   const [topUsersFriends, setTopUsersFriends] = useState([]);
   const [triggerEffect, setTriggerEffect] = useState(false);
 
+  const [followingWorstQuestions, setFollowingWorstQuestions] = useState([]);
+  const [leastAccurateQuestions, setLeastAccurateQuestions] = useState([]);
+
   const followHandler = (user_id) => {
     fetch(`http://${config.server_host}/follow_user/${userId}/${user_id}`, { method: 'POST' })
       .then((res) => res.json())
@@ -104,6 +107,16 @@ export default function StatisticsPage() {
       .then((res) => res.json())
       .then((resJson) => setTopUsersFriends(resJson))
       .catch((err) => console.log(err));
+
+    fetch(`http://${config.server_host}/following_worst_questions/${userId}`)
+      .then((res) => res.json())
+      .then((resJson) => setFollowingWorstQuestions(resJson))
+      .catch((err) => console.log(err));
+
+    fetch(`http://${config.server_host}/least_accurate_questions_top_users/`)
+      .then((res) => res.json())
+      .then((resJson) => setLeastAccurateQuestions(resJson))
+      .catch((err) => console.log(err));
   }, [userId, triggerEffect]);
 
   return (
@@ -144,7 +157,7 @@ export default function StatisticsPage() {
               >
                 Log in or Sign up
               </RouterLink>
-              {" "}to access <strong>"My Performance"</strong> and <strong>"Friend Leaderboard"</strong> features.
+              {" "}to access user-dependent features.
             </span>
           </Typography>
         )}
@@ -364,6 +377,92 @@ export default function StatisticsPage() {
             </Box>
           </Grid>
         </Grid>
+        
+        <Grid container spacing={2} sx={{ marginTop: 3 }}>
+        {/* Tough Questions Section */}
+        <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              backgroundColor: '#081484',
+              borderRadius: '10px',
+              padding: '20px',
+              border: '3px solid #FFD700',
+              height: '100%',
+            }}
+          >
+            <Typography variant="h4" align="center" sx={{ color: '#FFD700' }}>
+              Toughest Questions from your Friends!
+            </Typography>
+            <TableContainer component={Paper} sx={{ backgroundColor: '#FFD700', marginTop: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Question</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Category</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Total Answers</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Correct Answers</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Accuracy</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {followingWorstQuestions.map((row, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell sx={{ color: '#081484' }}>{row.question}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.subject}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.total_answers}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.correct_answers}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.accuracy}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              backgroundColor: '#081484',
+              borderRadius: '10px',
+              padding: '20px',
+              border: '3px solid #FFD700',
+              height: '100%',
+            }}
+          >
+            <Typography variant="h4" align="center" sx={{ color: '#FFD700' }}>
+              Toughest Questions from Our Top Users!
+            </Typography>
+            <TableContainer component={Paper} sx={{ backgroundColor: '#FFD700', marginTop: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Question</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Category</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Total Answers</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Correct Answers</TableCell>
+                    <TableCell sx={{ color: '#081484', fontWeight: 'bold' }}>Accuracy</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {leastAccurateQuestions.map((row, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell sx={{ color: '#081484' }}>{row.question}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.subject}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.total_answers}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.correct_answers}</TableCell>
+                      <TableCell sx={{ color: '#081484' }}>{row.accuracy}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Grid>
+      </Grid>
+
+
+
       </Container>
     </Box>
   );

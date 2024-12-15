@@ -639,18 +639,17 @@ const question_selection = async function (req, res) {
     'Vocabulary',
     'Math',
   ];
-
   const user_id = req.params.user_id;
-
   const keyword = (req.query.keyword || '').toLowerCase();
   const selected_source = req.query.source || 'both';
-  const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 200;
-  const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 1000;
+  const value_low = req.query.valueLow ? parseInt(req.query.valueLow, 10) : 5;
+  const value_high = req.query.valueHigh ? parseInt(req.query.valueHigh, 10) : 18000;
   const subjects = req.query.subjects && req.query.subjects != '' ? req.query.subjects.split(',') : defaultSubjects;
   const rounds = req.query.rounds && req.query.rounds != '' ? req.query.rounds.split(',') : ['Jeopardy!', 'Double Jeopardy!', 'Final Jeopardy!'];
   const question_set = !user_id.startsWith('guest_') ? req.query.questionSet : 'all';
 
   let query = ``
+  
   if (question_set === 'past') { // past wrong
     query += `WITH questions_filtered AS (
       SELECT question_id
@@ -677,6 +676,23 @@ const question_selection = async function (req, res) {
   }
 
   query += `
+  SELECT *
+  FROM defaultQuestions
+  WHERE EXISTS (SELECT * FROM questions_filtered WHERE defaultQuestions.id = questions_filtered.question_id)
+      AND LOWER(question) LIKE '%${keyword}%'
+      AND (('${selected_source}' = 'both') 
+        OR ('${selected_source}' = LOWER(jeopardy_or_general)) 
+      )
+      AND (value IS NULL 
+        OR (value >= ${value_low} AND value <= ${value_high})
+      )    
+      AND subject IN ('${subjects.join(`','`)}')
+      AND (round IS NULL 
+        OR round IN ('${rounds.join(`','`)}')
+      );
+  `
+
+  /* query += `
     SELECT Questions.question_id AS id,
       SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
       CASE
@@ -701,8 +717,45 @@ const question_selection = async function (req, res) {
       AND (round IS NULL 
         OR round IN ('${rounds.join(`','`)}')
       )
-    ORDER BY id_substring
-  `  
+    ORDER BY id_substring`
+
+  /* let jeopardy = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Jeopardy' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+      JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'0'
+      AND (value >= ${value_low} AND value <= ${value_high})
+      AND subject IN ('${subjects.join(`','`)}')
+      AND round IN ('${rounds.join(`','`)}')
+  `
+  let trivia = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Trivia' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'1'
+      AND subject IN ('${subjects.join(`','`)}')
+  `
+
+  if (selected_source === 'jeopardy') {
+    query += jeopardy + `ORDER BY id_substring`
+  } else if (selected_source === 'trivia') {
+    query += trivia + `ORDER BY id_substring`
+  } else {
+    query += `(` + jeopardy + `) UNION (` + trivia + `)` 
+  } */
 
   console.log(query)
   
@@ -716,17 +769,47 @@ const question_selection = async function (req, res) {
   })
 };
 
+// const least_accurate_questions_top_users = async function(req, res) {
+//   connection.query(`
+//     WITH top_users AS (
+//      SELECT user_id,
+//       ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
+//     FROM UserAnswers
+//     WHERE user_id NOT LIKE 'guest_%'
+//     GROUP BY user_id
+//     ORDER BY accuracy DESC
+//     LIMIT 5
+//     )
+//     SELECT 
+//       q.question_id,
+//       q.question,
+//       q.subject,
+//       COUNT(ua.is_correct) AS total_answers,
+//       COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) AS correct_answers,
+//       ROUND((COUNT(CASE WHEN ua.is_correct = B'1' THEN 1 END) * 100.0 / COUNT(ua.is_correct)),2) AS accuracy
+//     FROM 
+//       UserAnswers ua
+//     JOIN 
+//       Questions q ON ua.question_id = q.question_id
+//     WHERE 
+//       ua.user_id IN (SELECT user_id FROM top_users)
+//     GROUP BY 
+//       q.question_id, q.question, q.subject
+//     ORDER BY 
+//       accuracy ASC, q.subject
+//     LIMIT 3;
+//   `, (err, data) => {
+//     if (err) {
+//       console.log(err);
+//       res.json([]);
+//     } else {
+//       res.json(data.rows);
+//     }
+//   });
+// };
+
 const least_accurate_questions_top_users = async function(req, res) {
     connection.query(`
-      WITH top_users AS (
-       SELECT user_id,
-        ROUND(COUNT(*) FILTER (WHERE is_correct = B'1') * 100.0 / COUNT(*), 2) AS accuracy
-      FROM UserAnswers
-      WHERE user_id NOT LIKE 'guest_%'
-      GROUP BY user_id
-      ORDER BY accuracy DESC
-      LIMIT 5
-      )
       SELECT 
         q.question_id,
         q.question,
@@ -739,11 +822,12 @@ const least_accurate_questions_top_users = async function(req, res) {
       JOIN 
         Questions q ON ua.question_id = q.question_id
       WHERE 
-        ua.user_id IN (SELECT user_id FROM top_users)
+        ua.user_id IN (SELECT user_id FROM top_users_accuracy)
       GROUP BY 
         q.question_id, q.question, q.subject
       ORDER BY 
-        accuracy ASC
+        accuracy ASC, q.subject
+      LIMIT 3;
     `, (err, data) => {
       if (err) {
         console.log(err);
@@ -756,7 +840,6 @@ const least_accurate_questions_top_users = async function(req, res) {
 
   const following_worst_questions = async function(req, res) {
     const user_id = req.params.user_id;
-  
     connection.query(`
       WITH followed_users AS (
         SELECT person_of_interest AS followed_user_id
@@ -793,7 +876,7 @@ const least_accurate_questions_top_users = async function(req, res) {
       WHERE ua.user_id IN (SELECT followed_user_id FROM followed_users)
       GROUP BY q.question_id, q.question, q.subject
       ORDER BY accuracy ASC
-      LIMIT 10;
+      LIMIT 3;
     `, (err, data) => {
       if (err) {
         console.log(err);
