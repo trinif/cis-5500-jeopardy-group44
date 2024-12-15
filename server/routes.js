@@ -726,6 +726,7 @@ const question_selection = async function (req, res) {
       AND (round IS NULL 
         OR round IN ('${rounds.join(`','`)}')
       )
+  ORDER BY id
   `
 
   /* query += `
@@ -737,8 +738,7 @@ const question_selection = async function (req, res) {
         END AS jeopardy_or_general,
       Questions.question AS question,
       Questions.answer AS answer,
-      Questions.subject AS subject,
-      Jeopardy.value AS value
+      Questions.subject AS subject
     FROM questions_filtered
       JOIN Questions ON questions_filtered.question_id = Questions.question_id
       LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
@@ -754,9 +754,45 @@ const question_selection = async function (req, res) {
       AND (round IS NULL 
         OR round IN ('${rounds.join(`','`)}')
       )
-    ORDER BY id_substring
-    LIMIT 10
-  `  
+    ORDER BY id_substring`
+
+  /* let jeopardy = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Jeopardy' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+      JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'0'
+      AND (value >= ${value_low} AND value <= ${value_high})
+      AND subject IN ('${subjects.join(`','`)}')
+      AND round IN ('${rounds.join(`','`)}')
+  `
+  let trivia = `
+  SELECT Questions.question_id AS id,
+      SUBSTRING(Questions.question_id, 2, 10) AS id_substring,
+      'Trivia' AS jeopardy_or_general,
+      Questions.question AS question,
+      Questions.answer AS answer,
+      Questions.subject AS subject
+    FROM questions_filtered
+      JOIN Questions ON questions_filtered.question_id = Questions.question_id
+    WHERE LOWER(Questions.question) LIKE '%${keyword}%'
+      AND jeopardy_or_general = B'1'
+      AND subject IN ('${subjects.join(`','`)}')
+  `
+
+  if (selected_source === 'jeopardy') {
+    query += jeopardy + `ORDER BY id_substring`
+  } else if (selected_source === 'trivia') {
+    query += trivia + `ORDER BY id_substring`
+  } else {
+    query += `(` + jeopardy + `) UNION (` + trivia + `)` 
+  } */
 
   console.log(query)
   
