@@ -21,7 +21,7 @@ export default function JeopardyQuestions() {
     const { userId } = useAuth();
 
     const checkButtonHandler = () => {
-        fetch(`http://${config.server_host}/check_answer/${questionId}/${answer}`, {
+        fetch(`https://${config.server_host}/check_answer/${questionId}/${answer}`, {
             method: "POST",
         }).then(res => res.json())
           .then(resJson => {
@@ -31,8 +31,8 @@ export default function JeopardyQuestions() {
                     total + 1,
                     correct + 1,
                     incorrect
-                ])
-                fetch(`http://${config.server_host}/update_user_answer`, {
+                ]);
+                fetch(`https://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -44,9 +44,9 @@ export default function JeopardyQuestions() {
                 setQuestionsAnswered(([total, correct, incorrect]) => [
                     total + 1,
                     correct,
-                    incorrect+1
-                ])
-                fetch(`http://${config.server_host}/update_user_answer`, {
+                    incorrect + 1
+                ]);
+                fetch(`https://${config.server_host}/update_user_answer`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -62,10 +62,8 @@ export default function JeopardyQuestions() {
     };
 
     useEffect(() => {
-        fetch(`http://${config.server_host}/random`)
-            .then(res => {
-                return res.json()
-            })
+        fetch(`https://${config.server_host}/random`)
+            .then(res => res.json())
             .then(resJson => {
                 setQuestionId(resJson.question_id);
                 setQuestion(resJson.question);
@@ -87,7 +85,7 @@ export default function JeopardyQuestions() {
         >
             <Container>
                 <Typography variant="h2" align="center" gutterBottom>
-                    Test Yourself
+                Test Yourself
                 </Typography>
                 <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
 
