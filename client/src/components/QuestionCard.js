@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, ButtonGroup, Modal } from '@mui/material';
+import { Box, Button, ButtonGroup, Modal, Grid } from '@mui/material';
 //maybe won't need all these charts but it looks cool?
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { NavLink } from 'react-router-dom';
@@ -19,6 +19,8 @@ export default function QuestionCard({ questionId, handleClose }) {
   const [answer, setAnswer] = useState('')
   const [answerMessage, setAnswerMessage] = useState('')
 
+  const [extraInformation, setExtraInformation] = useState(null)
+
   const { userId } = useAuth();
 
   useEffect(() => {
@@ -27,7 +29,6 @@ export default function QuestionCard({ questionId, handleClose }) {
       .then(res => res.json())
       .then(resJson => {
         setQuestionData(resJson);
-        console.log(resJson.question_id[0])
       }).catch(err => {
         console.log(err)
       })
@@ -98,10 +99,15 @@ const checkButtonHandler = () => {
       style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
     >
       {questionData && (
-        <>
-          <Box
-              p={3}
-              style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
+        <Grid
+          style={{
+            display: 'flex',
+            flexDirection: 'row'
+          }}
+        >
+          <Grid
+            p={3}
+            style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
           >
             <h1>{questionData.question}</h1>
             <h2>{questionData.subject}</h2>
@@ -138,15 +144,25 @@ const checkButtonHandler = () => {
             </input>
             <button onClick={checkButtonHandler}>Check</button>
             <div>
-              {answerMessage && <p>{answerMessage}</p>}
+              {answerMessage && (
+                <>
+                  <p>{answerMessage}</p>
+                  <button onClick={e => setExtraInformation('hello')}>See similar information</button>
+                </>
+              )}
             </div> 
-          </Box>
+          </Grid>
 
-          <Box>
-            <p>Hello</p>
+          {extraInformation && (
+            <Grid
+              p={3}
+              style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
+            >
+              <h1>Hello</h1>
 
-          </Box>
-        </>
+            </Grid>
+          )}
+        </Grid>
       )}
     </Modal>
   );
