@@ -348,7 +348,6 @@ FROM best_category, worst_category
 //DONE
 const best_worst_category_universal = async function (req, res) {
   connection.query(`
-EXPLAIN ANALYZE
 WITH category_accuracy AS (
     SELECT subject,
            COUNT(*) FILTER (WHERE UserAnswers.is_correct = B'1') * 100.0 / COUNT(*) AS accuracy
