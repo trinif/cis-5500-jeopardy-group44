@@ -72,7 +72,7 @@ app.get('/following_worst_questions/:user_id', routes.following_worst_questions)
 app.get('/hardest_question_from_network/:user_id', routes.hardest_question_from_network);
 
 app.listen(8080, () => {
-  console.log(`Server running at https://${config.server_host}/`)
+  console.log(`Server running at http://${config.server_host}/`)
 });
 
 module.exports = app;

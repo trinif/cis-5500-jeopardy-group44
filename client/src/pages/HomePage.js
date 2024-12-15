@@ -9,7 +9,7 @@ export default function HomePage() {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    fetch(`https://${config.server_host}/random`)
+    fetch(`http://${config.server_host}/random`)
       .then((res) => res.json())
       .then((resJson) => {
         setQuestionOfTheDay(resJson);

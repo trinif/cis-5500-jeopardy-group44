@@ -4,5 +4,5 @@
   "rds_user": "group44",
   "rds_password": "lylamiatrinisarah266",
   "rds_db": "postgres",
-  "server_host": "the-cheat-code-to-jeopardy.onrender.com"
+  "server_host": "localhost:8080"
 }
