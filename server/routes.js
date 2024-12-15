@@ -315,32 +315,16 @@ WITH category_accuracy AS (
     WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
     LIMIT 1
 )
-SELECT *
+SELECT best_category.subject AS best_category,
+    worst_category.subject AS worst_category
 FROM best_category, worst_category
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      let best_category, worst_category;
-
-      data.rows.forEach(row => {
-        console.log(row)
-        if (row.max_category === 'Most Successful') {
-          best_category = row.subject;
-        }
-        if (row.min_category === 'Least Successful') {
-          worst_category = row.subject;
-        }
-      });
-
-      console.log(best_category);
-      console.log(worst_category);
-
-      res.json({
-        best_category,
-        worst_category
-      });
+      console.log(data)
+      res.json(data.rows[0]);
     }
   })
 }
@@ -365,7 +349,8 @@ WITH category_accuracy AS (
     WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
     LIMIT 1
 )
-SELECT *
+SELECT best_category.subject AS best_category,
+    worst_category.subject AS worst_category
 FROM best_category, worst_category
 
 
@@ -374,25 +359,7 @@ FROM best_category, worst_category
       console.log(err)
       res.json({})
     } else {
-      let best_category, worst_category;
-
-      data.rows.forEach(row => {
-        console.log(row)
-        if (row.max_category === 'Most Successful') {
-          best_category = row.subject;
-        }
-        if (row.min_category === 'Least Successful') {
-          worst_category = row.subject;
-        }
-      });
-
-      console.log(best_category);
-      console.log(worst_category);
-
-      res.json({
-        best_category,
-        worst_category
-      });
+      res.json(data.rows[0]);
     }
   })
 }
@@ -971,6 +938,39 @@ const least_accurate_questions_top_users = async function(req, res) {
     });
   };
 
+const extra_information = async function(req, res) {
+  const question_id = req.params.question_id;
+  if (question_id.startsWith('0')) {
+    connection.query(`
+      SELECT *
+      FROM Jeopardy
+        JOIN GeneralQuestions ON Jeopardy.answer = GeneralQuestions.answer
+      WHERE Jeopardy.question_id = '${question_id}'
+    `, (err, data) => {
+      if (err) {
+        console.log(err)
+        res.json([])
+      } else {
+        res.json(data.rows)
+      }
+    })
+  } else {
+    connection.query(`
+      SELECT *
+      FROM GeneralQuestions
+        JOIN Jeopardy ON Jeopardy.answer = GeneralQuestions.answer
+      WHERE GeneralQuestions.question_id = '${question_id}'
+    `, (err, data) => {
+      if (err) {
+        console.log(err)
+        res.json([])
+      } else {
+        res.json(data.rows)
+      }
+    })
+  }
+}
+
 module.exports = {
   signup,
   login,
@@ -1001,4 +1001,5 @@ module.exports = {
   questions,
   following_worst_questions,
   hardest_question_from_network,
+  extra_information
 }

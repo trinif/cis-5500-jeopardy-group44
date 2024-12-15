@@ -41,6 +41,8 @@ app.get('/questions', routes.questions);
 app.get('/question_jeopardy/:question_id', routes.question_jeopardy)
 app.get('/question_trivia/:question_id', routes.question_trivia)
 
+app.get('/extra_information/:question_id', routes.extra_information);
+
 
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 app.get('/check_follow_status/:following/:person_of_interest', routes.check_follow_status)
