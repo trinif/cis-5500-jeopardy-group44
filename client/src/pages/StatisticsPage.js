@@ -24,31 +24,31 @@ export default function StatisticsPage() {
   const [triggerEffect, setTriggerEffect] = useState(false);
 
   const followHandler = (user_id) => {
-    fetch(`http://${config.server_host}/follow_user/${userId}/${user_id}`, { method: 'POST' })
+    fetch(`https://${config.server_host}/follow_user/${userId}/${user_id}`, { method: 'POST' })
       .then((res) => res.json())
       .then(() => setTriggerEffect(!triggerEffect))
       .catch((err) => console.log(err));
   };
 
   const unfollowHandler = (user_id) => {
-    fetch(`http://${config.server_host}/unfollow_user/${userId}/${user_id}`, { method: 'POST' })
+    fetch(`https://${config.server_host}/unfollow_user/${userId}/${user_id}`, { method: 'POST' })
       .then((res) => res.json())
       .then(() => setTriggerEffect(!triggerEffect))
       .catch((err) => console.log(err));
   };
 
   useEffect(() => {
-    fetch(`http://${config.server_host}/overall_accuracy/${userId}`)
+    fetch(`https://${config.server_host}/overall_accuracy/${userId}`)
       .then((res) => res.json())
       .then((resJson) => setOverallUserAccuracy(resJson.accuracy))
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/category_accuracy/${userId}`)
+    fetch(`https://${config.server_host}/category_accuracy/${userId}`)
       .then((res) => res.json())
       .then((resJson) => setCategoryUserAccuracy(resJson))
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/best_worst_category/${userId}`)
+    fetch(`https://${config.server_host}/best_worst_category/${userId}`)
       .then((res) => res.json())
       .then((resJson) => {
         setBestCategoryAccuracy(resJson.best_category);
@@ -56,17 +56,17 @@ export default function StatisticsPage() {
       })
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/overall_accuracy_universal`)
+    fetch(`https://${config.server_host}/overall_accuracy_universal`)
       .then((res) => res.json())
       .then((resJson) => setOverallAccuracy(resJson.accuracy))
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/category_accuracy_universal`)
+    fetch(`https://${config.server_host}/category_accuracy_universal`)
       .then((res) => res.json())
       .then((resJson) => setcategoryAccuracy(resJson))
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/best_worst_category_universal`)
+    fetch(`https://${config.server_host}/best_worst_category_universal`)
       .then((res) => res.json())
       .then((resJson) => {
         setBestCategoryAccuracyUniversal(resJson.best_category);
@@ -74,12 +74,12 @@ export default function StatisticsPage() {
       })
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/top_users`)
+    fetch(`https://${config.server_host}/top_users`)
       .then((res) => res.json())
       .then((resJson) => setTopUsers(resJson))
       .catch((err) => console.log(err));
 
-    fetch(`http://${config.server_host}/top_users_friends/${userId}`)
+    fetch(`https://${config.server_host}/top_users_friends/${userId}`)
       .then((res) => res.json())
       .then((resJson) => setTopUsersFriends(resJson))
       .catch((err) => console.log(err));

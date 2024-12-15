@@ -61,14 +61,14 @@ export default function QuestionSelectionPageV2() {
   const [questionSet, setQuestionSet] = useState('all')
 
   const checkButtonHandler = () => {
-    fetch(`http://${config.server_host}/check_answer/${selectedQuestionId}/${answer}`, {
+    fetch(`https://${config.server_host}/check_answer/${selectedQuestionId}/${answer}`, {
       method: "POST",
     }).then(res => {
       return res.json()
     }).then(resJson => {
       if (resJson.status == 'Correct') {
         setAnswerMessage('Correct!')
-        fetch(`http://${config.server_host}/update_user_answer`, {
+        fetch(`https://${config.server_host}/update_user_answer`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export default function QuestionSelectionPageV2() {
         })
       } else if (resJson.status == 'Incorrect') {
         setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`)
-        fetch(`http://${config.server_host}/update_user_answer`, {
+        fetch(`https://${config.server_host}/update_user_answer`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -167,7 +167,7 @@ export default function QuestionSelectionPageV2() {
   }, [])
 
   const search = () => {
-    fetch(`http://${config.server_host}/question_selection/${userId}?`+
+    fetch(`https://${config.server_host}/question_selection/${userId}?`+
       `keyword=${keyword}` +
       `&source=${selectedSource}` + 
       `&valueLow=${valueRange[0]}` + 
