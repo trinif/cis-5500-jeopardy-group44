@@ -168,7 +168,7 @@ const checkButtonHandler = () => {
                       })}
                     </p>
                   ) : (null)}
-                  <button onClick={e => seeExtraInformationHandler()}>See similar information</button>
+                  {/*<button onClick={e => seeExtraInformationHandler()}>See similar information</button>*/}
                 </>
               )}
             </div> 
