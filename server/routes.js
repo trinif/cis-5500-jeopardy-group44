@@ -722,7 +722,8 @@ const question_selection = async function (req, res) {
         END AS jeopardy_or_general,
       Questions.question AS question,
       Questions.answer AS answer,
-      Questions.subject AS subject
+      Questions.subject AS subject,
+      Jeopardy.value AS value
     FROM questions_filtered
       JOIN Questions ON questions_filtered.question_id = Questions.question_id
       LEFT JOIN Jeopardy ON Questions.question_id = Jeopardy.question_id
@@ -739,7 +740,6 @@ const question_selection = async function (req, res) {
         OR round IN ('${rounds.join(`','`)}')
       )
     ORDER BY id_substring
-    LIMIT 10
   `  
 
   console.log(query)

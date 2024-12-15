@@ -41,17 +41,74 @@ export default function QuestionSelectionPageV2() {
   const [data, setData] = useState([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-  const [showAnswer, setShowAnswer] = useState({});
 
   const [keyword, setKeyword] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [selectedSource, setSelectedSource] = useState('both')
-  const [valueRange, setValueRange] = useState([200, 1000])
+  const [valueRange, setValueRange] = useState([100, 2000])
   const [selectedRounds, setSelectedRounds] = useState([])
   const [questionSet, setQuestionSet] = useState('all')
+  const [rowStates, setRowStates] = useState({});
+
+  const toggleAnswerSection = (rowId) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        showAnswerSection: !prev[rowId]?.showAnswerSection,
+      },
+    }));
+  };
+
+  // Function to handle input change for a row
+  const handleInputChange = (rowId, value) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        userAnswer: value,
+      },
+    }));
+  };
+
+  // Function to check the answer
+  const checkAnswer = (rowId, correctAnswer) => {
+    const userAnswer = rowStates[rowId]?.userAnswer || '';
+    const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        feedback: isCorrect ? 'Correct!' : `Incorrect!`,
+      },
+    }))
+
+    const isCorrectBin = isCorrect ? 1 : 0;
+    fetch(`http://${config.server_host}/update_user_answer`, {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId, questionId: rowId, is_correct: isCorrectBin })
+    });
+  };
+
+  // Toggle "Reveal/Hide Answer"
+  const toggleRevealAnswer = (rowId, correctAnswer) => {
+    setRowStates((prev) => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        isAnswerRevealed: !prev[rowId]?.isAnswerRevealed,
+        feedback: !prev[rowId]?.isAnswerRevealed ? `Correct Answer: ${correctAnswer}` : '',
+      },
+    }));
+  };
+
 
   const columns = [
-    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: 1},
+    { field: 'jeopardy_or_general', headerName: 'Source', cellClassName: 'white-text', flex: .7},
     { field: 'question', 
       headerName: 'Question', 
       cellClassName: 'white-text', 
@@ -71,26 +128,108 @@ export default function QuestionSelectionPageV2() {
       ) 
     },
     { field: 'subject', headerName: 'Subject', cellClassName: 'white-text', flex: 1 },
-    { field: 'answer', headerName: 'Answer', cellClassName: 'white-text', flex: 2,
-      renderCell: (params) => (
-        <>
-          {showAnswer[params.row.id] ? (
-            <p>{params.value}</p>
-          ) : (
-            <button
-              onClick={e => {
-                setShowAnswer((prev) => ({
-                  ...prev,
-                  [params.row.id]: !prev[params.row.id],
-                }))
-              }}
-            >
-              Click to see answer.
-            </button>
-          )}
-        </>
-      ),
-    }
+    { field: 'value', headerName: 'Value', cellClassName: 'white-text', flex: .5},
+    {
+      field: 'answer',
+      headerName: 'Answer',
+      flex: 2,
+      renderCell: (params) => {
+        const rowId = params.row.id;
+        const rowState = rowStates[rowId] || {};
+
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%%' }}>
+            {/* Try Answering Button */}
+            {!rowState.showAnswerSection ? (
+              <Typography
+                variant="body1"
+                onClick={() => toggleAnswerSection(rowId)}
+                sx={{
+                  color: 'gold',
+                  textDecoration: 'bold',
+                  cursor: 'pointer',
+                  '&:hover': { color: 'white' },
+                }}
+              >
+                Try Answering
+              </Typography>
+
+            ) : (
+              <>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    width: '100%',
+                  }}
+                >
+                  {/* Input Field */}
+                  <TextField
+                    size="small"
+                    value={rowState.userAnswer || ''}
+                    onChange={(e) => handleInputChange(rowId, e.target.value)}
+                    placeholder="Your answer"
+                    sx={{
+                      backgroundColor: 'white',
+                      borderRadius: '5px',
+                      flexGrow: 1, 
+                      maxWidth: '90%',
+                    }}
+                  />
+
+                  {/* Close (x) button */}
+                  <Typography
+                    variant="body1"
+                    onClick={() => toggleAnswerSection(rowId)}
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'gold',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      marginLeft: '8px', 
+                    }}
+                  >
+                    x
+                  </Typography>
+                </Box>
+
+                {/* Buttons */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => checkAnswer(rowId, params.row.answer)}
+                    sx={{ backgroundColor: 'gold', color: 'black' }}
+                  >
+                    Check
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => toggleRevealAnswer(rowId, params.row.answer)}
+                    sx={{ borderColor: 'gold', color: 'gold' }}
+                  >
+                    {rowState.isAnswerRevealed ? 'Hide Answer' : 'Reveal Answer'}
+                  </Button>
+                </Box>
+
+                {/* Feedback */}
+                {rowState.feedback && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: rowState.feedback.includes('Correct') ? 'green' : 'red',
+                    }}
+                  >
+                    {rowState.feedback}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Box>
+        );
+      },
+    }    
   ]
 
   useEffect(() => {
@@ -347,7 +486,11 @@ export default function QuestionSelectionPageV2() {
           rowsPerPageOptions={[5, 10, 25]}
           onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
           autoHeight
+          getRowHeight={() => 'auto'}
           sx={{
+            '& .MuiDataGrid-row': {
+              maxHeight: 'none'
+            },
             '& .MuiDataGrid-columnHeaders': {
               color: 'white',
               backgroundColor: '#081484',
@@ -361,6 +504,9 @@ export default function QuestionSelectionPageV2() {
               whiteSpace: 'normal',
               wordWrap: 'break-word',
               lineHeight: '1.2',
+              display: 'flex',
+              padding: '8px',
+              alignItems: 'center'
             },
             '& .MuiDataGrid-columnSeparator': {
               visibility: 'visible', 

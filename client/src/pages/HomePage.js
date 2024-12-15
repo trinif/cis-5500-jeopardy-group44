@@ -53,16 +53,16 @@ export default function HomePage() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ userId, question_id, is_correct: 1 }),
+            body: JSON.stringify({ userId, questionId: questionOfTheDay.question_id, is_correct: 1 }),
           });
         } else if (resJson.status === 'Incorrect') {
           setAnswerMessage(`Incorrect! The correct answer is '${resJson.message}'`);
-          fetch(`https://${config.server_host}/update_user_answer`, {
+          fetch(`http://${config.server_host}/update_user_answer`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ userId, question_id, is_correct: 0 }),
+            body: JSON.stringify({ userId, questionId: questionOfTheDay.question_id, is_correct: 0 }),
           });
         }
       })
