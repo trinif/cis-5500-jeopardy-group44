@@ -69,6 +69,7 @@ export default function StatisticsPage() {
     fetch(`http://${config.server_host}/best_worst_category_universal`)
       .then((res) => res.json())
       .then((resJson) => {
+        console.log(resJson)
         setBestCategoryAccuracyUniversal(resJson.best_category);
         setWorstCategoryAccuracyUniversal(resJson.worst_category);
       })

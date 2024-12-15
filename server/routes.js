@@ -315,32 +315,16 @@ WITH category_accuracy AS (
     WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
     LIMIT 1
 )
-SELECT *
+SELECT best_category.subject AS best_category,
+    worst_category.subject AS worst_category
 FROM best_category, worst_category
   `, (err, data) => {
     if (err) {
       console.log(err)
       res.json({})
     } else {
-      let best_category, worst_category;
-
-      data.rows.forEach(row => {
-        console.log(row)
-        if (row.max_category === 'Most Successful') {
-          best_category = row.subject;
-        }
-        if (row.min_category === 'Least Successful') {
-          worst_category = row.subject;
-        }
-      });
-
-      console.log(best_category);
-      console.log(worst_category);
-
-      res.json({
-        best_category,
-        worst_category
-      });
+      console.log(data)
+      res.json(data.rows[0]);
     }
   })
 }
@@ -348,7 +332,6 @@ FROM best_category, worst_category
 //DONE
 const best_worst_category_universal = async function (req, res) {
   connection.query(`
-EXPLAIN ANALYZE
 WITH category_accuracy AS (
     SELECT subject,
            COUNT(*) FILTER (WHERE UserAnswers.is_correct = B'1') * 100.0 / COUNT(*) AS accuracy
@@ -366,7 +349,8 @@ WITH category_accuracy AS (
     WHERE accuracy <= ALL (SELECT accuracy FROM category_accuracy)
     LIMIT 1
 )
-SELECT *
+SELECT best_category.subject AS best_category,
+    worst_category.subject AS worst_category
 FROM best_category, worst_category
 
 
@@ -375,25 +359,7 @@ FROM best_category, worst_category
       console.log(err)
       res.json({})
     } else {
-      let best_category, worst_category;
-
-      data.rows.forEach(row => {
-        console.log(row)
-        if (row.max_category === 'Most Successful') {
-          best_category = row.subject;
-        }
-        if (row.min_category === 'Least Successful') {
-          worst_category = row.subject;
-        }
-      });
-
-      console.log(best_category);
-      console.log(worst_category);
-
-      res.json({
-        best_category,
-        worst_category
-      });
+      res.json(data.rows[0]);
     }
   })
 }
