@@ -71,7 +71,7 @@ app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_t
 app.get('/following_worst_questions/:user_id', routes.following_worst_questions);
 
 app.listen(8080, () => {
-  console.log(`Server running at http://${config.server_host}/`)
+  console.log(`Server running at https://${config.server_host}/`)
 });
 
 module.exports = app;
