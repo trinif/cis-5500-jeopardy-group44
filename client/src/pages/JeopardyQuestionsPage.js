@@ -99,11 +99,11 @@ export default function JeopardyQuestions() {
                     }}
                 >
                     <Typography variant="h4" gutterBottom>
-                        Question:
+                        Question
                     </Typography>
 
                     <Typography variant="h6">{question}</Typography>
-                    <Typography variant="h8" sx={{ display: 'block' }}>
+                    <Typography variant="h8" sx={{ display: 'block', marginTop: '20px', }}>
                         <strong>Category:</strong> {category}
                     </Typography>
                     <Typography variant="h8" sx={{ display: 'block' }}>
