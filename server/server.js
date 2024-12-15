@@ -36,6 +36,12 @@ app.post('/signup', routes.signup);
 app.post('/login', routes.login);
 app.post('/update_user_answer', routes.update_user_answer);
 
+app.get('/question/:question_id', routes.question);
+app.get('/questions', routes.questions);
+app.get('/question_jeopardy/:question_id', routes.question_jeopardy)
+app.get('/question_trivia/:question_id', routes.question_trivia)
+
+
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 app.get('/check_follow_status/:following/:person_of_interest', routes.check_follow_status)
 app.post('/follow_user/:following/:person_of_interest', routes.follow_user)
@@ -59,7 +65,7 @@ app.get('/category_accuracy_universal', routes.category_accuracy_universal);
 app.get('/category_accuracy/:user_id', routes.category_accuracy);
 
 app.get('/random', routes.random);
-app.get('/question_selection', routes.question_selection);
+app.get('/question_selection/:user_id', routes.question_selection);
 
 app.get('/least_accurate_questions_top_users', routes.least_accurate_questions_top_users);
 app.get('/following_worst_questions/:user_id', routes.following_worst_questions);
