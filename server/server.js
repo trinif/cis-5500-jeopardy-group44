@@ -29,10 +29,6 @@ app.get('/question/:question_id', routes.question);
 app.get('/question_jeopardy/:question_id', routes.question_jeopardy)
 app.get('/question_trivia/:question_id', routes.question_trivia)
 
-// GET extra information based on question ID
-
-app.get('/extra_information/:question_id', routes.extra_information);
-
 // POST methods for checking answer
 app.post('/check_answer/:question_id/:answer', routes.check_answer);
 

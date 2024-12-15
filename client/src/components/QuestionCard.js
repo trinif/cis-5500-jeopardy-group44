@@ -90,19 +90,6 @@ const checkButtonHandler = () => {
     return airDate.split('T')[0]; // Extract only the date part
   };
 
-  //maybe delete?
-  const seeExtraInformationHandler = () => {
-    console.log("here")
-    fetch(`http://${config.server_host}/extra_information/${questionId}`)
-      .then(res => res.json())
-      .then(resJson => {
-          setExtraInformation(resJson)
-          console.log(resJson)
-      }).catch(err => {
-
-      })
-  }
-
   return (
     <Modal
       open={true}
@@ -133,18 +120,7 @@ const checkButtonHandler = () => {
                   <p>Value: {extraData.value}</p>
                   <p>Air Date: {formatAirDate(extraData.air_date)}</p>
                 </>
-              ) : questionData.jeopardy_or_general == '1' ? (
-                <> 
-                {/*delete? GeneralTrivia specific information (descriptions, URLs)*/}
-                  {/* extraData.descriptions.map((row, idx) => {
-                    return <p>Description {idx}: {row}</p>
-                  }) */}
-
-                  {/* {extraData.urls.map((row, idx) => {
-                    return <div>{idx}: <a href={row} target="_blank" rel="noopener noreferrer">{row}</a></div>
-                  })} */}
-                </>
-                ) : null
+              ) : null
             )}
 
             {/* If user hits "Enter" on keyboard or clicks Check, will automatically check */}
@@ -171,32 +147,10 @@ const checkButtonHandler = () => {
                       })}
                     </p>
                   ) : (null)}
-                  {/*<button onClick={e => seeExtraInformationHandler()}>See similar information</button>*/}
                 </>
               )}
             </div> 
           </Grid>
-          
-          {/* maybe delete? */}
-          {extraInformation && (
-            <Grid
-              p={3}
-              style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
-            >
-              <h1>These questions have the same answers.</h1>
-              {extraInformation.map((row, idx) => {
-
-                if (idx < 5) {
-                  return (
-                    <>
-                      <p>{row.question}</p>
-                    </>
-                  )
-                }
-              })}
-
-            </Grid>
-          )}
         </Grid>
       )}
     </Modal>

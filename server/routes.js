@@ -720,39 +720,6 @@ const following_worst_questions = async function(req, res) {
     });
   };
 
-const extra_information = async function(req, res) {
-  const question_id = req.params.question_id;
-  if (question_id.startsWith('0')) {
-    connection.query(`
-      SELECT *
-      FROM Jeopardy
-        JOIN GeneralQuestions ON Jeopardy.answer = GeneralQuestions.answer
-      WHERE Jeopardy.question_id = '${question_id}'
-    `, (err, data) => {
-      if (err) {
-        console.log(err)
-        res.json([])
-      } else {
-        res.json(data.rows)
-      }
-    })
-  } else {
-    connection.query(`
-      SELECT *
-      FROM GeneralQuestions
-        JOIN Jeopardy ON Jeopardy.answer = GeneralQuestions.answer
-      WHERE GeneralQuestions.question_id = '${question_id}'
-    `, (err, data) => {
-      if (err) {
-        console.log(err)
-        res.json([])
-      } else {
-        res.json(data.rows)
-      }
-    })
-  }
-}
-
 module.exports = {
   signup,
   login,
@@ -776,5 +743,4 @@ module.exports = {
   question_jeopardy,
   question_trivia,
   following_worst_questions,
-  extra_information
 }
