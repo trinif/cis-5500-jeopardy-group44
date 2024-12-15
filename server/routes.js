@@ -782,6 +782,7 @@ const least_accurate_questions_top_users = async function(req, res) {
         q.question_id, q.question, q.subject
       ORDER BY 
         accuracy ASC
+      LIMIT 3;
     `, (err, data) => {
       if (err) {
         console.log(err);
@@ -831,7 +832,7 @@ const least_accurate_questions_top_users = async function(req, res) {
       WHERE ua.user_id IN (SELECT followed_user_id FROM followed_users)
       GROUP BY q.question_id, q.question, q.subject
       ORDER BY accuracy ASC
-      LIMIT 10;
+      LIMIT 3;
     `, (err, data) => {
       if (err) {
         console.log(err);
