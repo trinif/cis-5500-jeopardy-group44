@@ -200,7 +200,7 @@ export default function QuestionSelectionPageV2() {
       {/* display QuestionCard when a question is selected (based on questionId) */}
       {selectedQuestionId && <QuestionCard questionId={selectedQuestionId} handleClose={() => setSelectedQuestionId(null)} />}
       <Typography variant="h2" align="center" gutterBottom>
-          User Statistics
+          Search Questions
         </Typography>
         <Divider sx={{ backgroundColor: 'gold', marginY: 3 }} />
       <Box container rowSpacing={5}
